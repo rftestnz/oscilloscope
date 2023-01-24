@@ -306,6 +306,17 @@ class DSOX_3000:
         self.write("ACQ:TYPE AVER")
         self.write(f"ACQ:COUNT {num_samples}")
 
+    def set_trigger_mode(self, mode: str) -> None:
+        """
+        set_trigger_mode _summary_
+
+        Args:
+            mode (str): _description_
+        """
+
+        self.write(f"TRIG:MODE {mode}")
+        self.write("TRIG:SWE AUTO")
+
     def measure_voltage(self, chan: int) -> float:
         """
         measure_voltage
