@@ -447,8 +447,11 @@ if __name__ == "__main__":
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
     input("Set voltage source to 0V")
-    print(dsox3034t.read_cursor(1))
+    y1 = dsox3034t.read_cursor_avg()
+
+    print(y1)
 
     input("Set voltage source to 1V")
-    print(dsox3034t.read_cursor(2))
-    print(f"Y Delta {dsox3034t.read_cursor_ydelta()}")
+    y2 = dsox3034t.read_cursor_avg()
+    print(y2)
+    print(f"Y Delta {y2-y1}")
