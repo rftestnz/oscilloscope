@@ -14,6 +14,20 @@ from typing import List
 VERSION = "A.00.00"
 
 
+class DSOX_FAMILY(Enum):
+    """
+    DSOX_FAMILY
+    Enum to cope with minor differences in commands
+
+    Args:
+        Enum (_type_): _description_
+    """
+
+    DSOX1000 = 1
+    DSOX2000 = 2
+    DSOX3000 = 3
+
+
 class DSOX3000_Simulator:
     """
     _summary_
