@@ -359,8 +359,8 @@ class DSOX_3000:
         """
 
         self.write("MARK:MODE WAV")
-        self.write("MARK:Y1:DISP ON")
-        self.write("MARK:Y1P")
+        self.write(f"MARK:Y{cursor}:DISP ON")
+        return self.read_query(f"MARK:Y{cursor}P?")
 
 
 if __name__ == "__main__":
