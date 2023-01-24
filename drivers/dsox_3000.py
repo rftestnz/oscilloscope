@@ -274,7 +274,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:DISP {state}")
 
-    def set_voltage_scale(self, chan: int, scale: float) -> None:
+    def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
         set_voltage_scale _summary_
 
@@ -284,6 +284,7 @@ class DSOX_3000:
         """
 
         self.write(f"CHAN{chan}:SCAL {scale}")
+        self.write(f"CHAN:PROB {probe}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
