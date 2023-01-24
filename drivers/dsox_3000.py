@@ -9,36 +9,66 @@ from pyvisa.constants import VI_GPIB_REN_ASSERT
 from pprint import pprint
 import time
 from random import random
-
-replace DRIVER_NAME with item
+from typing import List
 
 VERSION = "A.00.00"
 
 
 class DRIVER_NAME_Simulator:
-    def close(self):
+    """
+    _summary_
+    """
+
+    def close(self) -> None:
+        """
+        close _summary_
+        """
         pass
 
-    def write(self, command: str):
+    def write(self, command: str) -> None:
+        """
+        write _summary_
+
+        Args:
+            command (str): _description_
+        """
         print(f"DRIVER_NAME <- {command}")
 
-    def read(self):
+    def read(self) -> float | str:
+        """
+        read _summary_
+
+        Returns:
+            float| str: _description_
+        """
         return 0.5 + random()
 
     def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
 
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
             return "Keysight,DRIVER_NAME,MY_Simulated,B.00.00"
 
-        if command.startswith("READ"):
-            return str(0.5 + random())
-
-        return ""
+        return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class DRIVER_NAME:
+class DSOX_3000:
+    """
+     _summary_
+
+    Returns:
+        _type_: _description_
+    """
 
     connected: bool = False
     visa_address: str = "GPIB0::26::INSTR"
@@ -59,6 +89,12 @@ class DRIVER_NAME:
         self.close()
 
     def open_connection(self) -> bool:
+        """
+        open_connection _summary_
+
+        Returns:
+            bool: _description_
+        """
         try:
             if self.simulating:
                 self.instr = DRIVER_NAME_Simulator
@@ -78,20 +114,30 @@ class DRIVER_NAME:
 
         return self.connected
 
-    def initialize(self):
+    def initialize(self) -> None:
+        """
+        initialize _summary_
+        """
         self.open_connection()
 
-    def close(self):
-        self.instr.close()
+    def close(self) -> None:
+        """
+        close _summary_
+        """
+        self.instr.close()  # type: ignore
         self.connected = False
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
+        """
+        is_connected _summary_
+
+        Returns:
+            bool: _description_
+        """
         return bool(
             self.open_connection()
             and (
-                not self.simulating
-                and self.model.find("DRIVER_NAME") >= 0
-                or self.simulating
+                not self.simulating and self.model.find("3034") >= 0 or self.simulating
             )
         )
 
@@ -137,6 +183,15 @@ class DRIVER_NAME:
         return ret
 
     def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
 
         attempts = 0
         ret = ""
@@ -152,9 +207,18 @@ class DRIVER_NAME:
         return ret
 
     def reset(self) -> None:
+        """
+        reset _summary_
+        """
         self.write("*RST")
 
-    def get_id(self):
+    def get_id(self) -> List:
+        """
+        get_id _summary_
+
+        Returns:
+            List: _description_
+        """
         try:
             self.instr.timeout = 2000  # type: ignore
             response = self.instr.query("*IDN?")  # type: ignore
@@ -175,11 +239,9 @@ class DRIVER_NAME:
         return response.split(",")
 
 
-
-
 if __name__ == "__main__":
 
-    driver_name = DRIVER_NAME()
+    driver_name = DSOX_3000()
     driver_name.visa_address = "GPIB0::0::INSTR"
 
     driver_name.open_connection()
