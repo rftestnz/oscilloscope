@@ -348,12 +348,13 @@ class DSOX_3000:
             float: _description_
         """
 
-        self.write(f"MEAS:SOURCE {chan}")
+        self.write(f"MEAS:SOURCE CHAN{chan}")
 
-        return self.read_query("MEAS:VAMP?")
+        return self.read_query("MEAS:VAV?")
 
     def read_cursor(self, cursor: int) -> float:
         """
+
         set_cursor_y1 _summary_
 
         Enable cursor Y1, set to center of screen
