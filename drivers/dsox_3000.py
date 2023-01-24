@@ -391,17 +391,17 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
-    def read_cursor(self, cursor: int) -> float:
+    def read_cursor(self, cursor: str) -> float:
         """
 
-        set_cursor_y1 _summary_
+        read_cursor _summary_
 
-        Enable cursor Y1, set to center of screen
+        Enable cursor and read
         """
 
         self.write("MARK:MODE WAV")
-        self.write(f"MARK:Y{cursor}:DISP ON")
-        return self.read_query(f"MARK:Y{cursor}P?")
+        self.write(f"MARK:{cursor}:DISP ON")
+        return self.read_query(f"MARK:{cursor}P?")
 
     def read_cursor_avg(self) -> float:
         """
