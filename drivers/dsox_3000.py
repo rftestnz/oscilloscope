@@ -426,12 +426,15 @@ if __name__ == "__main__":
 
     dsox3034t.open_connection()
 
+    print(f"Model {dsox3034t.model}")
+
     dsox3034t.reset()
 
     dsox3034t.set_channel(chan=1, enabled=True)
     dsox3034t.set_channel(chan=2, enabled=True)
     dsox3034t.set_voltage_scale(chan=1, scale=1)
     dsox3034t.set_voltage_scale(chan=2, scale=0.2)
+    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
     dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
     dsox3034t.set_timebase(0.001)
 
