@@ -239,6 +239,20 @@ class DSOX_3000:
 
         return response.split(",")
 
+    def set_channel(self, chan: int, enabled: bool) -> None:
+        """
+        set_channel
+        Turn display of channel on or off
+
+        Args:
+            chan (int): _description_
+            enabled (bool): _description_
+        """
+
+        state = "ON" if enabled else "OFF"
+
+        self.write(f"CHAN{chan}:DISP {state}")
+
     def set_voltage_scale(self, chan: int, scale: float) -> None:
         """
         set_voltage_scale _summary_
@@ -259,7 +273,7 @@ class DSOX_3000:
             offset (float): _description_
         """
 
-        self.write(f"CHAN:OFFS {offset}")
+        self.write(f"CHAN{chan}:OFFS {offset}")
 
     def set_timebase(self, timebase: float) -> None:
         """
