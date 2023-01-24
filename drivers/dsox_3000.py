@@ -365,6 +365,19 @@ class DSOX_3000:
         self.write(f"TRIG:MODE {mode}")
         self.write("TRIG:SWE AUTO")
 
+    def set_trigger_level(self, level: float, chan: int) -> None:
+        """
+        set_trigger_level
+        Set the trigger level and source
+
+        Args:
+            level (float): _description_
+            chan (int): _description_
+        """
+
+        self.write(f"TRIG:EDGE:SOUR chan{chan}")
+        self.write(f"TRIG:EDGE:LEV {level}")
+
     def measure_voltage(self, chan: int) -> float:
         """
         measure_voltage
