@@ -443,6 +443,17 @@ class DSOX_3000:
         self.write("MARK:MODE WAV")
         self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
 
+    def set_cursor_position(self, cursor: str, pos: float) -> None:
+        """
+        set_cursor_position _summary_
+
+        Args:
+            cursor (str): _description_
+            pos (float): _description_
+        """
+
+        self.write(f"MARK:{cursor}P {pos}")
+
 
 if __name__ == "__main__":
 
