@@ -512,10 +512,29 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=0.5, chan=1)
+    dsox3034t.set_trigger_level(level=2.5, chan=1)
+
+    dsox3034t.set_timebase(20e-9)
+
+    dsox3034t.set_cursor_xy_source(chan=1, cursor=1)
+    dsox3034t.set_cursor_position(cursor="X1", pos=0)
+
+    ref_x = dsox3034t.read_cursor("X1")
+    time.sleep(0.1)
+    ref = dsox3034t.read_cursor("Y1")
+    print(ref)
 
     dsox3034t.set_timebase_pos(0.001)
-    dsox3034t.set_timebase(20e-9)
+    time.sleep(0.1)
+
+    dsox3034t.set_cursor_position(cursor="X1", pos=0.001)
+    time.sleep(0.1)
+
+    dsox3034t.adjust_cursor(target=ref)
+
+    offset_x = dsox3034t.read_cursor("X1")
+
+    print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
     y1 = dsox3034t.read_cursor_avg()
