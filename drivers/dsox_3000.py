@@ -459,6 +459,11 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
+    dsox3034t.set_trigger_level(level=0.5, chan=1)
+
+    dsox3034t.set_timebase_pos(0.001)
+    dsox3034t.set_timebase(20e-9)
+
     input("Set voltage source to 0V")
     y1 = dsox3034t.read_cursor_avg()
 
