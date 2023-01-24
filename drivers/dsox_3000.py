@@ -14,7 +14,7 @@ from typing import List
 VERSION = "A.00.00"
 
 
-class DRIVER_NAME_Simulator:
+class DSOX3000_Simulator:
     """
     _summary_
     """
@@ -57,7 +57,7 @@ class DRIVER_NAME_Simulator:
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
-            return "Keysight,DRIVER_NAME,MY_Simulated,B.00.00"
+            return "Keysight,DSOX3000,MY_Simulated,B.00.00"
 
         return str(0.5 + random()) if command.startswith("READ") else ""
 
@@ -71,7 +71,7 @@ class DSOX_3000:
     """
 
     connected: bool = False
-    visa_address: str = "GPIB0::26::INSTR"
+    visa_address: str = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
     model = ""
     manufacturer = ""
     serial = ""
@@ -97,8 +97,8 @@ class DSOX_3000:
         """
         try:
             if self.simulating:
-                self.instr = DRIVER_NAME_Simulator
-                self.model = "DRIVER_NAME"
+                self.instr = DSOX3000_Simulator
+                self.model = "DSOX3034T"
                 self.manufacturer = "Keysight"
                 self.serial = "666"
             else:
