@@ -1,0 +1,373 @@
+# Excel handler for test results reading and writing, settings for tests
+# DK May 2022
+
+from collections import namedtuple
+from typing import Tuple, Dict, NamedTuple, List, Any
+import openpyxl
+from openpyxl.utils import get_column_letter
+from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
+import os
+import time
+import re
+from datetime import datetime
+from pprint import pprint
+
+
+VERSION = "A.00.01"
+
+
+class ExcelInterface:  # TODO class name
+
+    __filename: str = ""
+    __start_row: int = 100
+    __max_row: int = 1000
+    __saved: bool = True
+    __data_col = 10
+    __result_col = 5
+
+    row: int = 1
+
+    def __init__(self, filename, sheetindex=0) -> None:
+        self.__filename = filename
+        self.wb = openpyxl.load_workbook(
+            self.__filename, read_only=False, data_only=False
+        )
+        self.ws = self.wb.worksheets[sheetindex]  # Default is the first sheet
+        self.initialize()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
+
+    def read_result(self) -> float | Any:
+        """
+        read_result
+        Special to read the data in the result column, for testing
+
+        Returns:
+            float: _description_
+        """
+
+        return self.ws.cell(column=self.__result_col, row=self.row).value
+
+    def close(self) -> None:  # sourcery skip: raise-specific-error
+        if not self.__saved:
+            self.save_sheet()
+
+        if not self.__saved:
+            raise Exception("Unable to save")
+
+        self.wb.close()
+
+    def initialize(self) -> None:
+        """
+        initialize
+        Set the row back to the start
+        Multiple ways of initializing are in use:
+        * Named Range StartCell which content is first row in data range
+        * First row in the __data_col is the row
+        * Default value in __start_row
+        """
+
+        if nr := self.get_named_cell("StartCell"):
+            self.row = nr.value  # type: ignore
+        elif rw := self.ws.cell(column=self.__data_col, row=1).value:
+            self.row = int(rw)  # type: ignore
+        else:
+            self.row = self.__start_row
+
+    def check_excel_available(self) -> bool:
+        """
+        check_excel_available
+        Try to write to the file, if there is an exception user probably has it open
+        """
+
+        available = True
+
+        try:
+            self.wb.save(self.__filename)
+        except PermissionError:
+            available = False
+
+        return available
+
+    def check_valid_results(self) -> bool:
+        """
+        check_valid_results
+        Check the model matches the expected values
+
+        Returns:
+            bool: _description_
+        """
+
+        # TODO cell must be named in sheet
+        try:
+            model = self.get_named_cell("Model").value  # type: ignore
+        except AttributeError:
+            model = None
+
+        # TODO list of valid models
+        return model in [8207]
+
+    def backup(self) -> None:
+        """
+        backup
+        If the software crashes while the Excel instance is still open, it can corrupt the sheet
+        """
+
+        head, tail = os.path.split(self.__filename)
+
+        backup_path = os.path.join(head, "Backups")
+        fname = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{tail}"
+        backup_name = os.path.join(backup_path, fname)
+
+        if not os.path.exists(backup_path):
+            os.mkdir(backup_path)
+
+        self.wb.save(backup_name)
+
+    def save_sheet(self) -> None:
+        try:
+            # sometimes it throws an error if too quick
+            self.wb.save(self.__filename)
+            self.__saved = True
+        except Exception:
+            time.sleep(1)
+            self.__saved = False
+
+    def get_column_row_number(self, coord: str) -> Tuple[int, int]:
+        """
+        get_column_number
+        From the column letter(s), get the number
+
+        Args:
+            coord (str): "A1" to "XFD1048576"
+
+        Returns:
+            int: 1 based column number
+        """
+
+        xy = coordinate_from_string(coord)  # returns ('col', row)
+        col: int = column_index_from_string(xy[0])
+        row: int = xy[1]
+
+        return [col, row]  # type: ignore
+
+    def get_named_cell(self, name: str) -> NamedTuple:
+        """
+        get_named_cell
+        Get the cell coordinates from a named range.
+        Although range can refer a range of cells, only the top left is returned
+        as this is most commonly used in these applications
+
+        Args:
+            name (str): named range
+
+        Returns:
+            Tuple: col and row numbers
+        """
+
+        try:
+            rng = self.wb.defined_names[name]  # type: ignore
+
+            # This is returned in format tabname!cell_range
+
+            # Create a generator
+            dests = rng.destinations
+
+            tabname, coord = next(dests)
+
+            cell = namedtuple("Cell", ["col", "row", "value"])
+
+            cd = self.get_column_row_number(coord)
+
+            return cell(col=cd[0], row=cd[1], value=self.ws[coord].value)
+        except KeyError:
+            return None  # type: ignore
+
+    def get_number_all_tests(self) -> int:
+        """
+        get_number_all_tests Get the total number of tests to perform, for the progress updates
+
+        Takes into account 3 GHz option
+
+        Returns:
+            int: Number of rows with setup data
+        """
+
+        number_tests = 1  # Start row is pointing to first test
+
+        self.initialize()
+
+        while self.get_next_row():
+            number_tests += 1
+
+        self.initialize()  # Make sure row is reset
+
+        return number_tests
+
+    def get_next_row(self) -> bool:
+        """
+        Move down to the next row containing parameters
+
+        Returns:
+            bool: False when reached end of settings
+        """
+        valid = True
+
+        self.row += 1
+
+        while True:
+            val = self.ws.cell(column=self.__data_col, row=self.row).value
+
+            if val and str(val).lower() not in ["function"]:  # TODO keywords
+                break
+
+            self.row += 1
+            if self.row >= self.__max_row:
+                valid = False
+                break
+        if self.row >= self.__max_row:
+            valid = False
+
+        return valid
+
+    def get_test_rows(self, test_filter="*") -> List:
+        """
+        get_test_rows
+        Get a list of all test rows
+
+        Returns:
+            List: list of row numbers
+        """
+
+        self.initialize()
+
+        test_rows = []
+
+        while True:
+            # match against the filter
+            # Use a filter, but . is anything not *
+            test_filter = test_filter.replace("*", ".")
+            setting = self.get_test_settings()
+            if re.search(test_filter, setting.function):  # type: ignore
+                test_rows.append(self.row)
+
+            if not self.get_next_row():
+                break
+
+        return test_rows
+
+    def get_test_settings(self, row=-1) -> NamedTuple:
+        """
+        get_test_settings
+        Read the current row as a test setting
+
+        Args:
+            row (_type_, optional): _description_. Defaults to self.row.
+
+        Returns:
+            NamedTuple: _description_
+        """
+
+        # TODO namedtupe for the actual instance
+
+        if row == -1:
+            row = self.row
+
+        settings = namedtuple("settings", ["function", "voltage"])
+
+        col = self.__data_col
+        func = self.ws.cell(column=col, row=row).value
+        col += 1
+        volts = self.ws.cell(column=col, row=row).value
+
+        return settings(function=func, voltage=volts)
+
+    def get_all_test_settings(self, test_filter="*"):
+        """
+        get_all_test_settings
+        Get a list of all test settings
+
+        Returns:
+            Dict: _description_
+        """
+
+        self.initialize()
+
+        tests = []
+
+        while True:
+            setting = self.get_test_settings()
+            test_filter = test_filter.replace("*", ".")
+
+            if re.search(test_filter, setting.function):  # type: ignore
+                tests.append(setting)
+
+            if not self.get_next_row():
+                break
+
+        return tests
+
+    def get_test_types(self) -> set:
+        """
+        get_test_types
+        Get a list of the unique tests
+
+        Args:
+            self (_type_): _description_
+        """
+
+        self.initialize()
+
+        test_types = set()
+
+        while True:
+            if test_name := self.ws.cell(column=self.__data_col, row=self.row).value:
+                if test_name not in []:  # TODO list of ignore tests if required
+                    test_types.add(test_name)
+
+            if not self.get_next_row():
+                break
+
+        return test_types
+
+    def write_result(self, result) -> None:
+        """
+        write_result
+        Write the data to the sheet at the current row
+
+        Args:
+            result (_type_): _description_
+        """
+
+        self.ws.cell(column=self.__result_col, row=self.row).value = result
+
+        self.save_sheet()
+
+
+if __name__ == "__main__":
+
+    with ExcelInterface("Testing\\excel_test.xlsx") as excel:
+        excel.backup()
+        print(excel.get_named_cell("StartCell"))
+        print(excel.get_named_cell("InvalidName"))
+        print(f"Start row {excel.row}")
+        print(f"Number tests {excel.get_number_all_tests()}")
+        pprint(excel.get_test_rows())
+
+        excel.initialize()
+
+        pprint(excel.get_test_settings())
+
+        pprint(excel.get_all_test_settings())
+
+        print("Filtered:")
+
+        pprint(excel.get_all_test_settings("I"))
+
+        print(f"Available: {excel.check_excel_available()}")
+
+        pprint(excel.get_test_types())
