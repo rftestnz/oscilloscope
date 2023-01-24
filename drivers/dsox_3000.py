@@ -281,6 +281,17 @@ class DSOX_3000:
 
         self.write(f"TIM:POS {pos}")
 
+    def set_acquisition(self, num_samples: int) -> None:
+        """
+        set_acquisition _summary_
+
+        Args:
+            num_samples (int): _description_
+        """
+
+        self.write("ACQ:TYPE AVER")
+        self.write(f"ACQ:COUNT {num_samples}")
+
 
 if __name__ == "__main__":
 
