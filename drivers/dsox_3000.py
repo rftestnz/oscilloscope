@@ -14,7 +14,21 @@ from typing import List
 VERSION = "A.00.00"
 
 
-class DRIVER_NAME_Simulator:
+class DSOX_FAMILY(Enum):
+    """
+    DSOX_FAMILY
+    Enum to cope with minor differences in commands
+
+    Args:
+        Enum (_type_): _description_
+    """
+
+    DSOX1000 = 1
+    DSOX2000 = 2
+    DSOX3000 = 3
+
+
+class DSOX3000_Simulator:
     """
     _summary_
     """
@@ -57,7 +71,7 @@ class DRIVER_NAME_Simulator:
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
-            return "Keysight,DRIVER_NAME,MY_Simulated,B.00.00"
+            return "Keysight,DSOX3000,MY_Simulated,B.00.00"
 
         return str(0.5 + random()) if command.startswith("READ") else ""
 
@@ -71,10 +85,11 @@ class DSOX_3000:
     """
 
     connected: bool = False
-    visa_address: str = "GPIB0::26::INSTR"
+    visa_address: str = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
     model = ""
     manufacturer = ""
     serial = ""
+    family = DSOX_FAMILY.DSOX3000
     timeout = 5000
 
     def __init__(self, simulate=False):
@@ -97,8 +112,8 @@ class DSOX_3000:
         """
         try:
             if self.simulating:
-                self.instr = DRIVER_NAME_Simulator
-                self.model = "DRIVER_NAME"
+                self.instr = DSOX3000_Simulator
+                self.model = "DSOX3034T"
                 self.manufacturer = "Keysight"
                 self.serial = "666"
             else:
@@ -248,6 +263,17 @@ class DSOX_3000:
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
                 self.model = identity[1]
+                model_type = self.model.split(" ")
+                if len(model_type) > 1:
+                    family = model_type[1][0]
+                    if family == "1":
+                        self.family = DSOX_FAMILY.DSOX1000
+                    else:
+                        self.family = (
+                            DSOX_FAMILY.DSOX2000
+                            if family == "2"
+                            else DSOX_FAMILY.DSOX3000
+                        )
                 self.serial = identity[2]
 
         except pyvisa.VisaIOError:
@@ -274,7 +300,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:DISP {state}")
 
-    def set_voltage_scale(self, chan: int, scale: float) -> None:
+    def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
         set_voltage_scale _summary_
 
@@ -283,6 +309,7 @@ class DSOX_3000:
             scale (float): _description_
         """
 
+        self.write(f"CHAN{chan}:PROB {probe}")  # Set before the scale
         self.write(f"CHAN{chan}:SCAL {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
@@ -347,12 +374,13 @@ class DSOX_3000:
             float: _description_
         """
 
-        self.write(f"MEAS:SOURCE {chan}")
+        self.write(f"MEAS:SOURCE CHAN{chan}")
 
-        return self.read_query("MEAS:VAMP?")
+        return self.read_query("MEAS:VAV?")
 
     def read_cursor(self, cursor: int) -> float:
         """
+
         set_cursor_y1 _summary_
 
         Enable cursor Y1, set to center of screen
@@ -361,6 +389,24 @@ class DSOX_3000:
         self.write("MARK:MODE WAV")
         self.write(f"MARK:Y{cursor}:DISP ON")
         return self.read_query(f"MARK:Y{cursor}P?")
+
+    def read_cursor_avg(self) -> float:
+        """
+        read_cursor_avg
+        Read both of the Y cursors, and return the average
+
+        Returns:
+            float: _description_
+        """
+
+        self.write("MARK:MODE WAV")
+        if self.family == DSOX_FAMILY.DSOX3000:
+            self.write("MARK:Y1:DISP ON")
+            self.write("MARK:Y2:DISP ON")
+        y1 = self.read_query("MARK:Y1P?")
+        y2 = self.read_query("MARK:Y1P?")
+
+        return (y1 + y2) / 2
 
     def read_cursor_ydelta(self) -> float:
         """
@@ -376,9 +422,11 @@ class DSOX_3000:
 if __name__ == "__main__":
 
     dsox3034t = DSOX_3000()
-    dsox3034t.visa_address = "GPIB0::0::INSTR"
+    dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
     dsox3034t.open_connection()
+
+    print(f"Model {dsox3034t.model}")
 
     dsox3034t.reset()
 
@@ -386,6 +434,7 @@ if __name__ == "__main__":
     dsox3034t.set_channel(chan=2, enabled=True)
     dsox3034t.set_voltage_scale(chan=1, scale=1)
     dsox3034t.set_voltage_scale(chan=2, scale=0.2)
+    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
     dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
     dsox3034t.set_timebase(0.001)
 
@@ -395,13 +444,14 @@ if __name__ == "__main__":
 
     time.sleep(1)
 
-    for _ in range(20):
-        print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
-        time.sleep(0.2)
+    print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
     input("Set voltage source to 0V")
-    print(dsox3034t.read_cursor(1))
+    y1 = dsox3034t.read_cursor_avg()
+
+    print(y1)
 
     input("Set voltage source to 1V")
-    print(dsox3034t.read_cursor(2))
-    print(f"Y Delta {dsox3034t.read_cursor_ydelta()}")
+    y2 = dsox3034t.read_cursor_avg()
+    print(y2)
+    print(f"Y Delta {y2-y1}")
