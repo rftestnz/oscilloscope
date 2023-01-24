@@ -431,6 +431,18 @@ class DSOX_3000:
 
         return self.read_query("MARK:YDEL?")
 
+    def set_cursor_xy_source(self, chan: int, cursor: int) -> None:
+        """
+        set_cursor_xy_source
+        Set the X1Y1 marker source
+
+        Args:
+            chan (int): _description_
+        """
+
+        self.write("MARK:MODE WAV")
+        self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+
 
 if __name__ == "__main__":
 
