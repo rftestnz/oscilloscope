@@ -365,6 +365,19 @@ class DSOX_3000:
         self.write(f"TRIG:MODE {mode}")
         self.write("TRIG:SWE AUTO")
 
+    def set_trigger_level(self, level: float, chan: int) -> None:
+        """
+        set_trigger_level
+        Set the trigger level and source
+
+        Args:
+            level (float): _description_
+            chan (int): _description_
+        """
+
+        self.write(f"TRIG:EDGE:SOUR chan{chan}")
+        self.write(f"TRIG:EDGE:LEV {level}")
+
     def measure_voltage(self, chan: int) -> float:
         """
         measure_voltage
@@ -378,17 +391,17 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
-    def read_cursor(self, cursor: int) -> float:
+    def read_cursor(self, cursor: str) -> float:
         """
 
-        set_cursor_y1 _summary_
+        read_cursor _summary_
 
-        Enable cursor Y1, set to center of screen
+        Enable cursor and read
         """
 
         self.write("MARK:MODE WAV")
-        self.write(f"MARK:Y{cursor}:DISP ON")
-        return self.read_query(f"MARK:Y{cursor}P?")
+        self.write(f"MARK:{cursor}:DISP ON")
+        return self.read_query(f"MARK:{cursor}P?")
 
     def read_cursor_avg(self) -> float:
         """
@@ -418,6 +431,59 @@ class DSOX_3000:
 
         return self.read_query("MARK:YDEL?")
 
+    def set_cursor_xy_source(self, chan: int, cursor: int) -> None:
+        """
+        set_cursor_xy_source
+        Set the X1Y1 marker source
+
+        Args:
+            chan (int): _description_
+        """
+
+        self.write("MARK:MODE WAV")
+        self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+
+    def set_cursor_position(self, cursor: str, pos: float) -> None:
+        """
+        set_cursor_position _summary_
+
+        Args:
+            cursor (str): _description_
+            pos (float): _description_
+        """
+
+        self.write(f"MARK:{cursor}P {pos}")
+
+    def adjust_cursor(self, target: float) -> None:
+        """
+        adjust_cursor
+        Adjust the cursor time until target voltage met
+
+        Args:
+            target (float): _description_
+        """
+
+        current_y = self.read_query("MARK:Y1P?")
+        current_x = self.read_query("MARK:X1P?")
+
+        time_inc = self.read_query("TIM:SCAL?") / 20
+
+        direction = +1 if current_y < target else -1
+
+        if current_y < target:
+            for _ in range(100):
+                self.set_cursor_position(
+                    cursor="X1", pos=current_x + time_inc * direction
+                )
+                current_x = self.read_query("MARK:X1P?")
+                current_y = self.read_query("MARK:Y1P?")
+                if ((current_y > target) and direction == 1) or (
+                    (current_y < target) and direction == -1
+                ):
+                    break
+        else:
+            ...
+
 
 if __name__ == "__main__":
 
@@ -445,6 +511,30 @@ if __name__ == "__main__":
     time.sleep(1)
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
+
+    dsox3034t.set_trigger_level(level=2.5, chan=1)
+
+    dsox3034t.set_timebase(20e-9)
+
+    dsox3034t.set_cursor_xy_source(chan=1, cursor=1)
+    dsox3034t.set_cursor_position(cursor="X1", pos=0)
+
+    ref_x = dsox3034t.read_cursor("X1")
+    time.sleep(0.1)
+    ref = dsox3034t.read_cursor("Y1")
+    print(ref)
+
+    dsox3034t.set_timebase_pos(0.001)
+    time.sleep(0.1)
+
+    dsox3034t.set_cursor_position(cursor="X1", pos=0.001)
+    time.sleep(0.1)
+
+    dsox3034t.adjust_cursor(target=ref)
+
+    offset_x = dsox3034t.read_cursor("X1")
+
+    print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
     y1 = dsox3034t.read_cursor_avg()
