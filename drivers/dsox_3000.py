@@ -337,10 +337,38 @@ class DSOX_3000:
 
         return ampl
 
+    def set_cursor_y1(self) -> None:
+        """
+        set_cursor_y1 _summary_
+
+        Enable cursor Y1, set to center of screen
+        """
+
+        self.write("MARK:MODE WAV")
+        self.write("MARK:Y1:DISP ON")
+        self.write("MARK:Y1P")
+
 
 if __name__ == "__main__":
 
-    driver_name = DSOX_3000()
-    driver_name.visa_address = "GPIB0::0::INSTR"
+    dsox3034t = DSOX_3000()
+    dsox3034t.visa_address = "GPIB0::0::INSTR"
 
-    driver_name.open_connection()
+    dsox3034t.open_connection()
+
+    dsox3034t.reset()
+
+    dsox3034t.set_channel(chan=1, enabled=True)
+    dsox3034t.set_channel(chan=2, enabled=True)
+    dsox3034t.set_voltage_scale(chan=1, scale=1)
+    dsox3034t.set_timebase(0.001)
+
+    dsox3034t.set_acquisition(64)
+
+    dsox3034t.set_trigger_mode("EDGE")
+
+    time.sleep(1)
+
+    for _ in range(20):
+        print(f"Measurment {dsox3034t.measure_voltage(chan=1)}")
+        time.sleep(0.2)
