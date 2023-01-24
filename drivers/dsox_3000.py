@@ -397,9 +397,7 @@ if __name__ == "__main__":
 
     time.sleep(1)
 
-    for _ in range(20):
-        print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
-        time.sleep(0.2)
+    print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
     input("Set voltage source to 0V")
     print(dsox3034t.read_cursor(1))
