@@ -362,6 +362,16 @@ class DSOX_3000:
         self.write(f"MARK:Y{cursor}:DISP ON")
         return self.read_query(f"MARK:Y{cursor}P?")
 
+    def read_cursor_ydelta(self) -> float:
+        """
+        read_cursor_ydelta _summary_
+
+        Returns:
+            float: _description_
+        """
+
+        return self.read_query("MARK:YDEL?")
+
 
 if __name__ == "__main__":
 
@@ -388,3 +398,10 @@ if __name__ == "__main__":
     for _ in range(20):
         print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
         time.sleep(0.2)
+
+    input("Set voltage source to 0V")
+    print(dsox3034t.read_cursor(1))
+
+    input("Set voltage source to 1V")
+    print(dsox3034t.read_cursor(2))
+    print(f"Y Delta {dsox3034t.read_cursor_ydelta()}")
