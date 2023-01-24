@@ -89,6 +89,7 @@ class DSOX_3000:
     model = ""
     manufacturer = ""
     serial = ""
+    family = DSOX_FAMILY.DSOX3000
     timeout = 5000
 
     def __init__(self, simulate=False):
@@ -262,6 +263,17 @@ class DSOX_3000:
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
                 self.model = identity[1]
+                model_type = self.model.split(" ")
+                if len(model_type) > 1:
+                    family = model_type[1][0]
+                    if family == "1":
+                        self.family = DSOX_FAMILY.DSOX1000
+                    else:
+                        self.family = (
+                            DSOX_FAMILY.DSOX2000
+                            if family == "2"
+                            else DSOX_FAMILY.DSOX3000
+                        )
                 self.serial = identity[2]
 
         except pyvisa.VisaIOError:
