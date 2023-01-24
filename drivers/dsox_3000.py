@@ -206,6 +206,27 @@ class DSOX_3000:
 
         return ret
 
+    def read_query(self, command: str) -> float:
+        """
+        read_query
+        send query command, return a float or -999 if invalid
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            float: _description_
+        """
+
+        reply = self.query(command)
+
+        try:
+            val = float(reply)
+        except ValueError:
+            val = 0.0
+
+        return val
+
     def reset(self) -> None:
         """
         reset _summary_
