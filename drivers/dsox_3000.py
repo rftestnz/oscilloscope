@@ -349,16 +349,9 @@ class DSOX_3000:
 
         self.write(f"MEAS:SOURCE {chan}")
 
-        val = self.query("MEAS:VAMP?")
+        return self.read_query("MEAS:VAMP?")
 
-        try:
-            ampl = float(val)
-        except ValueError:
-            ampl = 0.0
-
-        return ampl
-
-    def set_cursor_y1(self) -> None:
+    def read_cursor(self, cursor: int) -> float:
         """
         set_cursor_y1 _summary_
 
