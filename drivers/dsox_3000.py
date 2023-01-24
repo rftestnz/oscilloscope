@@ -376,7 +376,7 @@ class DSOX_3000:
 if __name__ == "__main__":
 
     dsox3034t = DSOX_3000()
-    dsox3034t.visa_address = "GPIB0::0::INSTR"
+    dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
     dsox3034t.open_connection()
 
