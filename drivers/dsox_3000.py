@@ -250,6 +250,17 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:SCAL {scale}")
 
+    def set_voltage_offset(self, chan: int, offset: float) -> None:
+        """
+        set_voltage_offset _summary_
+
+        Args:
+            chan (int): _description_
+            offset (float): _description_
+        """
+
+        self.write(f"CHAN:OFFS {offset}")
+
     def set_timebase(self, timebase: float) -> None:
         """
         set_timebase _summary_
@@ -258,7 +269,17 @@ class DSOX_3000:
             timebase (float): _description_
         """
 
-        self.write(f"TIME:SCAL {timebase}")
+        self.write(f"TIM:SCAL {timebase}")
+
+    def set_timebase_pos(self, pos: float) -> None:
+        """
+        set_timebase_pos _summary_
+
+        Args:
+            pos (float): _description_
+        """
+
+        self.write(f"TIM:POS {pos}")
 
 
 if __name__ == "__main__":
