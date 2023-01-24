@@ -454,6 +454,36 @@ class DSOX_3000:
 
         self.write(f"MARK:{cursor}P {pos}")
 
+    def adjust_cursor(self, target: float) -> None:
+        """
+        adjust_cursor
+        Adjust the cursor time until target voltage met
+
+        Args:
+            target (float): _description_
+        """
+
+        current_y = self.read_query("MARK:Y1P?")
+        current_x = self.read_query("MARK:X1P?")
+
+        time_inc = self.read_query("TIM:SCAL?") / 20
+
+        direction = +1 if current_y < target else -1
+
+        if current_y < target:
+            for _ in range(100):
+                self.set_cursor_position(
+                    cursor="X1", pos=current_x + time_inc * direction
+                )
+                current_x = self.read_query("MARK:X1P?")
+                current_y = self.read_query("MARK:Y1P?")
+                if ((current_y > target) and direction == 1) or (
+                    (current_y < target) and direction == -1
+                ):
+                    break
+        else:
+            ...
+
 
 if __name__ == "__main__":
 
