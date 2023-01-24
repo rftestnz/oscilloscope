@@ -210,6 +210,7 @@ class DSOX_3000:
         """
         reset _summary_
         """
+        self.write("*CLS")
         self.write("*RST")
 
     def get_id(self) -> List:
@@ -237,6 +238,27 @@ class DSOX_3000:
         self.instr.timeout = self.timeout  # type: ignore
 
         return response.split(",")
+
+    def set_voltage_scale(self, chan: int, scale: float) -> None:
+        """
+        set_voltage_scale _summary_
+
+        Args:
+            chan (int): _description_
+            scale (float): _description_
+        """
+
+        self.write(f"CHAN{chan}:SCAL {scale}")
+
+    def set_timebase(self, timebase: float) -> None:
+        """
+        set_timebase _summary_
+
+        Args:
+            timebase (float): _description_
+        """
+
+        self.write(f"TIME:SCAL {timebase}")
 
 
 if __name__ == "__main__":
