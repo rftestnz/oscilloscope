@@ -390,6 +390,24 @@ class DSOX_3000:
         self.write(f"MARK:Y{cursor}:DISP ON")
         return self.read_query(f"MARK:Y{cursor}P?")
 
+    def read_cursor_avg(self) -> float:
+        """
+        read_cursor_avg
+        Read both of the Y cursors, and return the average
+
+        Returns:
+            float: _description_
+        """
+
+        self.write("MARK:MODE WAV")
+        if self.family == DSOX_FAMILY.DSOX3000:
+            self.write("MARK:Y1:DISP ON")
+            self.write("MARK:Y2:DISP ON")
+        y1 = self.read_query("MARK:Y1P?")
+        y2 = self.read_query("MARK:Y1P?")
+
+        return (y1 + y2) / 2
+
     def read_cursor_ydelta(self) -> float:
         """
         read_cursor_ydelta _summary_
