@@ -292,6 +292,26 @@ class DSOX_3000:
         self.write("ACQ:TYPE AVER")
         self.write(f"ACQ:COUNT {num_samples}")
 
+    def measure_voltage(self, chan: int) -> float:
+        """
+        measure_voltage
+        Return the average voltage
+
+        Returns:
+            float: _description_
+        """
+
+        self.write(f"MEAS:SOURCE {chan}")
+
+        val = self.query("MEAS:VAMP?")
+
+        try:
+            ampl = float(val)
+        except ValueError:
+            ampl = 0.0
+
+        return ampl
+
 
 if __name__ == "__main__":
 
