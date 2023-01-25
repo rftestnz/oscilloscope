@@ -252,6 +252,9 @@ if __name__ == "__main__":
             f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
         )
 
+        uut.simulating = simulate
+        uut.visa_address = values["-UUT_ADDRESS-"]
+
         if event == "-TEST_CONNECTIONS-":
             connections_check_form()
             continue
