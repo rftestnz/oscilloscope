@@ -6,16 +6,22 @@ Test DSOX Oscilloscopes
 from typing import Dict, List
 import PySimpleGUI as sg
 
-from drivers.fluke_5700a import Fluke5700A  # TODO fix the import names
-from drivers.meatest_m142 import M142  # TODO fix the import names
+from drivers.fluke_5700a import Fluke5700A
+from drivers.meatest_m142 import M142
+from drivers.dsox_3000 import DSOX_3000
+from drivers.excel_interface import ExcelInterface
 import os
 import sys
+import time
+from pathlib import Path
 
 VERSION = "A.00.00"
 
 
 calibrator = Fluke5700A()
 calibrator_address: str = "GPIB0::06::INSTR"
+uut = DSOX_3000()
+simulating: bool = False
 
 
 def get_path(filename: str) -> str:
@@ -31,7 +37,7 @@ def get_path(filename: str) -> str:
     """
 
     if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, filename)  # type: ignore
+        return Path(sys._MEIPASS, filename).__str__()  # type: ignore
     else:
         return filename
 
@@ -57,6 +63,7 @@ def connections_check_form() -> None:
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("FLUKE_5700A", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
+        [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
     ]
@@ -70,6 +77,11 @@ def connections_check_form() -> None:
         window,
         "-FLUKE_5700A_CONN-",
         color="green" if connected["FLUKE_5700A"] else "red",
+    )
+    set_led(
+        window,
+        "-UUT-",
+        color="green" if connected["DSO"] else "red",
     )
 
     while True:
@@ -88,6 +100,11 @@ def connections_check_form() -> None:
                 "-FLUKE_5700A_CONN-",
                 color="green" if connected["FLUKE_5700A"] else "red",
             )
+            set_led(
+                window,
+                "-UUT-",
+                color="green" if connected["DSO"] else "red",
+            )
 
     window.close()
 
@@ -98,12 +115,63 @@ def test_connections() -> Dict:
     """
 
     global calibrator
+    global uut
 
     fluke_5700a_conn = calibrator.is_connected()
+    uut_conn = uut.is_connected()
 
-    return {
-        "FLUKE_5700A": fluke_5700a_conn,
-    }
+    return {"FLUKE_5700A": fluke_5700a_conn, "DSO": uut_conn}
+
+
+def test_dcv(filename: str, test_rows: List) -> None:
+    """
+    test_dcv
+    Perform the basic DC V tests
+    Set the calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
+    """
+
+    global simulating
+
+    # TODO read both the cursor and mean at the same time
+
+    last_channel = -1
+
+    with ExcelInterface(filename) as excel:
+
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            calibrator.set_voltage_dc(settings.voltage)
+
+            channel = settings.channel
+
+            if channel != last_channel:
+                sg.popup(
+                    f"Connect calibrator output to channel {channel}",
+                    background_color="blue",
+                )
+                last_channel = channel
+
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+
+            calibrator.operate()
+
+            if not simulating:
+                time.sleep(2)
+
+            reading = uut.measure_voltage(chan=channel)
+
+            excel.write_result(reading)
+
+        excel.save_sheet()
+
+        calibrator.close()
+        uut.close()
+
+        sg.popup("Finished", background_color="blue")
 
 
 if __name__ == "__main__":
@@ -119,7 +187,11 @@ if __name__ == "__main__":
         [sg.Text("Create Excel sheet from template first", text_color="red")],
         [
             sg.Text("Results file", size=(10, 1)),
-            sg.Input(size=(60, 1), key="-FILE-", default_text=""),
+            sg.Input(
+                default_text=sg.user_settings_get_entry("-FILENAME-"),
+                size=(60, 1),
+                key="-FILE-",
+            ),
             sg.FileBrowse(
                 "...",
                 target="-FILE-",
@@ -162,10 +234,18 @@ if __name__ == "__main__":
                 key="GPIB_ADDR_FLUKE_5700A",
             ),
         ],
+        [
+            sg.Text("UUT", size=(15, 1)),
+            sg.Input(
+                default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),
+                size=(60, 1),
+                key="-UUT_ADDRESS-",
+            ),
+        ],
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Ok", size=(12, 1), key="-OK-"),
+            sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -173,6 +253,8 @@ if __name__ == "__main__":
     window = sg.Window("Oscilloscope Test", layout=layout, finalize=True)
 
     back_color = window["-FILE-"].BackgroundColor
+
+    simulating = False
 
     while True:
         event, values = window.read(200)
@@ -189,7 +271,7 @@ if __name__ == "__main__":
         else:
             window["-SIMULATE-"].update(text_color=txt_clr)
 
-        if event in ["-OK-"]:  # TODO button names
+        if event in ["-TEST_DCV-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -207,18 +289,42 @@ if __name__ == "__main__":
 
             window["-VIEW-"].update(disabled=True)  # Disable while testing
 
+            if values["-CALIBRATOR-"] == "M-142":
+                calibrator = M142(simulate=simulating)
+            else:
+                calibrator = Fluke5700A(simulate=simulating)
+            calibrator.visa_address = calibrator_address
+            calibrator.open_connection()
+
+            uut = DSOX_3000(simulate=simulating)
+            uut.visa_address = values["-UUT_ADDRESS-"]
+
+            uut.open_connection()
+
+            with ExcelInterface(values["-FILE-"]) as excel:
+                test_rows = excel.get_test_rows("DCV")
+
+            test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+
+            window["-VIEW-"].update(disabled=False)
+
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
         sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
+        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
+        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
         sg.user_settings_save()
 
-        simulate = values["-SIMULATE-"]
+        simulating = values["-SIMULATE-"]
 
-        calibrator.simulating = simulate
+        calibrator.simulating = simulating
         calibrator_address = (
             f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
         )
+
+        uut.simulating = simulating
+        uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
             connections_check_form()
