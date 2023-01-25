@@ -377,7 +377,7 @@ class DSOX_3000:
             chan (int): _description_
         """
 
-        self.write(f"TRIG:EDGE:SOUR chan{chan}")
+        self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
         self.write(f"TRIG:EDGE:LEV {level}")
 
     def measure_voltage(self, chan: int) -> float:

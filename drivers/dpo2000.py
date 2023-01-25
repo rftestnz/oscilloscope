@@ -73,7 +73,7 @@ class DPO_2000:
     """
 
     connected: bool = False
-    visa_address: str = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    visa_address: str = "USB0::0x0699::0x0373::C010049::INSTR"
     model = ""
     manufacturer = ""
     serial = ""
