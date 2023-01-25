@@ -1,5 +1,7 @@
+"""
 # Excel handler for test results reading and writing, settings for tests
-# DK May 2022
+# DK Jan 2023
+"""
 
 from collections import namedtuple
 from typing import Tuple, Dict, NamedTuple, List, Any
@@ -19,11 +21,11 @@ VERSION = "A.00.01"
 class ExcelInterface:  # TODO class name
 
     __filename: str = ""
-    __start_row: int = 100
+    __start_row: int = 10
     __max_row: int = 1000
     __saved: bool = True
     __data_col = 10
-    __result_col = 5
+    __result_col = 4
 
     row: int = 1
 
@@ -72,7 +74,8 @@ class ExcelInterface:  # TODO class name
         """
 
         if nr := self.get_named_cell("StartCell"):
-            self.row = nr.value  # type: ignore
+            self.row = nr.row  # type: ignore
+            self.__data_col = nr.col
         elif rw := self.ws.cell(column=self.__data_col, row=1).value:
             self.row = int(rw)  # type: ignore
         else:
@@ -191,8 +194,6 @@ class ExcelInterface:  # TODO class name
         """
         get_number_all_tests Get the total number of tests to perform, for the progress updates
 
-        Takes into account 3 GHz option
-
         Returns:
             int: Number of rows with setup data
         """
@@ -277,14 +278,32 @@ class ExcelInterface:  # TODO class name
         if row == -1:
             row = self.row
 
-        settings = namedtuple("settings", ["function", "voltage"])
+        settings = namedtuple(
+            "settings",
+            ["function", "channel", "coupling", "scale", "voltage", "offset"],
+        )
 
         col = self.__data_col
         func = self.ws.cell(column=col, row=row).value
         col += 1
-        volts = self.ws.cell(column=col, row=row).value
+        chan = self.ws.cell(column=col, row=row).value
+        col += 1
+        coupling = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        offset = self.ws.cell(column=col, row=row).value
 
-        return settings(function=func, voltage=volts)
+        return settings(
+            function=func,
+            channel=chan,
+            coupling=coupling,
+            scale=scale,
+            voltage=voltage,
+            offset=offset,
+        )
 
     def get_all_test_settings(self, test_filter="*"):
         """
@@ -350,10 +369,12 @@ class ExcelInterface:  # TODO class name
 
 if __name__ == "__main__":
 
-    with ExcelInterface("Testing\\excel_test.xlsx") as excel:
+    with ExcelInterface("testsheets\\666_Keysight_DSOX3034A.xlsx") as excel:
         excel.backup()
-        print(excel.get_named_cell("StartCell"))
-        print(excel.get_named_cell("InvalidName"))
+        start_cell = excel.get_named_cell("StartCell")
+        print(start_cell)
+        # excel.row = start_cell.row
+        # print(excel.get_named_cell("InvalidName"))
         print(f"Start row {excel.row}")
         print(f"Number tests {excel.get_number_all_tests()}")
         pprint(excel.get_test_rows())
@@ -366,7 +387,7 @@ if __name__ == "__main__":
 
         print("Filtered:")
 
-        pprint(excel.get_all_test_settings("I"))
+        pprint(excel.get_all_test_settings("CURS"))
 
         print(f"Available: {excel.check_excel_available()}")
 
