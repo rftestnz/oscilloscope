@@ -41,25 +41,27 @@ class DSOX3000_Simulator:
         """
         pass
 
-    def write(self, command: str) -> None:
+    def write(command: str) -> None:  # type: ignore
         """
         write _summary_
 
         Args:
             command (str): _description_
         """
+        # sourcery skip: instance-method-first-arg-name
         print(f"DSOX3000 <- {command}")
 
-    def read(self) -> float | str:
+    def read() -> float | str:  # type: ignore
         """
         read _summary_
 
         Returns:
             float| str: _description_
         """
+
         return 0.5 + random()
 
-    def query(self, command: str) -> str:
+    def query(command: str) -> str:  # type: ignore
         """
         query _summary_
 
@@ -70,10 +72,12 @@ class DSOX3000_Simulator:
             str: _description_
         """
 
+        # sourcery skip: instance-method-first-arg-name
+
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
-            return "Keysight,DSOX3000,MY_Simulated,B.00.00"
+            return "Keysight,DSOX3034G,MY_Simulated,B.00.00"
 
         return str(0.5 + random()) if command.startswith("READ") else ""
 
