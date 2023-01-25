@@ -148,7 +148,10 @@ def test_dcv(filename: str, test_rows: List) -> None:
             channel = settings.channel
 
             if channel != last_channel:
-                sg.popup(f"Connect calibrator output to channel {channel}")
+                sg.popup(
+                    f"Connect calibrator output to channel {channel}",
+                    background_color="blue",
+                )
                 last_channel = channel
 
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
@@ -167,6 +170,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
         calibrator.close()
         uut.close()
+
+        sg.popup("Finished", background_color="blue")
 
 
 if __name__ == "__main__":
@@ -300,6 +305,8 @@ if __name__ == "__main__":
                 test_rows = excel.get_test_rows("DCV")
 
             test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+
+            window["-VIEW-"].update(disabled=False)
 
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
         sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
