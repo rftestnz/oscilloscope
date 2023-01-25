@@ -176,7 +176,11 @@ if __name__ == "__main__":
         [sg.Text("Create Excel sheet from template first", text_color="red")],
         [
             sg.Text("Results file", size=(10, 1)),
-            sg.Input(size=(60, 1), key="-FILE-", default_text=""),
+            sg.Input(
+                default_text=sg.user_settings_get_entry("-FILENAME-"),
+                size=(60, 1),
+                key="-FILE-",
+            ),
             sg.FileBrowse(
                 "...",
                 target="-FILE-",
@@ -285,6 +289,7 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
+        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
         sg.user_settings_save()
 
