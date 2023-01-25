@@ -194,8 +194,6 @@ class ExcelInterface:  # TODO class name
         """
         get_number_all_tests Get the total number of tests to perform, for the progress updates
 
-        Takes into account 3 GHz option
-
         Returns:
             int: Number of rows with setup data
         """
@@ -280,14 +278,32 @@ class ExcelInterface:  # TODO class name
         if row == -1:
             row = self.row
 
-        settings = namedtuple("settings", ["function", "voltage"])
+        settings = namedtuple(
+            "settings",
+            ["function", "channel", "coupling", "scale", "voltage", "offset"],
+        )
 
         col = self.__data_col
         func = self.ws.cell(column=col, row=row).value
         col += 1
-        volts = self.ws.cell(column=col, row=row).value
+        chan = self.ws.cell(column=col, row=row).value
+        col += 1
+        coupling = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        offset = self.ws.cell(column=col, row=row).value
 
-        return settings(function=func, voltage=volts)
+        return settings(
+            function=func,
+            channel=chan,
+            coupling=coupling,
+            scale=scale,
+            voltage=voltage,
+            offset=offset,
+        )
 
     def get_all_test_settings(self, test_filter="*"):
         """
