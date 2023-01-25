@@ -1,5 +1,5 @@
 """
-# Driver for Keysight DSOX oscilloscopes
+# Driver for Tek DPO2000
 
 
 # DK Jan 23
@@ -16,21 +16,7 @@ from typing import List
 VERSION = "A.00.00"
 
 
-class DSOX_FAMILY(Enum):
-    """
-    DSOX_FAMILY
-    Enum to cope with minor differences in commands
-
-    Args:
-        Enum (_type_): _description_
-    """
-
-    DSOX1000 = 1
-    DSOX2000 = 2
-    DSOX3000 = 3
-
-
-class DSOX3000_Simulator:
+class DPO2000_Simulator:
     """
     _summary_
     """
@@ -48,7 +34,7 @@ class DSOX3000_Simulator:
         Args:
             command (str): _description_
         """
-        print(f"DSOX3000 <- {command}")
+        print(f"DPO2000 <- {command}")
 
     def read(self) -> float | str:
         """
@@ -73,12 +59,12 @@ class DSOX3000_Simulator:
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
-            return "Keysight,DSOX3000,MY_Simulated,B.00.00"
+            return "Tektronix,DPO2024,MY_Simulated,B.00.00"
 
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class DSOX_3000:
+class DPO_2000:
     """
      _summary_
 
@@ -87,11 +73,10 @@ class DSOX_3000:
     """
 
     connected: bool = False
-    visa_address: str = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    visa_address: str = "USB0::0x0699::0x0373::C010049::INSTR"
     model = ""
     manufacturer = ""
     serial = ""
-    family = DSOX_FAMILY.DSOX3000
     timeout = 5000
 
     def __init__(self, simulate=False):
@@ -114,9 +99,9 @@ class DSOX_3000:
         """
         try:
             if self.simulating:
-                self.instr = DSOX3000_Simulator
-                self.model = "DSO-X 3034T"
-                self.manufacturer = "Keysight"
+                self.instr = DPO2000_Simulator
+                self.model = "DPO3034"
+                self.manufacturer = "Tektronix"
                 self.serial = "666"
             else:
                 self.instr = self.rm.open_resource(
@@ -265,17 +250,6 @@ class DSOX_3000:
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
                 self.model = identity[1]
-                model_type = self.model.split(" ")
-                if len(model_type) > 1:
-                    family = model_type[1][0]
-                    if family == "1":
-                        self.family = DSOX_FAMILY.DSOX1000
-                    else:
-                        self.family = (
-                            DSOX_FAMILY.DSOX2000
-                            if family == "2"
-                            else DSOX_FAMILY.DSOX3000
-                        )
                 self.serial = identity[2]
 
         except pyvisa.VisaIOError:
@@ -300,9 +274,9 @@ class DSOX_3000:
 
         state = "ON" if enabled else "OFF"
 
-        self.write(f"CHAN{chan}:DISP {state}")
+        self.write(f"SEL:CH{chan} {state}")
 
-    def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
+    def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
         set_voltage_scale _summary_
 
@@ -311,8 +285,8 @@ class DSOX_3000:
             scale (float): _description_
         """
 
-        self.write(f"CHAN{chan}:PROB {probe}")  # Set before the scale
-        self.write(f"CHAN{chan}:SCAL {scale}")
+        self.write(f"CH{chan}:PRO:GAIN 1")
+        self.write(f"CH{chan}:VOL {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
@@ -323,7 +297,8 @@ class DSOX_3000:
             offset (float): _description_
         """
 
-        self.write(f"CHAN{chan}:OFFS {offset}")
+        # TODO Is it offset or pos?
+        self.write(f"CH{chan}:POS {offset}")
 
     def set_timebase(self, timebase: float) -> None:
         """
@@ -333,7 +308,7 @@ class DSOX_3000:
             timebase (float): _description_
         """
 
-        self.write(f"TIM:SCAL {timebase}")
+        self.write(f"HOR:SCAL {timebase}")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
@@ -343,7 +318,7 @@ class DSOX_3000:
             pos (float): _description_
         """
 
-        self.write(f"TIM:POS {pos}")
+        self.write(f"HOR:POS {pos}")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
@@ -353,8 +328,8 @@ class DSOX_3000:
             num_samples (int): _description_
         """
 
-        self.write("ACQ:TYPE AVER")
-        self.write(f"ACQ:COUNT {num_samples}")
+        self.write("ACQ:MODE AVE")
+        self.write(f"ACQ:NUMAV {num_samples}")
 
     def set_trigger_mode(self, mode: str) -> None:
         """
@@ -364,7 +339,7 @@ class DSOX_3000:
             mode (str): _description_
         """
 
-        self.write(f"TRIG:MODE {mode}")
+        # self.write(f"TRIG:A:MODE {mode}")
         self.write("TRIG:SWE AUTO")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
@@ -377,8 +352,8 @@ class DSOX_3000:
             chan (int): _description_
         """
 
-        self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
-        self.write(f"TRIG:EDGE:LEV {level}")
+        self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
+        self.write(f"TRIG:A:LEV {level}")
 
     def measure_voltage(self, chan: int) -> float:
         """
@@ -389,9 +364,12 @@ class DSOX_3000:
             float: _description_
         """
 
-        self.write(f"MEAS:SOURCE CHAN{chan}")
+        self.write("MEASU:MEAS1:TYPE MEAN")
 
-        return self.read_query("MEAS:VAV?")
+        self.write(f"MEAS:SOURCE CH{chan}")
+        self.write(f"MEASU:MEAS{chan}:STATE ON")
+
+        return self.read_query(f"MEASU:MEAS{chan}:MEAN?")
 
     def read_cursor(self, cursor: str) -> float:
         """
@@ -442,8 +420,9 @@ class DSOX_3000:
             chan (int): _description_
         """
 
-        self.write("MARK:MODE WAV")
-        self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+        self.write("CURS:FUNC WAV")
+        self.write("CURS:MOD:TRACK")
+        self.write(f"CURS:X{cursor}Y{cursor} CHAN{chan}")
 
     def set_cursor_position(self, cursor: str, pos: float) -> None:
         """
@@ -489,61 +468,61 @@ class DSOX_3000:
 
 if __name__ == "__main__":
 
-    dsox3034t = DSOX_3000()
-    dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    dpo2014 = DPO_2000()
+    dpo2014.visa_address = "USB0::0x0699::0x0373::C010049::INSTR"
 
-    dsox3034t.open_connection()
+    dpo2014.open_connection()
 
-    print(f"Model {dsox3034t.model}")
+    print(f"Model {dpo2014.model}")
 
-    dsox3034t.reset()
+    dpo2014.reset()
 
-    dsox3034t.set_channel(chan=1, enabled=True)
-    dsox3034t.set_channel(chan=2, enabled=True)
-    dsox3034t.set_voltage_scale(chan=1, scale=1)
-    dsox3034t.set_voltage_scale(chan=2, scale=0.2)
-    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
-    dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
-    dsox3034t.set_timebase(0.001)
+    dpo2014.set_channel(chan=1, enabled=True)
+    dpo2014.set_channel(chan=2, enabled=True)
+    dpo2014.set_voltage_scale(chan=1, scale=1)
+    dpo2014.set_voltage_scale(chan=2, scale=0.2)
+    dpo2014.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    dpo2014.set_voltage_offset(chan=2, offset=+0.5)
+    dpo2014.set_timebase(0.001)
 
-    dsox3034t.set_acquisition(64)
+    dpo2014.set_acquisition(64)
 
-    dsox3034t.set_trigger_mode("EDGE")
+    dpo2014.set_trigger_mode("EDGE")
 
     time.sleep(1)
 
-    print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
+    print(f"Measurement {dpo2014.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=2.5, chan=1)
+    dpo2014.set_trigger_level(level=0.1, chan=1)
 
-    dsox3034t.set_timebase(20e-9)
+    dpo2014.set_timebase(20e-9)
 
-    dsox3034t.set_cursor_xy_source(chan=1, cursor=1)
-    dsox3034t.set_cursor_position(cursor="X1", pos=0)
+    dpo2014.set_cursor_xy_source(chan=1, cursor=1)
+    dpo2014.set_cursor_position(cursor="X1", pos=0)
 
-    ref_x = dsox3034t.read_cursor("X1")
+    ref_x = dpo2014.read_cursor("X1")
     time.sleep(0.1)
-    ref = dsox3034t.read_cursor("Y1")
+    ref = dpo2014.read_cursor("Y1")
     print(ref)
 
-    dsox3034t.set_timebase_pos(0.001)
+    dpo2014.set_timebase_pos(0.001)
     time.sleep(0.1)
 
-    dsox3034t.set_cursor_position(cursor="X1", pos=0.001)
+    dpo2014.set_cursor_position(cursor="X1", pos=0.001)
     time.sleep(0.1)
 
-    dsox3034t.adjust_cursor(target=ref)
+    dpo2014.adjust_cursor(target=ref)
 
-    offset_x = dsox3034t.read_cursor("X1")
+    offset_x = dpo2014.read_cursor("X1")
 
     print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
-    y1 = dsox3034t.read_cursor_avg()
+    y1 = dpo2014.read_cursor_avg()
 
     print(y1)
 
     input("Set voltage source to 1V")
-    y2 = dsox3034t.read_cursor_avg()
+    y2 = dpo2014.read_cursor_avg()
     print(y2)
     print(f"Y Delta {y2-y1}")
