@@ -285,6 +285,11 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             calibrator.open_connection()
 
+            with ExcelInterface(values["-FILE-"]) as excel:
+                test_rows = excel.get_test_rows("DCV")
+
+            test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
         sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
