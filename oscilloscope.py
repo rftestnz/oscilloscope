@@ -60,6 +60,7 @@ def connections_check_form() -> None:
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("FLUKE_5700A", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
+        [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
     ]
@@ -73,6 +74,11 @@ def connections_check_form() -> None:
         window,
         "-FLUKE_5700A_CONN-",
         color="green" if connected["FLUKE_5700A"] else "red",
+    )
+    set_led(
+        window,
+        "-UUT-",
+        color="green" if connected["DSO"] else "red",
     )
 
     while True:
@@ -91,6 +97,11 @@ def connections_check_form() -> None:
                 "-FLUKE_5700A_CONN-",
                 color="green" if connected["FLUKE_5700A"] else "red",
             )
+            set_led(
+                window,
+                "-UUT-",
+                color="green" if connected["DSO"] else "red",
+            )
 
     window.close()
 
@@ -101,12 +112,12 @@ def test_connections() -> Dict:
     """
 
     global calibrator
+    global uut
 
     fluke_5700a_conn = calibrator.is_connected()
+    uut_conn = uut.is_connected()
 
-    return {
-        "FLUKE_5700A": fluke_5700a_conn,
-    }
+    return {"FLUKE_5700A": fluke_5700a_conn, "DSO": uut_conn}
 
 
 if __name__ == "__main__":
