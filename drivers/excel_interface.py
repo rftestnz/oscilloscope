@@ -369,10 +369,12 @@ class ExcelInterface:  # TODO class name
 
 if __name__ == "__main__":
 
-    with ExcelInterface("Testing\\excel_test.xlsx") as excel:
+    with ExcelInterface("testsheets\\666_Keysight_DSOX3034A.xlsx") as excel:
         excel.backup()
-        print(excel.get_named_cell("StartCell"))
-        print(excel.get_named_cell("InvalidName"))
+        start_cell = excel.get_named_cell("StartCell")
+        print(start_cell)
+        # excel.row = start_cell.row
+        # print(excel.get_named_cell("InvalidName"))
         print(f"Start row {excel.row}")
         print(f"Number tests {excel.get_number_all_tests()}")
         pprint(excel.get_test_rows())
