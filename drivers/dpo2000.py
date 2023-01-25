@@ -276,7 +276,7 @@ class DPO_2000:
 
         self.write(f"SEL:CH{chan} {state}")
 
-    def set_voltage_scale(self, chan: int, scale: float) -> None:
+    def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
         set_voltage_scale _summary_
 
@@ -285,7 +285,7 @@ class DPO_2000:
             scale (float): _description_
         """
 
-        # TODO check for probe sensitivity
+        self.write(f"CH{chan}:PRO:GAIN 1")
         self.write(f"CH{chan}:VOL {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
