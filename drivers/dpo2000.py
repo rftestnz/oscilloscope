@@ -339,7 +339,7 @@ class DPO_2000:
             mode (str): _description_
         """
 
-        self.write(f"TRIG:MODE {mode}")
+        # self.write(f"TRIG:A:MODE {mode}")
         self.write("TRIG:SWE AUTO")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
@@ -352,8 +352,8 @@ class DPO_2000:
             chan (int): _description_
         """
 
-        self.write(f"TRIG:EDGE:SOUR chan{chan}")
-        self.write(f"TRIG:EDGE:LEV {level}")
+        self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
+        self.write(f"TRIG:A:LEV {level}")
 
     def measure_voltage(self, chan: int) -> float:
         """
