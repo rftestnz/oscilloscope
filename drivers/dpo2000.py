@@ -492,7 +492,7 @@ if __name__ == "__main__":
 
     print(f"Measurement {dpo2014.measure_voltage(chan=1)}")
 
-    dpo2014.set_trigger_level(level=2.5, chan=1)
+    dpo2014.set_trigger_level(level=0.1, chan=1)
 
     dpo2014.set_timebase(20e-9)
 
