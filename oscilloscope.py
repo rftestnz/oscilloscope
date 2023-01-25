@@ -62,7 +62,7 @@ def connections_check_form() -> None:
 
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
-        [sg.Text("FLUKE_5700A", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
+        [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
