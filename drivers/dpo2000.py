@@ -318,7 +318,7 @@ class DPO_2000:
             pos (float): _description_
         """
 
-        self.write(f"TIM:POS {pos}")
+        self.write(f"HOR:POS {pos}")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
