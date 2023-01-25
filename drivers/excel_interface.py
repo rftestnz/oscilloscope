@@ -1,5 +1,7 @@
+"""
 # Excel handler for test results reading and writing, settings for tests
-# DK May 2022
+# DK Jan 2023
+"""
 
 from collections import namedtuple
 from typing import Tuple, Dict, NamedTuple, List, Any
@@ -72,7 +74,8 @@ class ExcelInterface:  # TODO class name
         """
 
         if nr := self.get_named_cell("StartCell"):
-            self.row = nr.value  # type: ignore
+            self.row = nr.row  # type: ignore
+            self.__data_col = nr.col
         elif rw := self.ws.cell(column=self.__data_col, row=1).value:
             self.row = int(rw)  # type: ignore
         else:
