@@ -274,7 +274,7 @@ class DPO_2000:
 
         state = "ON" if enabled else "OFF"
 
-        self.write(f"CHAN{chan}:DISP {state}")
+        self.write(f"SEL:CH{chan} {state}")
 
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
