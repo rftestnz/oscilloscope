@@ -420,8 +420,9 @@ class DPO_2000:
             chan (int): _description_
         """
 
-        self.write("MARK:MODE WAV")
-        self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+        self.write("CURS:FUNC WAV")
+        self.write("CURS:MOD:TRACK")
+        self.write(f"CURS:X{cursor}Y{cursor} CHAN{chan}")
 
     def set_cursor_position(self, cursor: str, pos: float) -> None:
         """
