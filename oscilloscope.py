@@ -21,6 +21,7 @@ VERSION = "A.00.00"
 calibrator = Fluke5700A()
 calibrator_address: str = "GPIB0::06::INSTR"
 uut = DSOX_3000()
+simulating: bool = False
 
 
 def get_path(filename: str) -> str:
@@ -129,6 +130,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
     Set the calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
     """
 
+    global simulating
+
     # TODO read both the cursor and mean at the same time
 
     last_channel = -1
@@ -153,7 +156,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             calibrator.operate()
 
-            time.sleep(2)
+            if not simulating:
+                time.sleep(2)
 
             reading = uut.measure_voltage(chan=channel)
 
@@ -245,7 +249,7 @@ if __name__ == "__main__":
 
     back_color = window["-FILE-"].BackgroundColor
 
-    simulate = False
+    simulating = False
 
     while True:
         event, values = window.read(200)
@@ -281,13 +285,13 @@ if __name__ == "__main__":
             window["-VIEW-"].update(disabled=True)  # Disable while testing
 
             if values["-CALIBRATOR-"] == "M-142":
-                calibrator = M142(simulate=simulate)
+                calibrator = M142(simulate=simulating)
             else:
-                calibrator = Fluke5700A(simulate=simulate)
+                calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             calibrator.open_connection()
 
-            uut = DSOX_3000(simulate=simulate)
+            uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
 
             uut.open_connection()
@@ -305,14 +309,14 @@ if __name__ == "__main__":
 
         sg.user_settings_save()
 
-        simulate = values["-SIMULATE-"]
+        simulating = values["-SIMULATE-"]
 
-        calibrator.simulating = simulate
+        calibrator.simulating = simulating
         calibrator_address = (
             f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
         )
 
-        uut.simulating = simulate
+        uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
