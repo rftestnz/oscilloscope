@@ -308,7 +308,7 @@ class DPO_2000:
             timebase (float): _description_
         """
 
-        self.write(f"TIM:SCAL {timebase}")
+        self.write(f"HOR:SCAL {timebase}")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
