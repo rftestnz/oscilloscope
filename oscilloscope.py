@@ -34,7 +34,7 @@ def get_path(filename: str) -> str:
     """
 
     if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, filename)  # type: ignore
+        return Path(sys._MEIPASS, filename).__str__()  # type: ignore
     else:
         return filename
 
