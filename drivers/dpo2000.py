@@ -276,7 +276,7 @@ class DPO_2000:
 
         self.write(f"SEL:CH{chan} {state}")
 
-    def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
+    def set_voltage_scale(self, chan: int, scale: float) -> None:
         """
         set_voltage_scale _summary_
 
