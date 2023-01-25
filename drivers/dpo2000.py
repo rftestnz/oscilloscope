@@ -297,7 +297,8 @@ class DPO_2000:
             offset (float): _description_
         """
 
-        self.write(f"CHAN{chan}:OFFS {offset}")
+        # TODO Is it offset or pos?
+        self.write(f"CH{chan}:POS {offset}")
 
     def set_timebase(self, timebase: float) -> None:
         """
