@@ -387,7 +387,7 @@ if __name__ == "__main__":
 
         print("Filtered:")
 
-        pprint(excel.get_all_test_settings("I"))
+        pprint(excel.get_all_test_settings("CURS"))
 
         print(f"Available: {excel.check_excel_available()}")
 
