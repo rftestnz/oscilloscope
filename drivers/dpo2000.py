@@ -1,5 +1,5 @@
 """
-# Driver for Keysight DSOX oscilloscopes
+# Driver for Tek DPO2000
 
 
 # DK Jan 23
