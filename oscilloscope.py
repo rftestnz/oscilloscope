@@ -6,16 +6,19 @@ Test DSOX Oscilloscopes
 from typing import Dict, List
 import PySimpleGUI as sg
 
-from drivers.fluke_5700a import Fluke5700A  # TODO fix the import names
-from drivers.meatest_m142 import M142  # TODO fix the import names
+from drivers.fluke_5700a import Fluke5700A
+from drivers.meatest_m142 import M142
+from drivers.dsox_3000 import DSOX_3000
 import os
 import sys
+from pathlib import Path
 
 VERSION = "A.00.00"
 
 
 calibrator = Fluke5700A()
 calibrator_address: str = "GPIB0::06::INSTR"
+uut = DSOX_3000()
 
 
 def get_path(filename: str) -> str:
