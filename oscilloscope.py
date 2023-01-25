@@ -120,6 +120,49 @@ def test_connections() -> Dict:
     return {"FLUKE_5700A": fluke_5700a_conn, "DSO": uut_conn}
 
 
+def test_dcv(filename: str, test_rows: List) -> None:
+    """
+    test_dcv
+    Perform the basic DC V tests
+    Set the calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
+    """
+
+    # TODO read both the cursor and mean at the same time
+
+    last_channel = -1
+
+    with ExcelInterface(filename) as excel:
+
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            calibrator.set_voltage_dc(settings.voltage)
+
+            channel = settings.channel
+
+            if channel != last_channel:
+                sg.popup(f"Connect calibrator output to channel {channel}")
+                last_channel = channel
+
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+
+            calibrator.operate()
+
+            time.sleep(2)
+
+            reading = uut.measure_voltage(chan=channel)
+
+            excel.write_result(reading)
+
+        excel.save_sheet()
+
+        calibrator.close()
+        uut.close()
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
