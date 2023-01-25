@@ -9,8 +9,10 @@ import PySimpleGUI as sg
 from drivers.fluke_5700a import Fluke5700A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
+from drivers.excel_interface import ExcelInterface
 import os
 import sys
+import time
 from pathlib import Path
 
 VERSION = "A.00.00"
