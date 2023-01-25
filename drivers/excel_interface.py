@@ -21,11 +21,11 @@ VERSION = "A.00.01"
 class ExcelInterface:  # TODO class name
 
     __filename: str = ""
-    __start_row: int = 100
+    __start_row: int = 10
     __max_row: int = 1000
     __saved: bool = True
     __data_col = 10
-    __result_col = 5
+    __result_col = 4
 
     row: int = 1
 
