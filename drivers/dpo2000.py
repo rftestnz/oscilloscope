@@ -16,21 +16,7 @@ from typing import List
 VERSION = "A.00.00"
 
 
-class DSOX_FAMILY(Enum):
-    """
-    DSOX_FAMILY
-    Enum to cope with minor differences in commands
-
-    Args:
-        Enum (_type_): _description_
-    """
-
-    DSOX1000 = 1
-    DSOX2000 = 2
-    DSOX3000 = 3
-
-
-class DSOX3000_Simulator:
+class DPO2000_Simulator:
     """
     _summary_
     """
@@ -48,7 +34,7 @@ class DSOX3000_Simulator:
         Args:
             command (str): _description_
         """
-        print(f"DRIVER_NAME <- {command}")
+        print(f"DPO2000 <- {command}")
 
     def read(self) -> float | str:
         """
@@ -73,12 +59,12 @@ class DSOX3000_Simulator:
         print(f"DRIVER_NAME <- {command}")
 
         if command == "*IDN?":
-            return "Keysight,DSOX3000,MY_Simulated,B.00.00"
+            return "Tektronix,DPO2024,MY_Simulated,B.00.00"
 
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class DSOX_3000:
+class DPO_2000:
     """
      _summary_
 
@@ -91,7 +77,6 @@ class DSOX_3000:
     model = ""
     manufacturer = ""
     serial = ""
-    family = DSOX_FAMILY.DSOX3000
     timeout = 5000
 
     def __init__(self, simulate=False):
@@ -114,9 +99,9 @@ class DSOX_3000:
         """
         try:
             if self.simulating:
-                self.instr = DSOX3000_Simulator
-                self.model = "DSOX3034T"
-                self.manufacturer = "Keysight"
+                self.instr = DPO2000_Simulator
+                self.model = "DPO3034"
+                self.manufacturer = "Tektronix"
                 self.serial = "666"
             else:
                 self.instr = self.rm.open_resource(
@@ -265,17 +250,6 @@ class DSOX_3000:
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
                 self.model = identity[1]
-                model_type = self.model.split(" ")
-                if len(model_type) > 1:
-                    family = model_type[1][0]
-                    if family == "1":
-                        self.family = DSOX_FAMILY.DSOX1000
-                    else:
-                        self.family = (
-                            DSOX_FAMILY.DSOX2000
-                            if family == "2"
-                            else DSOX_FAMILY.DSOX3000
-                        )
                 self.serial = identity[2]
 
         except pyvisa.VisaIOError:

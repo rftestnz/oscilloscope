@@ -48,7 +48,7 @@ class DSOX3000_Simulator:
         Args:
             command (str): _description_
         """
-        print(f"DRIVER_NAME <- {command}")
+        print(f"DSOX3000 <- {command}")
 
     def read(self) -> float | str:
         """
@@ -115,7 +115,7 @@ class DSOX_3000:
         try:
             if self.simulating:
                 self.instr = DSOX3000_Simulator
-                self.model = "DSOX3034T"
+                self.model = "DSO-X 3034T"
                 self.manufacturer = "Keysight"
                 self.serial = "666"
             else:
