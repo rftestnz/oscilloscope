@@ -164,6 +164,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             reading = uut.measure_voltage(chan=channel)
 
+            calibrator.standby()
+
             excel.write_result(reading)
 
         excel.save_sheet()
