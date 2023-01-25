@@ -480,8 +480,8 @@ if __name__ == "__main__":
     dpo2014.set_channel(chan=2, enabled=True)
     dpo2014.set_voltage_scale(chan=1, scale=1)
     dpo2014.set_voltage_scale(chan=2, scale=0.2)
-    dpo2014.set_voltage_offset(chan=1, offset=3.5)
-    dpo2014.set_voltage_offset(chan=2, offset=-0.5)
+    dpo2014.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    dpo2014.set_voltage_offset(chan=2, offset=+0.5)
     dpo2014.set_timebase(0.001)
 
     dpo2014.set_acquisition(64)
