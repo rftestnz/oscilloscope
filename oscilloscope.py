@@ -287,6 +287,11 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             calibrator.open_connection()
 
+            uut = DSOX_3000(simulate=simulate)
+            uut.visa_address = values["-UUT_ADDRESS-"]
+
+            uut.open_connection()
+
             with ExcelInterface(values["-FILE-"]) as excel:
                 test_rows = excel.get_test_rows("DCV")
 
