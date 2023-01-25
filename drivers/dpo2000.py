@@ -328,8 +328,8 @@ class DPO_2000:
             num_samples (int): _description_
         """
 
-        self.write("ACQ:TYPE AVER")
-        self.write(f"ACQ:COUNT {num_samples}")
+        self.write("ACQ:MODE AVE")
+        self.write(f"ACQ:NUMAV {num_samples}")
 
     def set_trigger_mode(self, mode: str) -> None:
         """
