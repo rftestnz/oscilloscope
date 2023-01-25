@@ -14,10 +14,8 @@ import sys
 VERSION = "A.00.00"
 
 
-fluke_5700a = Fluke5700A()
-fluke_5700a_address: str = "GPIB0::06::INSTR"
-meatest_m142 = M142()
-meatest_m142_address: str = "GPIB0::06::INSTR"
+calibrator = Fluke5700A()
+calibrator_address: str = "GPIB0::06::INSTR"
 
 
 def get_path(filename: str) -> str:
@@ -58,12 +56,8 @@ def connections_check_form() -> None:
 
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
-        [
-            sg.Text("DRIVER_BOILERPLATE", size=(20, 1)),
-            led_indicator("-DRIVER_BOILERPLATE_CONN-"),
-        ],
         [sg.Text("FLUKE_5700A", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
-        [sg.Text("MEATEST_M142", size=(20, 1)), led_indicator("-MEATEST_M142_CONN-")],
+        [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
     ]
 
@@ -74,18 +68,8 @@ def connections_check_form() -> None:
 
     set_led(
         window,
-        "-DRIVER_BOILERPLATE_CONN-",
-        color="green" if connected["DRIVER_BOILERPLATE"] else "red",
-    )
-    set_led(
-        window,
         "-FLUKE_5700A_CONN-",
         color="green" if connected["FLUKE_5700A"] else "red",
-    )
-    set_led(
-        window,
-        "-MEATEST_M142_CONN-",
-        color="green" if connected["MEATEST_M142"] else "red",
     )
 
     while True:
@@ -98,20 +82,11 @@ def connections_check_form() -> None:
             window["-CHECK_MSG-"].update(visible=True)
             connected = test_connections()
             window["-CHECK_MSG-"].update(visible=False)
-            set_led(
-                window,
-                "-DRIVER_BOILERPLATE_CONN-",
-                color="green" if connected["DRIVER_BOILERPLATE"] else "red",
-            )
+
             set_led(
                 window,
                 "-FLUKE_5700A_CONN-",
                 color="green" if connected["FLUKE_5700A"] else "red",
-            )
-            set_led(
-                window,
-                "-MEATEST_M142_CONN-",
-                color="green" if connected["MEATEST_M142"] else "red",
             )
 
     window.close()
@@ -122,15 +97,12 @@ def test_connections() -> Dict:
     Make sure all of the instruments are connected
     """
 
-    global fluke_5700a
-    global meatest_m142
+    global calibrator
 
-    fluke_5700a_conn = fluke_5700a.is_connected()
-    meatest_m142_conn = meatest_m142.is_connected()
+    fluke_5700a_conn = calibrator.is_connected()
 
     return {
         "FLUKE_5700A": fluke_5700a_conn,
-        "MEATEST_M142": meatest_m142_conn,
     }
 
 
@@ -167,7 +139,16 @@ if __name__ == "__main__":
         ],
         [sg.Text("Instrument Config:")],
         [
-            sg.Text("FLUKE_5700A", size=(15, 1)),
+            sg.Text("Main Calibrator", size=(15, 1)),
+            sg.Combo(
+                ["5700A", "5730A", "M-142"],
+                size=(10, 1),
+                default_value=sg.user_settings_get_entry("-CALIBRATOR-"),
+                key="-CALIBRATOR-",
+            ),
+        ],
+        [
+            sg.Text("Calibrator", size=(15, 1)),
             sg.Combo(
                 gpib_ifc_list,
                 size=(10, 1),
@@ -176,26 +157,11 @@ if __name__ == "__main__":
             ),
             sg.Combo(
                 gpib_addresses,
-                default_value="0",
+                default_value="6",
                 size=(6, 1),
                 key="GPIB_ADDR_FLUKE_5700A",
             ),
-        ],  # TODO set defaults
-        [
-            sg.Text("MEATEST_M142", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_MEATEST_M142",
-                default_value=sg.user_settings_get_entry("-MEATEST_M142_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value="0",
-                size=(6, 1),
-                key="GPIB_ADDR_MEATEST_M142",
-            ),
-        ],  # TODO set defaults
+        ],
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
@@ -242,21 +208,16 @@ if __name__ == "__main__":
             window["-VIEW-"].update(disabled=True)  # Disable while testing
 
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
+        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
-        sg.user_settings_set_entry(
-            "-MEATEST_M142_GPIB_IFC-", values["GPIB_MEATEST_M142"]
-        )
+
         sg.user_settings_save()
 
         simulate = values["-SIMULATE-"]
 
-        fluke_5700a.simulating = simulate
-        fluke_5700a_address = (
+        calibrator.simulating = simulate
+        calibrator_address = (
             f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
-        )
-        meatest_m142.simulating = simulate
-        meatest_m142_address = (
-            f"{values['GPIB_MEATEST_M142']}::{values['GPIB_ADDR_MEATEST_M142']}::INSTR"
         )
 
         if event == "-TEST_CONNECTIONS-":
