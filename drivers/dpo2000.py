@@ -463,61 +463,61 @@ class DPO_2000:
 
 if __name__ == "__main__":
 
-    dsox3034t = DSOX_3000()
-    dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    dpo2014 = DPO_2000()
+    dpo2014.visa_address = "USB0::0x0699::0x0373::C010049::INSTR"
 
-    dsox3034t.open_connection()
+    dpo2014.open_connection()
 
-    print(f"Model {dsox3034t.model}")
+    print(f"Model {dpo2014.model}")
 
-    dsox3034t.reset()
+    dpo2014.reset()
 
-    dsox3034t.set_channel(chan=1, enabled=True)
-    dsox3034t.set_channel(chan=2, enabled=True)
-    dsox3034t.set_voltage_scale(chan=1, scale=1)
-    dsox3034t.set_voltage_scale(chan=2, scale=0.2)
-    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
-    dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
-    dsox3034t.set_timebase(0.001)
+    dpo2014.set_channel(chan=1, enabled=True)
+    dpo2014.set_channel(chan=2, enabled=True)
+    dpo2014.set_voltage_scale(chan=1, scale=1)
+    dpo2014.set_voltage_scale(chan=2, scale=0.2)
+    dpo2014.set_voltage_offset(chan=1, offset=3.5)
+    dpo2014.set_voltage_offset(chan=2, offset=-0.5)
+    dpo2014.set_timebase(0.001)
 
-    dsox3034t.set_acquisition(64)
+    dpo2014.set_acquisition(64)
 
-    dsox3034t.set_trigger_mode("EDGE")
+    dpo2014.set_trigger_mode("EDGE")
 
     time.sleep(1)
 
-    print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
+    print(f"Measurement {dpo2014.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=2.5, chan=1)
+    dpo2014.set_trigger_level(level=2.5, chan=1)
 
-    dsox3034t.set_timebase(20e-9)
+    dpo2014.set_timebase(20e-9)
 
-    dsox3034t.set_cursor_xy_source(chan=1, cursor=1)
-    dsox3034t.set_cursor_position(cursor="X1", pos=0)
+    dpo2014.set_cursor_xy_source(chan=1, cursor=1)
+    dpo2014.set_cursor_position(cursor="X1", pos=0)
 
-    ref_x = dsox3034t.read_cursor("X1")
+    ref_x = dpo2014.read_cursor("X1")
     time.sleep(0.1)
-    ref = dsox3034t.read_cursor("Y1")
+    ref = dpo2014.read_cursor("Y1")
     print(ref)
 
-    dsox3034t.set_timebase_pos(0.001)
+    dpo2014.set_timebase_pos(0.001)
     time.sleep(0.1)
 
-    dsox3034t.set_cursor_position(cursor="X1", pos=0.001)
+    dpo2014.set_cursor_position(cursor="X1", pos=0.001)
     time.sleep(0.1)
 
-    dsox3034t.adjust_cursor(target=ref)
+    dpo2014.adjust_cursor(target=ref)
 
-    offset_x = dsox3034t.read_cursor("X1")
+    offset_x = dpo2014.read_cursor("X1")
 
     print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
-    y1 = dsox3034t.read_cursor_avg()
+    y1 = dpo2014.read_cursor_avg()
 
     print(y1)
 
     input("Set voltage source to 1V")
-    y2 = dsox3034t.read_cursor_avg()
+    y2 = dpo2014.read_cursor_avg()
     print(y2)
     print(f"Y Delta {y2-y1}")
