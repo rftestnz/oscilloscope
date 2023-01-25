@@ -35,7 +35,7 @@ class DSOX3000_Simulator:
     _summary_
     """
 
-    def close(self) -> None:
+    def close() -> None:
         """
         close _summary_
         """
