@@ -165,7 +165,7 @@ if __name__ == "__main__":
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Ok", size=(12, 1), key="-OK-"),
+            sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -173,6 +173,8 @@ if __name__ == "__main__":
     window = sg.Window("Oscilloscope Test", layout=layout, finalize=True)
 
     back_color = window["-FILE-"].BackgroundColor
+
+    simulate = False
 
     while True:
         event, values = window.read(200)
@@ -189,7 +191,7 @@ if __name__ == "__main__":
         else:
             window["-SIMULATE-"].update(text_color=txt_clr)
 
-        if event in ["-OK-"]:  # TODO button names
+        if event in ["-TEST_DCV-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -206,6 +208,13 @@ if __name__ == "__main__":
                 continue
 
             window["-VIEW-"].update(disabled=True)  # Disable while testing
+
+            if values["-CALIBRATOR-"] == "M-142":
+                calibrator = M142(simulate=simulate)
+            else:
+                calibrator = Fluke5700A(simulate=simulate)
+            calibrator.visa_address = calibrator_address
+            calibrator.open_connection()
 
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
         sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
