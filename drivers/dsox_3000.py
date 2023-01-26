@@ -97,6 +97,7 @@ class DSOX_3000:
     serial = ""
     family = DSOX_FAMILY.DSOX3000
     timeout = 5000
+    num_channels = 4
 
     def __init__(self, simulate=False):
         self.simulating = simulate
