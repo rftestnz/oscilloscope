@@ -160,6 +160,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
                     uut.set_channel(chan=channel, enabled=True)
+                    uut.set_channel_bw_limit(chan=channel, bw_limit=True)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
