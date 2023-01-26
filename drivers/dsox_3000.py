@@ -130,6 +130,7 @@ class DSOX_3000:
                 self.instr.timeout = self.timeout
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
+                self.get_num_channels()
             self.connected = True
         except Exception as ex:
             self.connected = False
@@ -525,6 +526,7 @@ if __name__ == "__main__":
     dsox3034t.open_connection()
 
     print(f"Model {dsox3034t.model}")
+    print(f"Num channels {dsox3034t.num_channels}")
 
     dsox3034t.reset()
 
