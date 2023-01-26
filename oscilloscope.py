@@ -334,6 +334,12 @@ if __name__ == "__main__":
         uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
+            if values["-CALIBRATOR-"] == "M-142":
+                calibrator = M142(simulate=simulating)
+            else:
+                calibrator = Fluke5700A(simulate=simulating)
+            calibrator.visa_address = calibrator_address
+            calibrator.open_connection()
             connections_check_form()
             continue
 
