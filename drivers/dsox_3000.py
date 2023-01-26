@@ -96,7 +96,7 @@ class DSOX_3000:
     manufacturer = ""
     serial = ""
     family = DSOX_FAMILY.DSOX3000
-    timeout = 5000
+    timeout = 500
     num_channels = 4
 
     def __init__(self, simulate=False):
