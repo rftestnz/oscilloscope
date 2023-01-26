@@ -151,6 +151,9 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             channel = settings.channel
 
+            if channel > uut.num_channels:
+                continue
+
             if channel != last_channel:
                 if last_channel:
                     uut.set_voltage_scale(chan=last_channel, scale=1)
