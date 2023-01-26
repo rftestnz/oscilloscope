@@ -85,7 +85,7 @@ def connections_check_form() -> None:
     )
 
     while True:
-        event, values = window.read()
+        event, values = window.read()  # type: ignore
 
         if event in ["Ok", sg.WIN_CLOSED]:
             break
@@ -124,6 +124,7 @@ def test_connections() -> Dict:
 
 
 def test_dcv(filename: str, test_rows: List) -> None:
+    # sourcery skip: extract-method
     """
     test_dcv
     Perform the basic DC V tests
@@ -147,9 +148,9 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            calibrator.set_voltage_dc(settings.voltage)
+            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
 
-            channel = settings.channel
+            channel = settings.channel  # type: ignore
 
             if channel > uut.num_channels:
                 continue
@@ -212,7 +213,7 @@ if __name__ == "__main__":
         [
             sg.Text("Results file", size=(10, 1)),
             sg.Input(
-                default_text=sg.user_settings_get_entry("-FILENAME-"),
+                default_text=sg.user_settings_get_entry("-FILENAME-"),  # type: ignore
                 size=(60, 1),
                 key="-FILE-",
             ),
@@ -228,7 +229,7 @@ if __name__ == "__main__":
         [
             sg.Check(
                 "Simulate",
-                default=sg.user_settings_get_entry("-SIMULATE-"),
+                default=sg.user_settings_get_entry("-SIMULATE-"),  # type: ignore
                 key="-SIMULATE-",
                 disabled=False,
             )
@@ -261,7 +262,7 @@ if __name__ == "__main__":
         [
             sg.Text("UUT", size=(15, 1)),
             sg.Input(
-                default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),
+                default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
                 size=(60, 1),
                 key="-UUT_ADDRESS-",
             ),
@@ -281,7 +282,7 @@ if __name__ == "__main__":
     simulating = False
 
     while True:
-        event, values = window.read(200)
+        event, values = window.read(200)  # type: ignore
 
         if event in ["Exit", sg.WIN_CLOSED]:
             break
