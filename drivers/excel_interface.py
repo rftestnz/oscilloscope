@@ -18,7 +18,8 @@ from pprint import pprint
 VERSION = "A.00.01"
 
 
-class ExcelInterface:  # TODO class name
+class ExcelInterface:
+    """ """
 
     __filename: str = ""
     __start_row: int = 10
@@ -55,6 +56,12 @@ class ExcelInterface:  # TODO class name
         return self.ws.cell(column=self.__result_col, row=self.row).value
 
     def close(self) -> None:  # sourcery skip: raise-specific-error
+        """
+        close _summary_
+
+        Raises:
+            Exception: _description_
+        """
         if not self.__saved:
             self.save_sheet()
 
@@ -75,7 +82,7 @@ class ExcelInterface:  # TODO class name
 
         if nr := self.get_named_cell("StartCell"):
             self.row = nr.row  # type: ignore
-            self.__data_col = nr.col
+            self.__data_col = nr.col  # type: ignore
         elif rw := self.ws.cell(column=self.__data_col, row=1).value:
             self.row = int(rw)  # type: ignore
         else:
@@ -132,6 +139,9 @@ class ExcelInterface:  # TODO class name
         self.wb.save(backup_name)
 
     def save_sheet(self) -> None:
+        """
+        save_sheet _summary_
+        """
         try:
             # sometimes it throws an error if too quick
             self.wb.save(self.__filename)
@@ -235,7 +245,7 @@ class ExcelInterface:  # TODO class name
 
         return valid
 
-    def get_test_rows(self, test_filter="*") -> List:
+    def get_test_rows(self, test_filter: str = "*") -> List:
         """
         get_test_rows
         Get a list of all test rows
@@ -261,7 +271,7 @@ class ExcelInterface:  # TODO class name
 
         return test_rows
 
-    def get_test_settings(self, row=-1) -> NamedTuple:
+    def get_test_settings(self, row: int = -1) -> NamedTuple:
         """
         get_test_settings
         Read the current row as a test setting
@@ -305,7 +315,7 @@ class ExcelInterface:  # TODO class name
             offset=offset,
         )
 
-    def get_all_test_settings(self, test_filter="*"):
+    def get_all_test_settings(self, test_filter: str = "*") -> List:
         """
         get_all_test_settings
         Get a list of all test settings
@@ -353,7 +363,7 @@ class ExcelInterface:  # TODO class name
 
         return test_types
 
-    def write_result(self, result) -> None:
+    def write_result(self, result: float) -> None:
         """
         write_result
         Write the data to the sheet at the current row

@@ -35,13 +35,13 @@ class DSOX3000_Simulator:
     _summary_
     """
 
-    def close() -> None:
+    def close(self) -> None:  # type: ignore
         """
         close _summary_
         """
         pass
 
-    def write(command: str) -> None:  # type: ignore
+    def write(self, command: str) -> None:  # type: ignore
         """
         write _summary_
 
@@ -51,7 +51,7 @@ class DSOX3000_Simulator:
         # sourcery skip: instance-method-first-arg-name
         print(f"DSOX3000 <- {command}")
 
-    def read() -> float | str:  # type: ignore
+    def read(self) -> float | str:  # type: ignore
         """
         read _summary_
 
@@ -61,7 +61,7 @@ class DSOX3000_Simulator:
 
         return 0.5 + random()
 
-    def query(command: str) -> str:  # type: ignore
+    def query(self, command: str) -> str:  # type: ignore
         """
         query _summary_
 
@@ -119,7 +119,7 @@ class DSOX_3000:
         """
         try:
             if self.simulating:
-                self.instr = DSOX3000_Simulator
+                self.instr = DSOX3000_Simulator()
                 self.model = "DSO-X 3034T"
                 self.manufacturer = "Keysight"
                 self.serial = "666"
@@ -547,7 +547,7 @@ class DSOX_3000:
 
 if __name__ == "__main__":
 
-    dsox3034t = DSOX_3000()
+    dsox3034t = DSOX_3000(simulate=True)
     dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
     dsox3034t.open_connection()

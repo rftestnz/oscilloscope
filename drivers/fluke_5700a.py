@@ -6,10 +6,10 @@ from enum import Enum
 import pyvisa
 import time
 from pprint import pprint
-
+from typing import List
 from pyvisa.constants import VI_GPIB_REN_ASSERT
 
-VERSION = "A.00.06"
+VERSION = "A.00.07"
 
 
 class Fluke5700AOutput(Enum):
@@ -31,17 +31,17 @@ class Fluke5700A_Simulator:
     For query, return a default reply
     """
 
-    def write(command: str) -> None:  # type: ignore
+    def write(self, command: str) -> None:
         """
         write _summary_
 
         Args:
             command (str): _description_
         """
-        # sourcery skip: instance-method-first-arg-name
+
         print(f"5700A: {command}")
 
-    def query(command: str) -> str:  # type: ignore
+    def query(self, command: str) -> str:
         """
         query _summary_
 
@@ -51,7 +51,7 @@ class Fluke5700A_Simulator:
         Returns:
             str: _description_
         """
-        # sourcery skip: instance-method-first-arg-name
+
         print(f"5700A: {command}")
         reply = "1.02"
         if command == "*OPC?":
@@ -67,7 +67,7 @@ class Fluke5700A_Simulator:
             reply = "1,0"
         return reply + "\n"
 
-    def close() -> None:  # type: ignore
+    def close(self) -> None:
         """
         close _summary_
         """
@@ -113,7 +113,7 @@ class Fluke5700A:
         """
         try:
             if self.simulating:
-                self.instr = Fluke5700A_Simulator
+                self.instr = Fluke5700A_Simulator()
                 self.model = "5700A"
                 self.manufacturer = "Fluke"
                 self.serial = "666"
@@ -220,7 +220,7 @@ class Fluke5700A:
 
         return ret
 
-    def get_id(self):
+    def get_id(self) -> List:
         """
         get_id _summary_
 
