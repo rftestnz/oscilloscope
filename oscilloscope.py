@@ -155,7 +155,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
                 continue
 
             if channel != last_channel:
-                if last_channel:
+                if last_channel > 0:
                     uut.set_voltage_scale(chan=last_channel, scale=1)
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
