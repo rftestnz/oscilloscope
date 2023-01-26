@@ -292,6 +292,31 @@ class DSOX_3000:
 
         return response.split(",")
 
+    def get_num_channels(self) -> None:
+        """
+        get_num_channels
+        The number of channels can be obtained from the model number, but use a more universal method
+        of querying channels
+        """
+        tmo = self.instr.timeout  # type: ignore
+        self.instr.timeout = 500  # type: ignore
+
+        # TODO it ignores the timeout, and uses 5000 ms
+        for chan in range(4):
+            chan_num = chan + 1
+
+            try:
+                reply = self.query(f"CHAN{chan_num}?")
+                if not len(reply) and chan_num > 2:
+                    self.num_channels = chan
+                    break
+            except pyvisa.VisaIOError:
+                if chan_num > 2:
+                    self.num_channels = chan
+                break
+
+        self.timeout = tmo
+
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
         set_channel
