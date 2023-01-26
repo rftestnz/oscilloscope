@@ -148,12 +148,17 @@ def test_dcv(filename: str, test_rows: List) -> None:
             channel = settings.channel
 
             if channel != last_channel:
+                if last_channel:
+                    uut.set_voltage_scale(chan=last_channel, scale=1)
+                    uut.set_voltage_offset(chan=last_channel, offset=0)
+                    uut.set_channel(chan=last_channel, enabled=False)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
                 )
                 last_channel = channel
 
+            uut.set_channel(chan=channel, enabled=True)
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
