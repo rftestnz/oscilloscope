@@ -96,7 +96,8 @@ class DSOX_3000:
     manufacturer = ""
     serial = ""
     family = DSOX_FAMILY.DSOX3000
-    timeout = 5000
+    timeout = 500
+    num_channels = 4
 
     def __init__(self, simulate=False):
         self.simulating = simulate
@@ -129,6 +130,7 @@ class DSOX_3000:
                 self.instr.timeout = self.timeout
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
+                self.get_num_channels()
             self.connected = True
         except Exception as ex:
             self.connected = False
@@ -291,6 +293,58 @@ class DSOX_3000:
         self.instr.timeout = self.timeout  # type: ignore
 
         return response.split(",")
+
+    def get_num_channels(self) -> None:
+        """
+        get_num_channels
+        The number of channels can be obtained from the model number, but use a more universal method
+        of querying channels
+        """
+
+        # use model for now until figuring out timeout
+
+        valid = False
+        model_fields = self.model.split(" ")
+        if len(model_fields) > 1:
+            try:
+                self.num_channels = int(model_fields[1][3])
+                valid = True
+            except (ValueError, IndexError):
+                valid = False
+
+        if not valid:
+            tmo = self.instr.timeout  # type: ignore
+            self.instr.timeout = 500  # type: ignore
+
+            # TODO it ignores the timeout, and uses 5000 ms
+            for chan in range(4):
+                chan_num = chan + 1
+
+                try:
+                    reply = self.query(f"CHAN{chan_num}?")
+                    if not len(reply) and chan_num > 2:
+                        self.num_channels = chan
+                        break
+                except pyvisa.VisaIOError:
+                    if chan_num > 2:
+                        self.num_channels = chan
+                    break
+
+            self.timeout = tmo
+
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+        """
+        set_channel_bw_limit
+        Set bandwidth limit on or off
+
+        Args:
+            chan (int): _description_
+            bw_limit (bool): _description_
+        """
+
+        state = "ON" if bw_limit else "OFF"
+
+        self.write(f"CHAN{chan}:BWL {state}")
 
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
@@ -499,6 +553,7 @@ if __name__ == "__main__":
     dsox3034t.open_connection()
 
     print(f"Model {dsox3034t.model}")
+    print(f"Num channels {dsox3034t.num_channels}")
 
     dsox3034t.reset()
 

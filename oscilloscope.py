@@ -136,6 +136,10 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
     last_channel = -1
 
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
     with ExcelInterface(filename) as excel:
 
         for row in test_rows:
@@ -147,11 +151,18 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             channel = settings.channel
 
+            if channel > uut.num_channels:
+                continue
+
             if channel != last_channel:
-                if last_channel:
+                if last_channel > 0:
                     uut.set_voltage_scale(chan=last_channel, scale=1)
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
+                    uut.set_channel(chan=channel, enabled=True)
+                    uut.set_channel_bw_limit(chan=channel, bw_limit=True)
+                    uut.set_voltage_scale(chan=channel, scale=5)
+                    uut.set_voltage_offset(chan=channel, offset=0)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
@@ -159,8 +170,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
-            uut.set_voltage_scale(chan=channel, scale=settings.scale)
-            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
             calibrator.operate()
 
@@ -171,11 +182,17 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             calibrator.standby()
 
-            excel.write_result(reading)
+            excel.write_result(reading)  # auto saving
 
-        excel.save_sheet()
+        # excel.save_sheet()
 
         calibrator.close()
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+
         uut.close()
 
         sg.popup("Finished", background_color="blue")
