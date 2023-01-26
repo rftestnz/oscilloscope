@@ -175,9 +175,9 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             calibrator.standby()
 
-            excel.write_result(reading)
+            excel.write_result(reading)  # auto saving
 
-        excel.save_sheet()
+        # excel.save_sheet()
 
         calibrator.close()
 
