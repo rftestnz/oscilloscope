@@ -136,6 +136,10 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
     last_channel = -1
 
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
     with ExcelInterface(filename) as excel:
 
         for row in test_rows:
@@ -176,6 +180,11 @@ def test_dcv(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
         calibrator.close()
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
         uut.close()
 
         sg.popup("Finished", background_color="blue")
