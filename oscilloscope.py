@@ -62,7 +62,7 @@ def connections_check_form() -> None:
 
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
-        [sg.Text("FLUKE_5700A", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
+        [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
@@ -148,12 +148,17 @@ def test_dcv(filename: str, test_rows: List) -> None:
             channel = settings.channel
 
             if channel != last_channel:
+                if last_channel:
+                    uut.set_voltage_scale(chan=last_channel, scale=1)
+                    uut.set_voltage_offset(chan=last_channel, offset=0)
+                    uut.set_channel(chan=last_channel, enabled=False)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
                 )
                 last_channel = channel
 
+            uut.set_channel(chan=channel, enabled=True)
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
@@ -163,6 +168,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
                 time.sleep(2)
 
             reading = uut.measure_voltage(chan=channel)
+
+            calibrator.standby()
 
             excel.write_result(reading)
 
@@ -327,6 +334,12 @@ if __name__ == "__main__":
         uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
+            if values["-CALIBRATOR-"] == "M-142":
+                calibrator = M142(simulate=simulating)
+            else:
+                calibrator = Fluke5700A(simulate=simulating)
+            calibrator.visa_address = calibrator_address
+            calibrator.open_connection()
             connections_check_form()
             continue
 

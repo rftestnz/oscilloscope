@@ -158,7 +158,7 @@ class DSOX_3000:
         return bool(
             self.open_connection()
             and (
-                not self.simulating and self.model.find("3034") >= 0 or self.simulating
+                not self.simulating and self.model.find("DSO-X") >= 0 or self.simulating
             )
         )
 
