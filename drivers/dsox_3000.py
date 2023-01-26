@@ -332,6 +332,20 @@ class DSOX_3000:
 
             self.timeout = tmo
 
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+        """
+        set_channel_bw_limit
+        Set bandwidth limit on or off
+
+        Args:
+            chan (int): _description_
+            bw_limit (bool): _description_
+        """
+
+        state = "ON" if bw_limit else "OFF"
+
+        self.write(f"CHAN{chan}:BWL {state}")
+
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
         set_channel
