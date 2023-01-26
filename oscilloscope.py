@@ -170,8 +170,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
-            uut.set_voltage_scale(chan=channel, scale=settings.scale)
-            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
             calibrator.operate()
 
@@ -191,6 +191,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
         # Turn off all channels but 1
         for chan in range(uut.num_channels):
             uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
 
         uut.close()
 
