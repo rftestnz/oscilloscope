@@ -10,7 +10,7 @@ import time
 from pprint import pprint
 from typing import Dict, List
 
-VERSION = "A.00.10"
+VERSION = "A.00.11"
 
 
 class M142_Simulate:
