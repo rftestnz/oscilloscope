@@ -11,7 +11,7 @@ import time
 from random import random
 from typing import List
 
-VERSION = "A.00.03"
+VERSION = "A.00.04"
 
 
 class Ks3250A_Simulator:
@@ -178,6 +178,20 @@ class Ks33250A:
         """
         self.instr.write(  # type: ignore
             f"FUNC SIN;FREQ {frequency};VOLT:UNIT VRMS; VOLTAGE {amplitude}"
+        )
+
+    def set_pulse(self, period: float, pulse_width: float, amplitude: float) -> None:
+        """
+        set_pulse _summary_
+
+        Args:
+            period (float): period in seconds
+            pulse_width (float): pulse width in seconds
+            amplitude (float): amplitude in volts peak
+        """
+
+        self.instr.write(  # type: ignore
+            f"FUNC PULS;PULS PERIOD {period};PULS WIDTH {pulse_width};PULS TRAN MIN;VOLT 1 VPP;VOLT OFFSET 0"
         )
 
     def enable_output(self, state: bool) -> None:
