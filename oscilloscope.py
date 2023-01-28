@@ -247,6 +247,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
         test_rows (List): _description_
     """
     global simulating
+    global cursor_results
 
     # TODO read both the cursor and mean at the same time
 
@@ -264,52 +265,62 @@ def test_cursor(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            if len(cursor_results):
+                for res in cursor_results:
+                    if (
+                        res["chan"] == settings.channel  # type: ignore
+                        and res["scale"] == settings.scale  # type: ignore
+                    ):
+                        excel.write_result(res["result"], save=False)
+                        break
+            else:
 
-            channel = settings.channel  # type: ignore
+                calibrator.set_voltage_dc(settings.voltage)  # type: ignore
 
-            if channel > uut.num_channels:
-                continue
+                channel = settings.channel  # type: ignore
 
-            if channel != last_channel:
-                if last_channel > 0:
-                    uut.set_voltage_scale(chan=last_channel, scale=1)
-                    uut.set_voltage_offset(chan=last_channel, offset=0)
-                    uut.set_channel(chan=last_channel, enabled=False)
-                    uut.set_channel(chan=channel, enabled=True)
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=True)
-                    uut.set_voltage_scale(chan=channel, scale=5)
-                    uut.set_voltage_offset(chan=channel, offset=0)
-                    uut.set_cursor_xy_source(chan=1, cursor=1)
-                    uut.set_cursor_position(cursor="X1", pos=0)
+                if channel > uut.num_channels:
+                    continue
 
-                sg.popup(
-                    f"Connect calibrator output to channel {channel}",
-                    background_color="blue",
-                )
-                last_channel = channel
+                if channel != last_channel:
+                    if last_channel > 0:
+                        uut.set_voltage_scale(chan=last_channel, scale=1)
+                        uut.set_voltage_offset(chan=last_channel, offset=0)
+                        uut.set_channel(chan=last_channel, enabled=False)
+                        uut.set_channel(chan=channel, enabled=True)
+                        uut.set_channel_bw_limit(chan=channel, bw_limit=True)
+                        uut.set_voltage_scale(chan=channel, scale=5)
+                        uut.set_voltage_offset(chan=channel, offset=0)
+                        uut.set_cursor_xy_source(chan=1, cursor=1)
+                        uut.set_cursor_position(cursor="X1", pos=0)
 
-            uut.set_channel(chan=channel, enabled=True)
-            uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
-            uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
+                    sg.popup(
+                        f"Connect calibrator output to channel {channel}",
+                        background_color="blue",
+                    )
+                    last_channel = channel
 
-            if not simulating:
-                time.sleep(2)
+                uut.set_channel(chan=channel, enabled=True)
+                uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
+                uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
-            voltage1 = uut.read_cursor_avg()
+                if not simulating:
+                    time.sleep(2)
 
-            calibrator.operate()
+                voltage1 = uut.read_cursor_avg()
 
-            if not simulating:
-                time.sleep(2)
+                calibrator.operate()
 
-            voltage2 = uut.read_cursor_avg()
+                if not simulating:
+                    time.sleep(2)
 
-            calibrator.standby()
+                voltage2 = uut.read_cursor_avg()
 
-            excel.write_result(voltage2 - voltage1)  # auto saving
+                calibrator.standby()
 
-        # excel.save_sheet()
+                excel.write_result(voltage2 - voltage1)  # auto saving
+
+        excel.save_sheet()
 
         calibrator.close()
 
@@ -320,8 +331,6 @@ def test_cursor(filename: str, test_rows: List) -> None:
 
         uut.reset()
         uut.close()
-
-        sg.popup("Finished", background_color="blue")
 
 
 if __name__ == "__main__":
