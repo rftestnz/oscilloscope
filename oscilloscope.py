@@ -23,6 +23,8 @@ calibrator_address: str = "GPIB0::06::INSTR"
 uut = DSOX_3000()
 simulating: bool = False
 
+cursor_results: List = []
+
 
 def get_path(filename: str) -> str:
     """
@@ -153,12 +155,15 @@ def test_dcv(filename: str, test_rows: List) -> None:
     """
 
     global simulating
+    global cursor_results
 
     # TODO read both the cursor and mean at the same time
 
     last_channel = -1
 
     uut.reset()
+
+    cursor_results = []  # save results for cursor tests
 
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
@@ -187,6 +192,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
                     uut.set_channel_bw_limit(chan=channel, bw_limit=True)
                     uut.set_voltage_scale(chan=channel, scale=5)
                     uut.set_voltage_offset(chan=channel, offset=0)
+                    uut.set_cursor_xy_source(chan=1, cursor=1)
+                    uut.set_cursor_position(cursor="X1", pos=0)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
@@ -197,12 +204,21 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
             uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
+            if not simulating:
+                time.sleep(2)
+
+            voltage1 = uut.read_cursor_avg()
+
             calibrator.operate()
 
             if not simulating:
                 time.sleep(2)
 
             reading = uut.measure_voltage(chan=channel)
+
+            voltage2 = uut.read_cursor_avg()
+
+            cursor_results.append({"chan": channel, "scale": settings.scale, "result": voltage2 - voltage1})  # type: ignore
 
             calibrator.standby()
 
