@@ -199,6 +199,91 @@ def test_dcv(filename: str, test_rows: List) -> None:
         uut.reset()
         uut.close()
 
+
+def test_cursor(filename: str, test_rows: List) -> None:
+    """
+    test_cursor
+    Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+    global simulating
+
+    # TODO read both the cursor and mean at the same time
+
+    last_channel = -1
+
+    uut.reset()
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    with ExcelInterface(filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+
+            channel = settings.channel  # type: ignore
+
+            if channel > uut.num_channels:
+                continue
+
+            if channel != last_channel:
+                if last_channel > 0:
+                    uut.set_voltage_scale(chan=last_channel, scale=1)
+                    uut.set_voltage_offset(chan=last_channel, offset=0)
+                    uut.set_channel(chan=last_channel, enabled=False)
+                    uut.set_channel(chan=channel, enabled=True)
+                    uut.set_channel_bw_limit(chan=channel, bw_limit=True)
+                    uut.set_voltage_scale(chan=channel, scale=5)
+                    uut.set_voltage_offset(chan=channel, offset=0)
+                    uut.set_cursor_xy_source(chan=1, cursor=1)
+                    uut.set_cursor_position(cursor="X1", pos=0)
+
+                sg.popup(
+                    f"Connect calibrator output to channel {channel}",
+                    background_color="blue",
+                )
+                last_channel = channel
+
+            uut.set_channel(chan=channel, enabled=True)
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
+
+            if not simulating:
+                time.sleep(2)
+
+            voltage1 = uut.read_cursor_avg()
+
+            calibrator.operate()
+
+            if not simulating:
+                time.sleep(2)
+
+            voltage2 = uut.read_cursor_avg()
+
+            calibrator.standby()
+
+            excel.write_result(voltage2 - voltage1)  # auto saving
+
+        # excel.save_sheet()
+
+        calibrator.close()
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+
+        uut.reset()
+        uut.close()
+
         sg.popup("Finished", background_color="blue")
 
 
