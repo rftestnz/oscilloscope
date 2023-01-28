@@ -419,6 +419,7 @@ if __name__ == "__main__":
 
             test_dcv(filename=values["-FILE-"], test_rows=test_rows)
 
+            sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
