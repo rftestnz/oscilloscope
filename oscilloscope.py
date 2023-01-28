@@ -42,7 +42,17 @@ def get_path(filename: str) -> str:
         return filename
 
 
-def led_indicator(key=None, radius=30):
+def led_indicator(key: str | None = None, radius: float = 30) -> sg.Graph:
+    """
+    led_indicator _summary_
+
+    Args:
+        key (str | None, optional): _description_. Defaults to None.
+        radius (float, optional): _description_. Defaults to 30.
+
+    Returns:
+        sg.Graph: _description_
+    """
     return sg.Graph(
         canvas_size=(radius, radius),
         graph_bottom_left=(-radius, -radius),
@@ -52,13 +62,24 @@ def led_indicator(key=None, radius=30):
     )
 
 
-def set_led(window, key, color):
+def set_led(window: sg.Window, key: str, color: str) -> None:
+    """
+    set_led _summary_
+
+    Args:
+        window (_type_): _description_
+        key (_type_): _description_
+        color (_type_): _description_
+    """
     graph = window[key]
-    graph.erase()
-    graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)
+    graph.erase()  # type: ignore
+    graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)  # type: ignore
 
 
 def connections_check_form() -> None:
+    """
+    connections_check_form _summary_
+    """
 
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
