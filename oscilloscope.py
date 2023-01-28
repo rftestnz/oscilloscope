@@ -285,6 +285,23 @@ def test_cursor(filename: str, test_rows: List) -> None:
         uut.close()
 
 
+def test_timebase(self, row: int) -> None:
+    """
+    test_timebase
+    Test the timebase. Simple single row test
+
+    Args:
+        row (int): _description_
+    """
+
+    uut.reset()
+
+    uut.set_channel(chan=1, enabled=True)
+
+    uut.set_voltage_scale(chan=1, scale=0.5)
+    uut.set_voltage_offset(chan=1, offset=0)
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
