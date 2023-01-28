@@ -7,6 +7,7 @@ from typing import Dict, List
 import PySimpleGUI as sg
 
 from drivers.fluke_5700a import Fluke5700A
+from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
 from drivers.excel_interface import ExcelInterface
@@ -19,7 +20,7 @@ VERSION = "A.00.00"
 
 
 calibrator = Fluke5700A()
-calibrator_address: str = "GPIB0::06::INSTR"
+ks33250 = Ks33250A()
 uut = DSOX_3000()
 simulating: bool = False
 
@@ -86,6 +87,7 @@ def connections_check_form() -> None:
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
+        [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
@@ -100,6 +102,11 @@ def connections_check_form() -> None:
         window,
         "-FLUKE_5700A_CONN-",
         color="green" if connected["FLUKE_5700A"] else "red",
+    )
+    set_led(
+        window,
+        "-33250_CONN-",
+        color="green" if connected["33250A"] else "red",
     )
     set_led(
         window,
@@ -138,12 +145,14 @@ def test_connections() -> Dict:
     """
 
     global calibrator
+    global ks33250
     global uut
 
     fluke_5700a_conn = calibrator.is_connected()
+    ks33250_conn = ks33250.is_connected()
     uut_conn = uut.is_connected()
 
-    return {"FLUKE_5700A": fluke_5700a_conn, "DSO": uut_conn}
+    return {"FLUKE_5700A": fluke_5700a_conn, "33250A": ks33250_conn, "DSO": uut_conn}
 
 
 def test_dcv(filename: str, test_rows: List) -> None:
@@ -241,6 +250,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
     """
     test_cursor
     Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
+    Measurements are taken during the DCV test, and recalled here
 
     Args:
         filename (str): _description_
@@ -248,10 +258,6 @@ def test_cursor(filename: str, test_rows: List) -> None:
     """
     global simulating
     global cursor_results
-
-    # TODO read both the cursor and mean at the same time
-
-    last_channel = -1
 
     uut.reset()
 
@@ -436,8 +442,10 @@ if __name__ == "__main__":
                 calibrator = M142(simulate=simulating)
             else:
                 calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address
+            calibrator.visa_address = calibrator_address  # type: ignore
             calibrator.open_connection()
+            ks33250.visa_address = ks33250_address  # type: ignore
+            ks33250.open_connection()
 
             uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
@@ -471,6 +479,11 @@ if __name__ == "__main__":
             f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
         )
 
+        ks33250.simulating = simulating
+        ks33250_address = (
+            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
+        )
+
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
@@ -481,6 +494,8 @@ if __name__ == "__main__":
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             calibrator.open_connection()
+            ks33250.visa_address = ks33250_address
+            ks33250.open_connection()
             connections_check_form()
             continue
 
