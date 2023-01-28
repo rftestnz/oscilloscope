@@ -273,56 +273,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
                     ):
                         excel.write_result(res["result"], save=False)
                         break
-            else:
-
-                calibrator.set_voltage_dc(settings.voltage)  # type: ignore
-
-                channel = settings.channel  # type: ignore
-
-                if channel > uut.num_channels:
-                    continue
-
-                if channel != last_channel:
-                    if last_channel > 0:
-                        uut.set_voltage_scale(chan=last_channel, scale=1)
-                        uut.set_voltage_offset(chan=last_channel, offset=0)
-                        uut.set_channel(chan=last_channel, enabled=False)
-                        uut.set_channel(chan=channel, enabled=True)
-                        uut.set_channel_bw_limit(chan=channel, bw_limit=True)
-                        uut.set_voltage_scale(chan=channel, scale=5)
-                        uut.set_voltage_offset(chan=channel, offset=0)
-                        uut.set_cursor_xy_source(chan=1, cursor=1)
-                        uut.set_cursor_position(cursor="X1", pos=0)
-
-                    sg.popup(
-                        f"Connect calibrator output to channel {channel}",
-                        background_color="blue",
-                    )
-                    last_channel = channel
-
-                uut.set_channel(chan=channel, enabled=True)
-                uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
-                uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
-
-                if not simulating:
-                    time.sleep(2)
-
-                voltage1 = uut.read_cursor_avg()
-
-                calibrator.operate()
-
-                if not simulating:
-                    time.sleep(2)
-
-                voltage2 = uut.read_cursor_avg()
-
-                calibrator.standby()
-
-                excel.write_result(voltage2 - voltage1)  # auto saving
 
         excel.save_sheet()
-
-        calibrator.close()
 
         # Turn off all channels but 1
         for chan in range(uut.num_channels):
