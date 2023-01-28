@@ -137,6 +137,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
     last_channel = -1
 
+    uut.reset()
+
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
@@ -194,6 +196,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_channel(chan=chan + 1, enabled=chan == 0)
             uut.set_channel_bw_limit(chan=chan, bw_limit=False)
 
+        uut.reset()
         uut.close()
 
         sg.popup("Finished", background_color="blue")
