@@ -48,6 +48,16 @@ class M142_Simulate:
             reply = "1,0"
         return reply + "\n"
 
+    def close(self) -> None:
+        """
+        close _summary_
+
+        Returns:
+            _type_: _description_
+        """
+
+        pass
+
 
 class M142:
     """

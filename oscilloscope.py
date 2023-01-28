@@ -23,6 +23,8 @@ calibrator_address: str = "GPIB0::06::INSTR"
 uut = DSOX_3000()
 simulating: bool = False
 
+cursor_results: List = []
+
 
 def get_path(filename: str) -> str:
     """
@@ -42,7 +44,17 @@ def get_path(filename: str) -> str:
         return filename
 
 
-def led_indicator(key=None, radius=30):
+def led_indicator(key: str | None = None, radius: float = 30) -> sg.Graph:
+    """
+    led_indicator _summary_
+
+    Args:
+        key (str | None, optional): _description_. Defaults to None.
+        radius (float, optional): _description_. Defaults to 30.
+
+    Returns:
+        sg.Graph: _description_
+    """
     return sg.Graph(
         canvas_size=(radius, radius),
         graph_bottom_left=(-radius, -radius),
@@ -52,13 +64,24 @@ def led_indicator(key=None, radius=30):
     )
 
 
-def set_led(window, key, color):
+def set_led(window: sg.Window, key: str, color: str) -> None:
+    """
+    set_led _summary_
+
+    Args:
+        window (_type_): _description_
+        key (_type_): _description_
+        color (_type_): _description_
+    """
     graph = window[key]
-    graph.erase()
-    graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)
+    graph.erase()  # type: ignore
+    graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)  # type: ignore
 
 
 def connections_check_form() -> None:
+    """
+    connections_check_form _summary_
+    """
 
     layout = [
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
@@ -132,10 +155,15 @@ def test_dcv(filename: str, test_rows: List) -> None:
     """
 
     global simulating
+    global cursor_results
 
     # TODO read both the cursor and mean at the same time
 
     last_channel = -1
+
+    uut.reset()
+
+    cursor_results = []  # save results for cursor tests
 
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
@@ -164,6 +192,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
                     uut.set_channel_bw_limit(chan=channel, bw_limit=True)
                     uut.set_voltage_scale(chan=channel, scale=5)
                     uut.set_voltage_offset(chan=channel, offset=0)
+                    uut.set_cursor_xy_source(chan=1, cursor=1)
+                    uut.set_cursor_position(cursor="X1", pos=0)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
@@ -174,12 +204,21 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
             uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
+            if not simulating:
+                time.sleep(2)
+
+            voltage1 = uut.read_cursor_avg()
+
             calibrator.operate()
 
             if not simulating:
                 time.sleep(2)
 
             reading = uut.measure_voltage(chan=channel)
+
+            voltage2 = uut.read_cursor_avg()
+
+            cursor_results.append({"chan": channel, "scale": settings.scale, "result": voltage2 - voltage1})  # type: ignore
 
             calibrator.standby()
 
@@ -194,9 +233,56 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_channel(chan=chan + 1, enabled=chan == 0)
             uut.set_channel_bw_limit(chan=chan, bw_limit=False)
 
+        uut.reset()
         uut.close()
 
-        sg.popup("Finished", background_color="blue")
+
+def test_cursor(filename: str, test_rows: List) -> None:
+    """
+    test_cursor
+    Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+    global simulating
+    global cursor_results
+
+    # TODO read both the cursor and mean at the same time
+
+    last_channel = -1
+
+    uut.reset()
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    with ExcelInterface(filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            if len(cursor_results):
+                for res in cursor_results:
+                    if (
+                        res["chan"] == settings.channel  # type: ignore
+                        and res["scale"] == settings.scale  # type: ignore
+                    ):
+                        excel.write_result(res["result"], save=False)
+                        break
+
+        excel.save_sheet()
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+
+        uut.reset()
+        uut.close()
 
 
 if __name__ == "__main__":
@@ -328,9 +414,12 @@ if __name__ == "__main__":
 
             with ExcelInterface(values["-FILE-"]) as excel:
                 test_rows = excel.get_test_rows("DCV")
+                test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+                test_rows = excel.get_test_rows("CURS")
+                if len(test_rows):
+                    test_cursor(filename=values["-FILE-"], test_rows=test_rows)
 
-            test_dcv(filename=values["-FILE-"], test_rows=test_rows)
-
+            sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
