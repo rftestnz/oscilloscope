@@ -363,7 +363,7 @@ class ExcelInterface:
 
         return test_types
 
-    def write_result(self, result: float) -> None:
+    def write_result(self, result: float, save: bool = True) -> None:
         """
         write_result
         Write the data to the sheet at the current row
@@ -374,7 +374,8 @@ class ExcelInterface:
 
         self.ws.cell(column=self.__result_col, row=self.row).value = result
 
-        self.save_sheet()
+        if save:
+            self.save_sheet()
 
 
 if __name__ == "__main__":
