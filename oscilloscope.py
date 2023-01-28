@@ -464,7 +464,8 @@ if __name__ == "__main__":
                 test_rows = excel.get_test_rows("DCV")
                 test_dcv(filename=values["-FILE-"], test_rows=test_rows)
                 test_rows = excel.get_test_rows("CURS")
-                test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+                if len(test_rows):
+                    test_cursor(filename=values["-FILE-"], test_rows=test_rows)
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
