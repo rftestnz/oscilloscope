@@ -125,7 +125,7 @@ class Fluke5700A:
                 self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception as ex:
+        except Exception:
             self.connected = False
 
         return self.connected
@@ -169,7 +169,7 @@ class Fluke5700A:
             try:
                 self.instr.write(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -190,7 +190,7 @@ class Fluke5700A:
             try:
                 ret = self.instr.read()  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -214,7 +214,7 @@ class Fluke5700A:
             try:
                 ret = self.instr.query(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 

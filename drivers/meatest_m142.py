@@ -106,7 +106,7 @@ class M142:
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception as ex:
+        except Exception:
             self.connected = False
 
         return self.connected
