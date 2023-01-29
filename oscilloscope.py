@@ -479,7 +479,7 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-"]:
+        if event in ["-TEST_DCV-", "-TEST_TB-"]:
             # Common check to make sure everything is in order
 
             valid = True
