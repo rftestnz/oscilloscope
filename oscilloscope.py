@@ -222,6 +222,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
             voltage1 = uut.read_cursor_avg()
 
             calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.operate()
 
             if not simulating:
                 time.sleep(1)
