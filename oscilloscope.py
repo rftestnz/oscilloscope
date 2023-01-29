@@ -289,7 +289,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
-def test_timebase(self, filename: str, row: int) -> None:
+def test_timebase(filename: str, row: int) -> None:
     """
     test_timebase
     Test the timebase. Simple single row test
