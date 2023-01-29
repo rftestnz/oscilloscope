@@ -176,6 +176,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
+    uut.set_acquisition(64)
+
     with ExcelInterface(filename) as excel:
 
         for row in test_rows:
