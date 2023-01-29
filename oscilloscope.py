@@ -310,7 +310,7 @@ def test_timebase(filename: str, row: int) -> None:
     ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=1)
     ks33250.enable_output(True)
 
-    uut.set_trigger_level(level=0.5, chan=1)
+    uut.set_trigger_level(level=0, chan=1)
     uut.set_timebase(10e-9)  # TODO add setting to sheet
     time.sleep(0.1)
     ref_x = uut.read_cursor("X1")
