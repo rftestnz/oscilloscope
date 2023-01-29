@@ -343,6 +343,7 @@ class DSOX_3000:
         state = "ON" if bw_limit else "OFF"
 
         self.write(f"CHAN{chan}:BWL {state}")
+        self.write("*OPC")
 
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
@@ -357,6 +358,7 @@ class DSOX_3000:
         state = "ON" if enabled else "OFF"
 
         self.write(f"CHAN{chan}:DISP {state}")
+        self.write("*OPC")
 
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
@@ -369,6 +371,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:PROB {probe}")  # Set before the scale
         self.write(f"CHAN{chan}:SCAL {scale}")
+        self.write("*OPC")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
@@ -380,6 +383,7 @@ class DSOX_3000:
         """
 
         self.write(f"CHAN{chan}:OFFS {offset}")
+        self.write("*OPC")
 
     def set_timebase(self, timebase: float) -> None:
         """
@@ -390,6 +394,7 @@ class DSOX_3000:
         """
 
         self.write(f"TIM:SCAL {timebase}")
+        self.write("*OPC")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
@@ -400,6 +405,7 @@ class DSOX_3000:
         """
 
         self.write(f"TIM:POS {pos}")
+        self.write("*OPC")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
@@ -411,6 +417,7 @@ class DSOX_3000:
 
         self.write("ACQ:TYPE AVER")
         self.write(f"ACQ:COUNT {num_samples}")
+        self.write("*OPC")
 
     def set_trigger_mode(self, mode: str) -> None:
         """
@@ -422,6 +429,7 @@ class DSOX_3000:
 
         self.write(f"TRIG:MODE {mode}")
         self.write("TRIG:SWE AUTO")
+        self.write("*OPC")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
         """
@@ -435,6 +443,7 @@ class DSOX_3000:
 
         self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
         self.write(f"TRIG:EDGE:LEV {level}")
+        self.write("*OPC")
 
     def measure_voltage(self, chan: int) -> float:
         """
@@ -461,6 +470,7 @@ class DSOX_3000:
         # TODO which family supprt this command
         if self.family != DSOX_FAMILY.DSOX1000:
             self.write(f"MARK:{cursor}:DISP ON")
+        self.write("*OPC")
         return self.read_query(f"MARK:{cursor}P?")
 
     def read_cursor_avg(self) -> float:
@@ -502,6 +512,7 @@ class DSOX_3000:
 
         self.write("MARK:MODE WAV")
         self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+        self.write("*OPC")
 
     def set_cursor_position(self, cursor: str, pos: float) -> None:
         """
@@ -513,6 +524,7 @@ class DSOX_3000:
         """
 
         self.write(f"MARK:{cursor}P {pos}")
+        self.write("*OPC")
 
     def adjust_cursor(self, target: float) -> None:
         """
@@ -535,6 +547,7 @@ class DSOX_3000:
                 self.set_cursor_position(
                     cursor="X1", pos=current_x + time_inc * direction
                 )
+                self.write("*OPC")
                 current_x = self.read_query("MARK:X1P?")
                 current_y = self.read_query("MARK:Y1P?")
                 if ((current_y > target) and direction == 1) or (
