@@ -335,7 +335,10 @@ def test_timebase(filename: str, row: int) -> None:
             excel.row = row
             excel.write_result(ppm, save=True, col=2)
 
+    ks33250.enable_output(False)
+    ks33250.close()
     uut.reset()
+    uut.close()
 
 
 if __name__ == "__main__":
