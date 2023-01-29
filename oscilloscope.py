@@ -332,7 +332,7 @@ def test_timebase(self, filename: str, row: int) -> None:
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
-            excel.write_result(ppm)
+            excel.write_result(ppm, save=True, col=2)
 
     uut.reset()
 
