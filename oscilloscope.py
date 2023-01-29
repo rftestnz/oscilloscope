@@ -217,14 +217,25 @@ def test_dcv(filename: str, test_rows: List) -> None:
             if not simulating:
                 time.sleep(2)
 
+            calibrator.operate()
+            calibrator.settle()
+
+            if not simulating:
+                time.sleep(2)
+
             voltage1 = uut.read_cursor_avg()
 
-            calibrator.operate()
+            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.settle()
 
             if not simulating:
                 time.sleep(2)
 
             reading = uut.measure_voltage(chan=channel)
+            units = excel.get_units()
+
+            if units.startswith("m"):
+                reading *= 1000
 
             voltage2 = uut.read_cursor_avg()
 
