@@ -545,7 +545,7 @@ class DSOX_3000:
 
 if __name__ == "__main__":
 
-    dsox3034t = DSOX_3000(simulate=True)
+    dsox3034t = DSOX_3000(simulate=False)
     dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
     dsox3034t.open_connection()
@@ -557,6 +557,7 @@ if __name__ == "__main__":
 
     dsox3034t.set_channel(chan=1, enabled=True)
     dsox3034t.set_channel(chan=2, enabled=True)
+    dsox3034t.set_channel_bw_limit(chan=1, bw_limit=True)
     dsox3034t.set_voltage_scale(chan=1, scale=1)
     dsox3034t.set_voltage_scale(chan=2, scale=0.2)
     dsox3034t.set_voltage_offset(chan=1, offset=3.5)
