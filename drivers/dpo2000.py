@@ -5,10 +5,7 @@
 # DK Jan 23
 """
 
-from enum import Enum
 import pyvisa
-from pyvisa.constants import VI_GPIB_REN_ASSERT
-from pprint import pprint
 import time
 from random import random
 from typing import List
@@ -111,7 +108,7 @@ class DPO_2000:
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception as ex:
+        except Exception:
             self.connected = False
 
         return self.connected
@@ -157,7 +154,7 @@ class DPO_2000:
             try:
                 self.instr.write(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -178,7 +175,7 @@ class DPO_2000:
             try:
                 ret = self.instr.read()  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -202,7 +199,7 @@ class DPO_2000:
             try:
                 ret = self.instr.query(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 

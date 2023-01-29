@@ -3,14 +3,12 @@
 # Quick script to control Meatest M142
 """
 
-from enum import Enum
 import pyvisa
-from pyvisa.constants import VI_GPIB_REN_ASSERT
 import time
 from pprint import pprint
-from typing import Dict, List
+from typing import List
 
-VERSION = "A.00.10"
+VERSION = "A.00.11"
 
 
 class M142_Simulate:
@@ -108,7 +106,7 @@ class M142:
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception as ex:
+        except Exception:
             self.connected = False
 
         return self.connected

@@ -4,9 +4,8 @@
 """
 
 from collections import namedtuple
-from typing import Tuple, Dict, NamedTuple, List, Any
+from typing import Tuple, NamedTuple, List, Any
 import openpyxl
-from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 import os
 import time
@@ -363,7 +362,7 @@ class ExcelInterface:
 
         return test_types
 
-    def write_result(self, result: float, save: bool = True) -> None:
+    def write_result(self, result: float, save: bool = True, col: int = 0) -> None:
         """
         write_result
         Write the data to the sheet at the current row
@@ -372,7 +371,8 @@ class ExcelInterface:
             result (_type_): _description_
         """
 
-        self.ws.cell(column=self.__result_col, row=self.row).value = result
+        res_col = col or self.__result_col
+        self.ws.cell(column=res_col, row=self.row).value = result
 
         if save:
             self.save_sheet()

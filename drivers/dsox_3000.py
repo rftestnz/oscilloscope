@@ -7,8 +7,6 @@
 
 from enum import Enum
 import pyvisa
-from pyvisa.constants import VI_GPIB_REN_ASSERT
-from pprint import pprint
 import time
 from random import random
 from typing import List
@@ -132,7 +130,7 @@ class DSOX_3000:
                 self.get_id()
                 self.get_num_channels()
             self.connected = True
-        except Exception as ex:
+        except Exception:
             self.connected = False
 
         return self.connected
@@ -178,7 +176,7 @@ class DSOX_3000:
             try:
                 self.instr.write(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -199,7 +197,7 @@ class DSOX_3000:
             try:
                 ret = self.instr.read()  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
@@ -223,7 +221,7 @@ class DSOX_3000:
             try:
                 ret = self.instr.query(command)  # type: ignore
                 break
-            except pyvisa.VisaIOError as ex:
+            except pyvisa.VisaIOError:
                 time.sleep(1)
                 attempts += 1
 
