@@ -166,8 +166,6 @@ def test_dcv(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
-    sg.popup("Connect Calibrator output to Ch1", background_color="blue")
-
     last_channel = -1
 
     uut.reset()
