@@ -279,7 +279,11 @@ def test_cursor(filename: str, test_rows: List) -> None:
                         res["chan"] == settings.channel  # type: ignore
                         and res["scale"] == settings.scale  # type: ignore
                     ):
-                        excel.write_result(res["result"], save=False)
+                        units = excel.get_units()
+                        result = res["result"]
+                        if units.startswith("m"):
+                            result *= 1000
+                        excel.write_result(result, save=False)
                         break
 
         excel.save_sheet()
