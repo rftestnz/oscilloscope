@@ -458,7 +458,9 @@ class DSOX_3000:
         """
 
         self.write("MARK:MODE WAV")
-        self.write(f"MARK:{cursor}:DISP ON")
+        # TODO which family supprt this command
+        if self.family != DSOX_FAMILY.DSOX1000:
+            self.write(f"MARK:{cursor}:DISP ON")
         return self.read_query(f"MARK:{cursor}P?")
 
     def read_cursor_avg(self) -> float:
@@ -558,9 +560,9 @@ if __name__ == "__main__":
     dsox3034t.set_channel(chan=1, enabled=True)
     dsox3034t.set_channel(chan=2, enabled=True)
     dsox3034t.set_channel_bw_limit(chan=1, bw_limit=True)
-    dsox3034t.set_voltage_scale(chan=1, scale=1)
+    dsox3034t.set_voltage_scale(chan=1, scale=0.5)
     dsox3034t.set_voltage_scale(chan=2, scale=0.2)
-    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
+    dsox3034t.set_voltage_offset(chan=1, offset=0)
     dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
     dsox3034t.set_timebase(0.001)
 
@@ -572,7 +574,7 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=2.5, chan=1)
+    dsox3034t.set_trigger_level(level=0, chan=1)
 
     dsox3034t.set_timebase(20e-9)
 
