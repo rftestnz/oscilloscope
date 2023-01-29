@@ -254,9 +254,13 @@ class Ks33250A:
             amplitude (float): amplitude in volts peak
         """
 
-        self.instr.write(  # type: ignore
-            f"FUNC PULS;PULS PERIOD {period};PULS WIDTH {pulse_width};PULS TRAN MIN;VOLT 1 VPP;VOLT OFFSET 0"
-        )
+        # The unit didn't like setting everything up in one line
+        self.write("FUNC PULS;")
+        self.write(f"PULS:PER {period}")
+        self.write(f"PULS:WIDTH {pulse_width}")
+        self.write("PULS:TRAN MIN")
+        self.write("VOLT:UNIT VPP")
+        self.write(f"VOLT {amplitude} VPP;VOLT:OFFSET {offset}")
 
     def enable_output(self, state: bool) -> None:
         """
@@ -280,5 +284,7 @@ if __name__ == "__main__":
         print(ks33250.model)
 
         ks33250.set_sin(1560, 0.25)
+
+        ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=2)
 
         ks33250.enable_output(True)
