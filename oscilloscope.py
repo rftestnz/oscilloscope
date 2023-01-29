@@ -166,7 +166,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
-    # TODO read both the cursor and mean at the same time
+    sg.popup("Connect Calibrator output to Ch1", background_color="blue")
 
     last_channel = -1
 
@@ -291,7 +291,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
         uut.close()
 
 
-def test_timebase(self, row: int) -> None:
+def test_timebase(self, filename: str, row: int) -> None:
     """
     test_timebase
     Test the timebase. Simple single row test
@@ -300,12 +300,41 @@ def test_timebase(self, row: int) -> None:
         row (int): _description_
     """
 
+    sg.popup("Connect 33250A output to Ch1", background_color="blue")
+
     uut.reset()
 
     uut.set_channel(chan=1, enabled=True)
 
     uut.set_voltage_scale(chan=1, scale=0.5)
     uut.set_voltage_offset(chan=1, offset=0)
+
+    ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=1)
+
+    uut.set_trigger_level(level=0.5, chan=1)
+    uut.set_timebase(10e-9)  # TODO add setting to sheet
+    time.sleep(0.1)
+    ref_x = uut.read_cursor("X1")
+    ref = uut.read_cursor("Y1")
+
+    uut.set_cursor_position(cursor="X1", pos=0.001)  # 1 ms delay
+    time.sleep(0.1)
+
+    uut.adjust_cursor(target=ref)
+
+    offset_x = uut.read_cursor("X1")
+
+    error = ref_x - offset_x + 0.001
+    print(f"TB Error {error}")
+
+    with ExcelInterface(filename=filename) as excel:
+        if uut.manufacturer == "Keysight":
+            # results in ppm
+            ppm = error / 1e-3 * 1e6
+            excel.row = row
+            excel.write_result(ppm)
+
+    uut.reset()
 
 
 if __name__ == "__main__":
