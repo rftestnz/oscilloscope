@@ -448,6 +448,31 @@ if __name__ == "__main__":
         else:
             window["-SIMULATE-"].update(text_color=txt_clr)
 
+        sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
+        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
+        sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
+        sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
+        sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
+        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
+        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
+
+        sg.user_settings_save()
+
+        simulating = values["-SIMULATE-"]
+
+        calibrator.simulating = simulating
+        calibrator_address = (
+            f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
+        )
+
+        ks33250.simulating = simulating
+        ks33250_address = (
+            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
+        )
+
+        uut.simulating = simulating
+        uut.visa_address = values["-UUT_ADDRESS-"]
+
         if event in ["-TEST_DCV-"]:
             # Common check to make sure everything is in order
 
@@ -489,31 +514,6 @@ if __name__ == "__main__":
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
-
-        sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
-        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
-        sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
-        sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
-        sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
-        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
-        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
-
-        sg.user_settings_save()
-
-        simulating = values["-SIMULATE-"]
-
-        calibrator.simulating = simulating
-        calibrator_address = (
-            f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
-        )
-
-        ks33250.simulating = simulating
-        ks33250_address = (
-            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
-        )
-
-        uut.simulating = simulating
-        uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
             if values["-CALIBRATOR-"] == "M-142":
