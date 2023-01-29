@@ -313,15 +313,17 @@ def test_timebase(filename: str, row: int) -> None:
     uut.set_trigger_level(level=0, chan=1)
     uut.set_timebase(10e-9)  # TODO add setting to sheet
     time.sleep(0.1)
-    ref_x = uut.read_cursor("X1")
-    ref = uut.read_cursor("Y1")
+    ref_x = uut.read_cursor("X1")  # get the reference time
+    ref = uut.read_cursor("Y1")  # get the voltage, so delayed can be adjusted to same
 
     uut.set_timebase_pos(0.001)  # delay 1ms to next pulse
 
     uut.set_cursor_position(cursor="X1", pos=0.001)  # 1 ms delay
     time.sleep(0.1)
 
-    uut.adjust_cursor(target=ref)
+    uut.adjust_cursor(
+        target=ref
+    )  # adjust the cursor until voltage is the same as measured from the reference pulse
 
     offset_x = uut.read_cursor("X1")
 
