@@ -329,7 +329,7 @@ def test_timebase(filename: str, row: int) -> None:
     print(f"TB Error {error}")
 
     with ExcelInterface(filename=filename) as excel:
-        if uut.manufacturer == "Keysight":
+        if uut.manufacturer[:3].lower() in {"key", "agi"}:
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
