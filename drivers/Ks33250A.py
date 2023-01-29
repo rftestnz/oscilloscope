@@ -212,7 +212,7 @@ class Ks33250A:
         """
         try:
             self.instr.timeout = 2000  # type: ignore
-            response = self.instr.query("*IDN?")  # type: ignore
+            response = self.query("*IDN?")  # type: ignore
             identity = response.split(",")
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
@@ -238,9 +238,6 @@ class Ks33250A:
             frequency (float): frequency in Hz
             amplitude (float): amplitude VRMS
         """
-        self.instr.write(  # type: ignore
-            f"FUNC SIN;FREQ {frequency};VOLT:UNIT VRMS; VOLTAGE {amplitude}"
-        )
 
     def set_pulse(self, period: float, pulse_width: float, amplitude: float) -> None:
         """
@@ -265,12 +262,12 @@ class Ks33250A:
         """
         op = "ON" if state else "OFF"
 
-        self.instr.write(f"OUTP {op}")  # type: ignore
+        self.write(f"OUTP {op}")  # type: ignore
 
 
 if __name__ == "__main__":
 
-    with Ks33250A(simulate=True) as ks33250:
+    with Ks33250A(simulate=False) as ks33250:
         ks33250.visa_address = "GPIB0::9::INSTR"
         ks33250.open_connection()
 
