@@ -185,7 +185,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.set_voltage_dc(0)  # type: ignore
 
             channel = settings.channel  # type: ignore
 
