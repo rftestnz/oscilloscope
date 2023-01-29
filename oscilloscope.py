@@ -214,9 +214,6 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
             uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
-            if not simulating:
-                time.sleep(2)
-
             calibrator.operate()
             calibrator.settle()
 
