@@ -239,7 +239,12 @@ class Ks33250A:
             amplitude (float): amplitude VRMS
         """
 
-    def set_pulse(self, period: float, pulse_width: float, amplitude: float) -> None:
+        self.write("VOLT:UNIT VRMS")
+        self.write(f"FUNC SIN;FREQ {frequency}; VOLTAGE {amplitude} VRMS")
+
+    def set_pulse(
+        self, period: float, pulse_width: float, amplitude: float, offset: float = 0
+    ) -> None:
         """
         set_pulse _summary_
 
