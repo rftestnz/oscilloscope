@@ -26,6 +26,7 @@ class ExcelInterface:
     __saved: bool = True
     __data_col = 10
     __result_col = 4
+    __units_col = 6
 
     row: int = 1
 
@@ -361,6 +362,17 @@ class ExcelInterface:
                 break
 
         return test_types
+
+    def get_units(self) -> str:
+        """
+        get_units
+        get the units
+
+        Returns:
+            str: _description_
+        """
+
+        return self.ws.cell(column=self.__units_col, row=self.row).value
 
     def write_result(self, result: float, save: bool = True, col: int = 0) -> None:
         """

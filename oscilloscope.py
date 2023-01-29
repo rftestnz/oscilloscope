@@ -166,8 +166,6 @@ def test_dcv(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
-    sg.popup("Connect Calibrator output to Ch1", background_color="blue")
-
     last_channel = -1
 
     uut.reset()
@@ -178,6 +176,8 @@ def test_dcv(filename: str, test_rows: List) -> None:
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
+    uut.set_acquisition(64)
+
     with ExcelInterface(filename) as excel:
 
         for row in test_rows:
@@ -185,7 +185,7 @@ def test_dcv(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.set_voltage_dc(0)  # type: ignore
 
             channel = settings.channel  # type: ignore
 
@@ -198,11 +198,12 @@ def test_dcv(filename: str, test_rows: List) -> None:
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
                     uut.set_channel(chan=channel, enabled=True)
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=True)
-                    uut.set_voltage_scale(chan=channel, scale=5)
-                    uut.set_voltage_offset(chan=channel, offset=0)
-                    uut.set_cursor_xy_source(chan=1, cursor=1)
-                    uut.set_cursor_position(cursor="X1", pos=0)
+
+                # uut.set_channel_bw_limit(chan=channel, bw_limit=True)
+                uut.set_voltage_scale(chan=channel, scale=5)
+                uut.set_voltage_offset(chan=channel, offset=0)
+                uut.set_cursor_xy_source(chan=1, cursor=1)
+                uut.set_cursor_position(cursor="X1", pos=0)
                 sg.popup(
                     f"Connect calibrator output to channel {channel}",
                     background_color="blue",
@@ -213,17 +214,24 @@ def test_dcv(filename: str, test_rows: List) -> None:
             uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
             uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
 
-            if not simulating:
-                time.sleep(2)
-
-            voltage1 = uut.read_cursor_avg()
-
             calibrator.operate()
 
             if not simulating:
-                time.sleep(2)
+                time.sleep(1)
+
+            voltage1 = uut.read_cursor_avg()
+
+            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.operate()
+
+            if not simulating:
+                time.sleep(1)
 
             reading = uut.measure_voltage(chan=channel)
+            units = excel.get_units()
+
+            if units.startswith("m"):
+                reading *= 1000
 
             voltage2 = uut.read_cursor_avg()
 
@@ -259,12 +267,6 @@ def test_cursor(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
-    uut.reset()
-
-    # Turn off all channels but 1
-    for chan in range(uut.num_channels):
-        uut.set_channel(chan=chan + 1, enabled=chan == 0)
-
     with ExcelInterface(filename) as excel:
         for row in test_rows:
             excel.row = row
@@ -277,18 +279,14 @@ def test_cursor(filename: str, test_rows: List) -> None:
                         res["chan"] == settings.channel  # type: ignore
                         and res["scale"] == settings.scale  # type: ignore
                     ):
-                        excel.write_result(res["result"], save=False)
+                        units = excel.get_units()
+                        result = res["result"]
+                        if units.startswith("m"):
+                            result *= 1000
+                        excel.write_result(result, save=False)
                         break
 
         excel.save_sheet()
-
-        # Turn off all channels but 1
-        for chan in range(uut.num_channels):
-            uut.set_channel(chan=chan + 1, enabled=chan == 0)
-            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
-
-        uut.reset()
-        uut.close()
 
 
 def test_timebase(self, filename: str, row: int) -> None:
