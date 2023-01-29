@@ -271,12 +271,6 @@ def test_cursor(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
-    uut.reset()
-
-    # Turn off all channels but 1
-    for chan in range(uut.num_channels):
-        uut.set_channel(chan=chan + 1, enabled=chan == 0)
-
     with ExcelInterface(filename) as excel:
         for row in test_rows:
             excel.row = row
@@ -293,14 +287,6 @@ def test_cursor(filename: str, test_rows: List) -> None:
                         break
 
         excel.save_sheet()
-
-        # Turn off all channels but 1
-        for chan in range(uut.num_channels):
-            uut.set_channel(chan=chan + 1, enabled=chan == 0)
-            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
-
-        uut.reset()
-        uut.close()
 
 
 def test_timebase(self, filename: str, row: int) -> None:
