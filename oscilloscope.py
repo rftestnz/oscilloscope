@@ -422,6 +422,7 @@ if __name__ == "__main__":
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
+            sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
