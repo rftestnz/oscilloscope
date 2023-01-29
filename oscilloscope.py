@@ -316,6 +316,8 @@ def test_timebase(filename: str, row: int) -> None:
     ref_x = uut.read_cursor("X1")
     ref = uut.read_cursor("Y1")
 
+    uut.set_timebase_pos(0.001)  # delay 1ms to next pulse
+
     uut.set_cursor_position(cursor="X1", pos=0.001)  # 1 ms delay
     time.sleep(0.1)
 
