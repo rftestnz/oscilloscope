@@ -5,10 +5,7 @@
 # DK Jan 23
 """
 
-from enum import Enum
 import pyvisa
-from pyvisa.constants import VI_GPIB_REN_ASSERT
-from pprint import pprint
 import time
 from random import random
 from typing import List

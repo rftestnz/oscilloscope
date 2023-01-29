@@ -3,12 +3,10 @@
 # Quick script to control Meatest M142
 """
 
-from enum import Enum
 import pyvisa
-from pyvisa.constants import VI_GPIB_REN_ASSERT
 import time
 from pprint import pprint
-from typing import Dict, List
+from typing import List
 
 VERSION = "A.00.11"
 

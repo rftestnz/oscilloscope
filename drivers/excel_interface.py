@@ -4,9 +4,8 @@
 """
 
 from collections import namedtuple
-from typing import Tuple, Dict, NamedTuple, List, Any
+from typing import Tuple, NamedTuple, List, Any
 import openpyxl
-from openpyxl.utils import get_column_letter
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 import os
 import time
