@@ -512,11 +512,15 @@ if __name__ == "__main__":
             uut.open_connection()
 
             with ExcelInterface(values["-FILE-"]) as excel:
-                test_rows = excel.get_test_rows("DCV")
-                test_dcv(filename=values["-FILE-"], test_rows=test_rows)
-                test_rows = excel.get_test_rows("CURS")
-                if len(test_rows):
-                    test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+                if event == "-TEST_DCV-":
+                    test_rows = excel.get_test_rows("DCV")
+                    test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+                    test_rows = excel.get_test_rows("CURS")
+                    if len(test_rows):
+                        test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+                if event == "-TEST_TB-":
+                    test_rows = excel.get_test_rows("TIME")
+                    test_timebase(filename=values["-FILE-"], row=test_rows[0])
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
