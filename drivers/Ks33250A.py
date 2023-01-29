@@ -5,6 +5,7 @@
 
 import pyvisa
 from typing import List
+import time
 
 VERSION = "A.00.04"
 
@@ -135,6 +136,72 @@ class Ks33250A:
                 or self.simulating
             )
         )
+
+    def write(self, command: str) -> None:
+        """
+        write
+        Fluke 5700A is unreliable sending using the pyvisa, so buffer it
+
+        Args:
+            command (str): [description]
+        """
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+    def read(self) -> str:
+        """
+        read
+        Read back from the fluke
+
+        Returns:
+            str: [description]
+        """
+
+        attempts = 0
+
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
+
+    def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def get_id(self) -> List:
         """
