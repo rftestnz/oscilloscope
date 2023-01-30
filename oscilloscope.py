@@ -492,6 +492,21 @@ if __name__ == "__main__":
             ),
         ],
         [
+            sg.Text("RF Gen", size=(15, 1)),
+            sg.Combo(
+                gpib_ifc_list,
+                size=(10, 1),
+                key="GPIB_IFC_RFGEN",
+                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_IFC-"),
+            ),
+            sg.Combo(
+                gpib_addresses,
+                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_ADDR-"),
+                size=(6, 1),
+                key="GPIB_ADDR_RFGEN",
+            ),
+        ],
+        [
             sg.Text("UUT", size=(15, 1)),
             sg.Input(
                 default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
@@ -534,6 +549,8 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
         sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
+        sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
+        sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
         sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
