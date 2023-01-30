@@ -363,7 +363,7 @@ def test_timebase(filename: str, row: int) -> None:
         ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
         ks33250.enable_output(True)
 
-        uut.set_trigger_level(level=0, chan=1)
+        uut.set_trigger_level(chan=1, level=0)
 
         if setting.timebase:  # type: ignore
             uut.set_timebase(setting.timebase / 1e9)  # type: ignore
