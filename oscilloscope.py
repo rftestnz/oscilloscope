@@ -534,6 +534,11 @@ if __name__ == "__main__":
 
             with ExcelInterface(values["-FILE-"]) as excel:
                 if event == "-TEST_DCV-":
+                    parallel = sg.popup_yes_no(
+                        "Will you connect all channels in parallel?",
+                        title="Parallel Channels",
+                        background_color="blue",
+                    )
                     test_rows = excel.get_test_rows("DCV")
                     test_dcv(filename=values["-FILE-"], test_rows=test_rows)
                     test_rows = excel.get_test_rows("CURS")
