@@ -202,6 +202,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if channel != last_channel:
                 if last_channel > 0:
+                    # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
                     uut.set_voltage_scale(chan=last_channel, scale=1)
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
@@ -210,6 +211,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 # uut.set_channel_bw_limit(chan=channel, bw_limit=True)
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
+                if settings.impedance:
+                    uut.set_channel_impedance(settings.impedance)
+
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
                 if not parallel_channels:
