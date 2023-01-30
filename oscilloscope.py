@@ -15,6 +15,8 @@ import os
 import sys
 import time
 from pathlib import Path
+from datetime import datetime
+
 
 VERSION = "A.00.00"
 
@@ -357,7 +359,7 @@ def test_timebase(filename: str, row: int) -> None:
         error = ref_x - offset_x + 0.001
         print(f"TB Error {error}")
 
-        if uut.manufacturer[:3].lower() in {"key", "agi"}:
+        if uut.keysight:
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
