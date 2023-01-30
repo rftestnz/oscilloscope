@@ -456,10 +456,12 @@ class DSOX_3000:
 
         Args:
             level (float): _description_
-            chan (int): _description_
+            chan (int): 0 for ext, else channel number
         """
 
-        self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
+        source = f"CHAN{chan}" if chan else "EXT"
+
+        self.write(f"TRIG:EDGE:SOUR {source}")
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
