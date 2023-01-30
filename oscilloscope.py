@@ -497,6 +497,8 @@ def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
             mxg.set_output_state(True)
 
             if settings.channel.upper() != "EXT":  # type: ignore
+                for chan in range(1, uut.num_channels + 1):
+                    uut.set_channel(chan=chan, enabled=chan == settings.channel)  # type: ignore
                 uut.set_channel(chan=settings.channel, enabled=True)  # type: ignore
                 uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
                 uut.set_voltage_offset(chan=settings.channel, offset=0)  # type: ignore
@@ -514,6 +516,12 @@ def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
 
             test_result = "Pass" if triggered else "Fail"
             excel.write_result(result=test_result, save=True, col=2)
+
+    mxg.set_output_state(False)
+    mxg.close()
+
+    uut.reset()
+    uut.close()
 
 
 if __name__ == "__main__":
