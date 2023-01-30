@@ -312,6 +312,8 @@ def test_timebase(filename: str, row: int) -> None:
     uut.set_voltage_scale(chan=1, scale=0.5)
     uut.set_voltage_offset(chan=1, offset=0)
 
+    uut.set_acquisition(32)
+
     ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
     ks33250.enable_output(True)
 
