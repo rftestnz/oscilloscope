@@ -360,6 +360,40 @@ def test_timebase(filename: str, row: int) -> None:
         print(f"TB Error {error}")
 
         if uut.keysight:
+            code = sg.popup_get_text(
+                "Enter date code from serial label (0 if no code)",
+                background_color="blue",
+            )
+
+            age = 10
+
+            try:
+                val = int(code)  # type: ignore
+                print(f"{val/100}, {datetime.now().year-2000}")
+                if val // 100 > datetime.now().year - 2000:
+                    val = 0
+                age = datetime.now().year - (val / 100) - 2000
+
+            except ValueError:
+                val = 0
+
+            if not val:
+                # work it out from serial
+                # All the modern Agilent/Keysight have 2 character manufacturing site, then 4 digits for date
+
+                if len(uut.serial) >= 10:
+                    code = uut.serial[2:6]
+
+                    try:
+                        val = int(code)
+                        # start is from 1960
+                        age = datetime.now().year - (val - 4000) / 100 - 2000
+                    except ValueError:
+                        # Invalid. Just assume 10
+                        age = 10
+
+            print(int(age + 0.5))
+
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
