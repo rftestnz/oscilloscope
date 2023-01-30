@@ -502,6 +502,19 @@ def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
                 uut.set_voltage_offset(chan=settings.channel, offset=0)  # type: ignore
                 uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
 
+            else:
+                # external. use channel 1
+                uut.set_channel(chan=1, enabled=True)
+                uut.set_trigger_level(chan=0, level=0)
+
+            period = 1 / settings.frequency / 1e6  # type: ignore
+            uut.set_timebase(period * 2)
+
+            triggered = uut.check_triggered(sweep_time=0.1)  # actual sweep time is ns
+
+            test_result = "Pass" if triggered else "Fail"
+            excel.write_result(result=test_result, save=True, col=2)
+
 
 if __name__ == "__main__":
     sg.theme("black")
