@@ -439,7 +439,7 @@ def test_timebase(filename: str, row: int) -> None:
     uut.close()
 
 
-def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
+def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     """
     test_trigger_sensitivity
 
@@ -627,6 +627,7 @@ if __name__ == "__main__":
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
+            sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -682,7 +683,7 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-", "-TEST_TB-"]:
+        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -732,9 +733,16 @@ if __name__ == "__main__":
                     test_rows = excel.get_test_rows("CURS")
                     if len(test_rows):
                         test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+
                 if event == "-TEST_TB-":
                     test_rows = excel.get_test_rows("TIME")
                     test_timebase(filename=values["-FILE-"], row=test_rows[0])
+
+                if event == "-TEST_TRIG-":
+                    test_rows = excel.get_test_rows("TRIG")
+                    test_trigger_sensitivity(
+                        filename=values["-FILE"], test_rows=test_rows
+                    )
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
