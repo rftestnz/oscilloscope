@@ -5,6 +5,7 @@
 
 import pyvisa
 from typing import List
+import time
 
 VERSION = "A.00.04"
 
@@ -136,6 +137,72 @@ class Ks33250A:
             )
         )
 
+    def write(self, command: str) -> None:
+        """
+        write
+        Fluke 5700A is unreliable sending using the pyvisa, so buffer it
+
+        Args:
+            command (str): [description]
+        """
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+    def read(self) -> str:
+        """
+        read
+        Read back from the fluke
+
+        Returns:
+            str: [description]
+        """
+
+        attempts = 0
+
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
+
+    def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
+
     def get_id(self) -> List:
         """
         get_id _summary_
@@ -145,7 +212,7 @@ class Ks33250A:
         """
         try:
             self.instr.timeout = 2000  # type: ignore
-            response = self.instr.query("*IDN?")  # type: ignore
+            response = self.query("*IDN?")  # type: ignore
             identity = response.split(",")
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
@@ -171,11 +238,13 @@ class Ks33250A:
             frequency (float): frequency in Hz
             amplitude (float): amplitude VRMS
         """
-        self.instr.write(  # type: ignore
-            f"FUNC SIN;FREQ {frequency};VOLT:UNIT VRMS; VOLTAGE {amplitude}"
-        )
 
-    def set_pulse(self, period: float, pulse_width: float, amplitude: float) -> None:
+        self.write("VOLT:UNIT VRMS")
+        self.write(f"FUNC SIN;FREQ {frequency}; VOLTAGE {amplitude} VRMS")
+
+    def set_pulse(
+        self, period: float, pulse_width: float, amplitude: float, offset: float = 0
+    ) -> None:
         """
         set_pulse _summary_
 
@@ -185,9 +254,13 @@ class Ks33250A:
             amplitude (float): amplitude in volts peak
         """
 
-        self.instr.write(  # type: ignore
-            f"FUNC PULS;PULS PERIOD {period};PULS WIDTH {pulse_width};PULS TRAN MIN;VOLT 1 VPP;VOLT OFFSET 0"
-        )
+        # The unit didn't like setting everything up in one line
+        self.write("FUNC PULS;")
+        self.write(f"PULS:PER {period}")
+        self.write(f"PULS:WIDTH {pulse_width}")
+        self.write("PULS:TRAN MIN")
+        self.write("VOLT:UNIT VPP")
+        self.write(f"VOLT {amplitude} VPP;VOLT:OFFSET {offset}")
 
     def enable_output(self, state: bool) -> None:
         """
@@ -198,12 +271,12 @@ class Ks33250A:
         """
         op = "ON" if state else "OFF"
 
-        self.instr.write(f"OUTP {op}")  # type: ignore
+        self.write(f"OUTP {op}")  # type: ignore
 
 
 if __name__ == "__main__":
 
-    with Ks33250A(simulate=True) as ks33250:
+    with Ks33250A(simulate=False) as ks33250:
         ks33250.visa_address = "GPIB0::9::INSTR"
         ks33250.open_connection()
 
@@ -211,5 +284,7 @@ if __name__ == "__main__":
         print(ks33250.model)
 
         ks33250.set_sin(1560, 0.25)
+
+        ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=2)
 
         ks33250.enable_output(True)

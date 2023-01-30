@@ -289,7 +289,12 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
-def test_timebase(self, filename: str, row: int) -> None:
+# DELAY_PERIOD = 0.00099998  # 1 ms
+# DELAY_PERIOD = 0.00100002  # 1 ms
+DELAY_PERIOD = 0.001  # 1 ms
+
+
+def test_timebase(filename: str, row: int) -> None:
     """
     test_timebase
     Test the timebase. Simple single row test
@@ -300,39 +305,61 @@ def test_timebase(self, filename: str, row: int) -> None:
 
     sg.popup("Connect 33250A output to Ch1", background_color="blue")
 
-    uut.reset()
-
-    uut.set_channel(chan=1, enabled=True)
-
-    uut.set_voltage_scale(chan=1, scale=0.5)
-    uut.set_voltage_offset(chan=1, offset=0)
-
-    ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=1)
-
-    uut.set_trigger_level(level=0.5, chan=1)
-    uut.set_timebase(10e-9)  # TODO add setting to sheet
-    time.sleep(0.1)
-    ref_x = uut.read_cursor("X1")
-    ref = uut.read_cursor("Y1")
-
-    uut.set_cursor_position(cursor="X1", pos=0.001)  # 1 ms delay
-    time.sleep(0.1)
-
-    uut.adjust_cursor(target=ref)
-
-    offset_x = uut.read_cursor("X1")
-
-    error = ref_x - offset_x + 0.001
-    print(f"TB Error {error}")
-
     with ExcelInterface(filename=filename) as excel:
-        if uut.manufacturer == "Keysight":
+
+        setting = excel.get_tb_test_settings(row=row)
+
+        uut.reset()
+
+        uut.set_channel(chan=1, enabled=True)
+
+        uut.set_voltage_scale(chan=1, scale=0.5)
+        uut.set_voltage_offset(chan=1, offset=0)
+
+        uut.set_acquisition(32)
+
+        ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
+        ks33250.enable_output(True)
+
+        uut.set_trigger_level(level=0, chan=1)
+
+        if setting.timebase:  # type: ignore
+            uut.set_timebase(setting.timebase / 1e9)  # type: ignore
+        else:
+            uut.set_timebase(10e-9)
+
+        time.sleep(0.1)
+        uut.cursors_on()
+        time.sleep(1.5)
+        ref_x = uut.read_cursor("X1")  # get the reference time
+        ref = uut.read_cursor(
+            "Y1"
+        )  # get the voltage, so delayed can be adjusted to same
+
+        uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+
+        uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
+        time.sleep(1)
+
+        uut.adjust_cursor(
+            target=ref
+        )  # adjust the cursor until voltage is the same as measured from the reference pulse
+
+        offset_x = uut.read_cursor("X1")
+
+        error = ref_x - offset_x + 0.001
+        print(f"TB Error {error}")
+
+        if uut.manufacturer[:3].lower() in {"key", "agi"}:
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
             excel.write_result(ppm, save=True, col=2)
 
+    ks33250.enable_output(False)
+    ks33250.close()
     uut.reset()
+    uut.close()
 
 
 if __name__ == "__main__":
@@ -422,6 +449,7 @@ if __name__ == "__main__":
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
+            sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -447,7 +475,32 @@ if __name__ == "__main__":
         else:
             window["-SIMULATE-"].update(text_color=txt_clr)
 
-        if event in ["-TEST_DCV-"]:
+        sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
+        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
+        sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
+        sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
+        sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
+        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
+        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
+
+        sg.user_settings_save()
+
+        simulating = values["-SIMULATE-"]
+
+        calibrator.simulating = simulating
+        calibrator_address = (
+            f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
+        )
+
+        ks33250.simulating = simulating
+        ks33250_address = (
+            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
+        )
+
+        uut.simulating = simulating
+        uut.visa_address = values["-UUT_ADDRESS-"]
+
+        if event in ["-TEST_DCV-", "-TEST_TB-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -480,39 +533,18 @@ if __name__ == "__main__":
             uut.open_connection()
 
             with ExcelInterface(values["-FILE-"]) as excel:
-                test_rows = excel.get_test_rows("DCV")
-                test_dcv(filename=values["-FILE-"], test_rows=test_rows)
-                test_rows = excel.get_test_rows("CURS")
-                if len(test_rows):
-                    test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+                if event == "-TEST_DCV-":
+                    test_rows = excel.get_test_rows("DCV")
+                    test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+                    test_rows = excel.get_test_rows("CURS")
+                    if len(test_rows):
+                        test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+                if event == "-TEST_TB-":
+                    test_rows = excel.get_test_rows("TIME")
+                    test_timebase(filename=values["-FILE-"], row=test_rows[0])
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
-
-        sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
-        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
-        sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
-        sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
-        sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
-        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
-        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
-
-        sg.user_settings_save()
-
-        simulating = values["-SIMULATE-"]
-
-        calibrator.simulating = simulating
-        calibrator_address = (
-            f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
-        )
-
-        ks33250.simulating = simulating
-        ks33250_address = (
-            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
-        )
-
-        uut.simulating = simulating
-        uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event == "-TEST_CONNECTIONS-":
             if values["-CALIBRATOR-"] == "M-142":

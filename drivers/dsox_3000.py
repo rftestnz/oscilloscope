@@ -94,7 +94,7 @@ class DSOX_3000:
     manufacturer = ""
     serial = ""
     family = DSOX_FAMILY.DSOX3000
-    timeout = 500
+    timeout = 2000
     num_channels = 4
 
     def __init__(self, simulate=False):
@@ -343,6 +343,7 @@ class DSOX_3000:
         state = "ON" if bw_limit else "OFF"
 
         self.write(f"CHAN{chan}:BWL {state}")
+        self.write("*OPC")
 
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
@@ -357,6 +358,7 @@ class DSOX_3000:
         state = "ON" if enabled else "OFF"
 
         self.write(f"CHAN{chan}:DISP {state}")
+        self.write("*OPC")
 
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
@@ -369,6 +371,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:PROB {probe}")  # Set before the scale
         self.write(f"CHAN{chan}:SCAL {scale}")
+        self.write("*OPC")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
@@ -380,6 +383,7 @@ class DSOX_3000:
         """
 
         self.write(f"CHAN{chan}:OFFS {offset}")
+        self.write("*OPC")
 
     def set_timebase(self, timebase: float) -> None:
         """
@@ -390,6 +394,7 @@ class DSOX_3000:
         """
 
         self.write(f"TIM:SCAL {timebase}")
+        self.write("*OPC")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
@@ -400,6 +405,7 @@ class DSOX_3000:
         """
 
         self.write(f"TIM:POS {pos}")
+        self.write("*OPC")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
@@ -411,6 +417,7 @@ class DSOX_3000:
 
         self.write("ACQ:TYPE AVER")
         self.write(f"ACQ:COUNT {num_samples}")
+        self.write("*OPC")
 
     def set_trigger_mode(self, mode: str) -> None:
         """
@@ -422,6 +429,7 @@ class DSOX_3000:
 
         self.write(f"TRIG:MODE {mode}")
         self.write("TRIG:SWE AUTO")
+        self.write("*OPC")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
         """
@@ -435,6 +443,7 @@ class DSOX_3000:
 
         self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
         self.write(f"TRIG:EDGE:LEV {level}")
+        self.write("*OPC")
 
     def measure_voltage(self, chan: int) -> float:
         """
@@ -449,6 +458,15 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
+    def cursors_on(self) -> None:
+        """
+        cursors_on
+        Turn the markers on
+        """
+
+        self.write("MARK:MODE WAV")
+        self.write("*OPC")
+
     def read_cursor(self, cursor: str) -> float:
         """
 
@@ -457,9 +475,15 @@ class DSOX_3000:
         Enable cursor and read
         """
 
-        self.write("MARK:MODE WAV")
-        self.write(f"MARK:{cursor}:DISP ON")
-        return self.read_query(f"MARK:{cursor}P?")
+        # TODO which family supprt this command
+        if self.family != DSOX_FAMILY.DSOX1000:
+            self.write(f"MARK:{cursor}:DISP ON")
+        self.write("*OPC")
+        pos = self.read_query(f"MARK:{cursor}P?")
+        if pos > 9e37:
+            time.sleep(0.2)
+            pos = self.read_query(f"MARK:{cursor}P?")
+        return pos
 
     def read_cursor_avg(self) -> float:
         """
@@ -500,6 +524,7 @@ class DSOX_3000:
 
         self.write("MARK:MODE WAV")
         self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
+        self.write("*OPC")
 
     def set_cursor_position(self, cursor: str, pos: float) -> None:
         """
@@ -511,6 +536,7 @@ class DSOX_3000:
         """
 
         self.write(f"MARK:{cursor}P {pos}")
+        self.write("*OPC")
 
     def adjust_cursor(self, target: float) -> None:
         """
@@ -528,16 +554,24 @@ class DSOX_3000:
 
         direction = +1 if current_y < target else -1
 
-        if current_y < target:
+        diff = abs(current_y - target)
+
+        if diff > 0.05:  # 0.1 div
             for _ in range(100):
                 self.set_cursor_position(
                     cursor="X1", pos=current_x + time_inc * direction
                 )
+                self.write("*OPC")
+                time.sleep(0.05)
                 current_x = self.read_query("MARK:X1P?")
                 current_y = self.read_query("MARK:Y1P?")
-                if ((current_y > target) and direction == 1) or (
-                    (current_y < target) and direction == -1
-                ):
+
+                diff = current_y - target
+
+                # As the slope can be steep, detect when it has passed the crossing
+
+                val = direction * diff
+                if val > 0:
                     break
         else:
             ...
@@ -558,9 +592,9 @@ if __name__ == "__main__":
     dsox3034t.set_channel(chan=1, enabled=True)
     dsox3034t.set_channel(chan=2, enabled=True)
     dsox3034t.set_channel_bw_limit(chan=1, bw_limit=True)
-    dsox3034t.set_voltage_scale(chan=1, scale=1)
+    dsox3034t.set_voltage_scale(chan=1, scale=0.5)
     dsox3034t.set_voltage_scale(chan=2, scale=0.2)
-    dsox3034t.set_voltage_offset(chan=1, offset=3.5)
+    dsox3034t.set_voltage_offset(chan=1, offset=0)
     dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
     dsox3034t.set_timebase(0.001)
 
@@ -572,7 +606,7 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=2.5, chan=1)
+    dsox3034t.set_trigger_level(level=0, chan=1)
 
     dsox3034t.set_timebase(20e-9)
 

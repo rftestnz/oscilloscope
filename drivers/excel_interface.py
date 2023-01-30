@@ -233,7 +233,7 @@ class ExcelInterface:
         while True:
             val = self.ws.cell(column=self.__data_col, row=self.row).value
 
-            if val and str(val).lower() not in ["function"]:  # TODO keywords
+            if val and str(val).lower() not in ["function", "test"]:  # TODO keywords
                 break
 
             self.row += 1
@@ -271,6 +271,30 @@ class ExcelInterface:
 
         return test_rows
 
+    def get_tb_test_settings(self, row: int = -1) -> NamedTuple:
+        """
+        get_tb_test_settings
+        Get the settings relevant to the timebase test
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            NamedTuple: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        settings = namedtuple("settings", ["function", "timebase"])
+
+        col = self.__data_col
+        func = self.ws.cell(column=col, row=row).value
+        col += 1
+        tb = self.ws.cell(column=col, row=row).value
+
+        return settings(function=func, timebase=tb)
+
     def get_test_settings(self, row: int = -1) -> NamedTuple:
         """
         get_test_settings
@@ -290,7 +314,7 @@ class ExcelInterface:
 
         settings = namedtuple(
             "settings",
-            ["function", "channel", "coupling", "scale", "voltage", "offset"],
+            ["function", "row", "channel", "coupling", "scale", "voltage", "offset"],
         )
 
         col = self.__data_col
@@ -308,6 +332,7 @@ class ExcelInterface:
 
         return settings(
             function=func,
+            row=row,
             channel=chan,
             coupling=coupling,
             scale=scale,
@@ -415,3 +440,9 @@ if __name__ == "__main__":
         print(f"Available: {excel.check_excel_available()}")
 
         pprint(excel.get_test_types())
+
+        rows = excel.get_all_test_settings("TIME")
+        if len(rows):
+            pprint(rows)
+            setting = excel.get_tb_test_settings(rows[0].row)
+            print(setting.timebase)
