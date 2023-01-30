@@ -62,11 +62,12 @@ class RF_Signal_Generator:
         _type_: _description_
     """
 
-    connected = False
+    connected: bool = False
     visa_address: str = "GPIB0::18::INSTR"
-    timeout = 5000
+    timeout: int = 5000
+    simulating: bool = False
 
-    def __init__(self, simulate=False):
+    def __init__(self, simulate: bool = False):
         self.simulating = simulate
         self.rm = pyvisa.ResourceManager()
 
