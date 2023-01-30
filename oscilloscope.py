@@ -172,6 +172,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     cursor_results = []  # save results for cursor tests
 
+    if parallel_channels:
+        sg.popup(
+            "Connect calibrator output to all channels in parallel",
+            background_color="blue",
+        )
+
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
@@ -204,10 +210,11 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 uut.set_voltage_offset(chan=channel, offset=0)
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
-                sg.popup(
-                    f"Connect calibrator output to channel {channel}",
-                    background_color="blue",
-                )
+                if not parallel_channels:
+                    sg.popup(
+                        f"Connect calibrator output to channel {channel}",
+                        background_color="blue",
+                    )
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
