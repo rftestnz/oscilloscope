@@ -92,6 +92,7 @@ def connections_check_form() -> None:
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
+        [sg.Text("RF Generator", size=(20, 1)), led_indicator("-RFGEN_CONN-")],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
@@ -111,6 +112,11 @@ def connections_check_form() -> None:
         window,
         "-33250_CONN-",
         color="green" if connected["33250A"] else "red",
+    )
+    set_led(
+        window,
+        "-RFGEN_CONN-",
+        color="green" if connected["RFGEN"] else "red",
     )
     set_led(
         window,
@@ -136,6 +142,16 @@ def connections_check_form() -> None:
             )
             set_led(
                 window,
+                "-33250_CONN-",
+                color="green" if connected["33250A"] else "red",
+            )
+            set_led(
+                window,
+                "-RFGEN_CONN-",
+                color="green" if connected["RFGEN"] else "red",
+            )
+            set_led(
+                window,
                 "-UUT-",
                 color="green" if connected["DSO"] else "red",
             )
@@ -150,13 +166,20 @@ def test_connections() -> Dict:
 
     global calibrator
     global ks33250
+    global mxg
     global uut
 
     fluke_5700a_conn = calibrator.is_connected()
     ks33250_conn = ks33250.is_connected()
+    rfgen_conn = mxg.is_connected()
     uut_conn = uut.is_connected()
 
-    return {"FLUKE_5700A": fluke_5700a_conn, "33250A": ks33250_conn, "DSO": uut_conn}
+    return {
+        "FLUKE_5700A": fluke_5700a_conn,
+        "33250A": ks33250_conn,
+        "RFGEN": rfgen_conn,
+        "DSO": uut_conn,
+    }
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
@@ -568,6 +591,9 @@ if __name__ == "__main__":
             f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
         )
 
+        mxg.simulating = simulating
+        mxg_address = f"{values['GPIB_IFC_RFGEN']}::{values['GPIB_ADDR_RFGEN']}::INSTR"
+
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
@@ -593,10 +619,12 @@ if __name__ == "__main__":
                 calibrator = M142(simulate=simulating)
             else:
                 calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address  # type: ignore
+            calibrator.visa_address = calibrator_address
             calibrator.open_connection()
-            ks33250.visa_address = ks33250_address  # type: ignore
+            ks33250.visa_address = ks33250_address
             ks33250.open_connection()
+            mxg.visa_address = mxg_address
+            mxg.open_connection()
 
             uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
@@ -635,6 +663,8 @@ if __name__ == "__main__":
             calibrator.open_connection()
             ks33250.visa_address = ks33250_address
             ks33250.open_connection()
+            mxg.visa_address = mxg_address
+            mxg.open_connection()
             connections_check_form()
             continue
 
