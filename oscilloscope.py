@@ -11,6 +11,7 @@ from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
 from drivers.excel_interface import ExcelInterface
+from drivers.rf_signal_generator import RF_Signal_Generator
 import os
 import sys
 import time
@@ -24,6 +25,7 @@ VERSION = "A.00.00"
 calibrator = Fluke5700A()
 ks33250 = Ks33250A()
 uut = DSOX_3000()
+mxg = RF_Signal_Generator()
 simulating: bool = False
 
 cursor_results: List = []
