@@ -63,10 +63,11 @@ class RF_Signal_Generator:
     """
 
     connected = False
+    visa_address: str = "GPIB0::18::INSTR"
+    timeout = 5000
 
-    def __init__(self, address, simulate=False):
+    def __init__(self, simulate=False):
         self.simulating = simulate
-        self.visa_address = address
         self.rm = pyvisa.ResourceManager()
 
     def __enter__(self):
@@ -86,11 +87,14 @@ class RF_Signal_Generator:
         try:
             if self.simulating:
                 self.instr = RF_Sig_Gen_Simulator()
+                self.model = "E4438C"
+                self.manufacturer = "Agilent"
+                self.serial = "0"
             else:
                 self.instr = self.rm.open_resource(
                     self.visa_address, write_termination="\n"
                 )
-                self.instr.timeout = 5000
+                self.instr.timeout = self.timeout
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)
             self.connected = True
         except Exception as ex:
@@ -118,23 +122,15 @@ class RF_Signal_Generator:
         Returns:
             bool: _description_
         """
-        if not self.open_connection():
-            return False
 
-        try:
-            if response := self.instr.query("*IDN?"):  # type: ignore
-                identity = response.split(",")
-                if len(identity) >= 3:
-                    self.manufacturer = identity[0]
-                    self.model = identity[1]
-                    self.serial = identity[2]
-                    if self.model in {"E4438C", "E8257D", "N5183A"}:
-                        return True
-
-        except pyvisa.VisaIOError as ex:
-            return False
-
-        return False
+        return bool(
+            self.open_connection()
+            and (
+                not self.simulating
+                and self.model in {"E4438C", "E8257D", "N5183A"}
+                or self.simulating
+            )
+        )
 
     def write(self, command: str) -> None:
         """
@@ -216,8 +212,23 @@ class RF_Signal_Generator:
             List: _description_
         """
 
-        response = self.query("*IDN?")
-        self.is_connected()  # populate the serial and manufacturer
+        try:
+            self.instr.timeout = 2000  # type: ignore
+            response = self.query("*IDN?")
+            identity = response.split(",")
+            if len(identity) >= 3:
+                self.manufacturer = identity[0]
+                self.model = identity[1]
+                self.serial = identity[2]
+
+        except pyvisa.VisaIOError:
+            self.model = ""
+            self.manufacturer = ""
+            self.serial = ""
+            response = ",,,"
+
+        self.instr.timeout = self.timeout  # type: ignore
+
         return response.split(",")
 
     def set_frequency(self, freq: float) -> None:
@@ -281,7 +292,10 @@ class RF_Signal_Generator:
 
 if __name__ == "__main__":
 
-    with RF_Signal_Generator("GPIB0::24::INSTR", simulate=True) as e4438c:
+    with RF_Signal_Generator(simulate=True) as e4438c:
+        e4438c.visa_address = "GPIB0::24::INSTR"
+        e4438c.open_connection()
+
         print(e4438c.get_id())
 
         e4438c.reset()
