@@ -271,6 +271,30 @@ class ExcelInterface:
 
         return test_rows
 
+    def get_tb_test_settings(self, row: int = -1) -> NamedTuple:
+        """
+        get_tb_test_settings
+        Get the settings relevant to the timebase test
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            NamedTuple: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        settings = namedtuple("settings", ["function", "timebase"])
+
+        col = self.__data_col
+        func = self.ws.cell(column=col, row=row).value
+        col += 1
+        tb = self.ws.cell(column=col, row=row).value
+
+        return settings(function=func, timebase=tb)
+
     def get_test_settings(self, row: int = -1) -> NamedTuple:
         """
         get_test_settings
