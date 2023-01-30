@@ -392,12 +392,13 @@ def test_timebase(filename: str, row: int) -> None:
                         # Invalid. Just assume 10
                         age = 10
 
-            print(int(age + 0.5))
+            age_years = int(age + 0.5)
 
             # results in ppm
             ppm = error / 1e-3 * 1e6
             excel.row = row
-            excel.write_result(ppm, save=True, col=2)
+            excel.write_result(ppm, save=False, col=2)
+            excel.write_result(age_years, save=True, col=1)
 
     ks33250.enable_output(False)
     ks33250.close()
