@@ -155,7 +155,7 @@ def test_connections() -> Dict:
     return {"FLUKE_5700A": fluke_5700a_conn, "33250A": ks33250_conn, "DSO": uut_conn}
 
 
-def test_dcv(filename: str, test_rows: List) -> None:
+def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     # sourcery skip: extract-method
     """
     test_dcv
@@ -171,6 +171,12 @@ def test_dcv(filename: str, test_rows: List) -> None:
     uut.reset()
 
     cursor_results = []  # save results for cursor tests
+
+    if parallel_channels:
+        sg.popup(
+            "Connect calibrator output to all channels in parallel",
+            background_color="blue",
+        )
 
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
@@ -204,10 +210,11 @@ def test_dcv(filename: str, test_rows: List) -> None:
                 uut.set_voltage_offset(chan=channel, offset=0)
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
-                sg.popup(
-                    f"Connect calibrator output to channel {channel}",
-                    background_color="blue",
-                )
+                if not parallel_channels:
+                    sg.popup(
+                        f"Connect calibrator output to channel {channel}",
+                        background_color="blue",
+                    )
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
@@ -534,8 +541,17 @@ if __name__ == "__main__":
 
             with ExcelInterface(values["-FILE-"]) as excel:
                 if event == "-TEST_DCV-":
+                    parallel = sg.popup_yes_no(
+                        "Will you connect all channels in parallel?",
+                        title="Parallel Channels",
+                        background_color="blue",
+                    )
                     test_rows = excel.get_test_rows("DCV")
-                    test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+                    test_dcv(
+                        filename=values["-FILE-"],
+                        test_rows=test_rows,
+                        parallel_channels=(parallel == "Yes"),
+                    )
                     test_rows = excel.get_test_rows("CURS")
                     if len(test_rows):
                         test_cursor(filename=values["-FILE-"], test_rows=test_rows)
