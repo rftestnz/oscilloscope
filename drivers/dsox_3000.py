@@ -96,6 +96,7 @@ class DSOX_3000:
     family = DSOX_FAMILY.DSOX3000
     timeout = 2000
     num_channels = 4
+    keysight: bool = True
 
     def __init__(self, simulate=False):
         self.simulating = simulate
