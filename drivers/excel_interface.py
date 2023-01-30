@@ -314,7 +314,16 @@ class ExcelInterface:
 
         settings = namedtuple(
             "settings",
-            ["function", "row", "channel", "coupling", "scale", "voltage", "offset"],
+            [
+                "function",
+                "row",
+                "channel",
+                "coupling",
+                "scale",
+                "voltage",
+                "offset",
+                "impedance",
+            ],
         )
 
         col = self.__data_col
@@ -329,6 +338,8 @@ class ExcelInterface:
         voltage = self.ws.cell(column=col, row=row).value
         col += 1
         offset = self.ws.cell(column=col, row=row).value
+        col += 1
+        impedance = self.ws.cell(column=col, row=row).value
 
         return settings(
             function=func,
@@ -338,6 +349,7 @@ class ExcelInterface:
             scale=scale,
             voltage=voltage,
             offset=offset,
+            impedance=impedance,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
