@@ -155,7 +155,7 @@ def test_connections() -> Dict:
     return {"FLUKE_5700A": fluke_5700a_conn, "33250A": ks33250_conn, "DSO": uut_conn}
 
 
-def test_dcv(filename: str, test_rows: List) -> None:
+def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     # sourcery skip: extract-method
     """
     test_dcv
@@ -540,7 +540,11 @@ if __name__ == "__main__":
                         background_color="blue",
                     )
                     test_rows = excel.get_test_rows("DCV")
-                    test_dcv(filename=values["-FILE-"], test_rows=test_rows)
+                    test_dcv(
+                        filename=values["-FILE-"],
+                        test_rows=test_rows,
+                        parallel_channels=(parallel == "Yes"),
+                    )
                     test_rows = excel.get_test_rows("CURS")
                     if len(test_rows):
                         test_cursor(filename=values["-FILE-"], test_rows=test_rows)
