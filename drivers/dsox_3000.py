@@ -554,17 +554,24 @@ class DSOX_3000:
 
         direction = +1 if current_y < target else -1
 
-        if current_y < target:
+        diff = abs(current_y - target)
+
+        if diff > 0.05:  # 0.1 div
             for _ in range(100):
                 self.set_cursor_position(
                     cursor="X1", pos=current_x + time_inc * direction
                 )
                 self.write("*OPC")
+                time.sleep(0.05)
                 current_x = self.read_query("MARK:X1P?")
                 current_y = self.read_query("MARK:Y1P?")
-                if ((current_y > target) and direction == 1) or (
-                    (current_y < target) and direction == -1
-                ):
+
+                diff = current_y - target
+
+                # As the slope can be steep, detect when it has passed the crossing
+
+                val = direction * diff
+                if val > 0:
                     break
         else:
             ...
