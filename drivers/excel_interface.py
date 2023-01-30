@@ -233,7 +233,7 @@ class ExcelInterface:
         while True:
             val = self.ws.cell(column=self.__data_col, row=self.row).value
 
-            if val and str(val).lower() not in ["function"]:  # TODO keywords
+            if val and str(val).lower() not in ["function", "test"]:  # TODO keywords
                 break
 
             self.row += 1
