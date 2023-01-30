@@ -289,6 +289,11 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
+# DELAY_PERIOD = 0.00099998  # 1 ms
+# DELAY_PERIOD = 0.00100002  # 1 ms
+DELAY_PERIOD = 0.001  # 1 ms
+
+
 def test_timebase(filename: str, row: int) -> None:
     """
     test_timebase
