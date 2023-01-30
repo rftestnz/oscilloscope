@@ -312,7 +312,7 @@ def test_timebase(filename: str, row: int) -> None:
     uut.set_voltage_scale(chan=1, scale=0.5)
     uut.set_voltage_offset(chan=1, offset=0)
 
-    ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=1)
+    ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
     ks33250.enable_output(True)
 
     uut.set_trigger_level(level=0, chan=1)
@@ -321,10 +321,10 @@ def test_timebase(filename: str, row: int) -> None:
     ref_x = uut.read_cursor("X1")  # get the reference time
     ref = uut.read_cursor("Y1")  # get the voltage, so delayed can be adjusted to same
 
-    uut.set_timebase_pos(0.001)  # delay 1ms to next pulse
+    uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
 
-    uut.set_cursor_position(cursor="X1", pos=0.001)  # 1 ms delay
-    time.sleep(0.1)
+    uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
+    time.sleep(1)
 
     uut.adjust_cursor(
         target=ref
