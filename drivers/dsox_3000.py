@@ -596,6 +596,24 @@ class DSOX_3000:
         else:
             ...
 
+    def check_triggered(self, sweep_time: float = 0.1) -> bool:
+        """
+        check_triggered
+        Check if the scope is triggered
+        clears it first then waits for a sweep and returns the status
+
+        Returns:
+            bool: _description_
+        """
+
+        self.write("*CLS")
+
+        time.sleep(sweep_time)
+
+        triggered = self.query("TER?")
+
+        return triggered == "1"
+
 
 if __name__ == "__main__":
 
