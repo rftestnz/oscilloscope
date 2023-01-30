@@ -470,10 +470,9 @@ def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
         for row in test_rows:
             excel.row = row
             settings = excel.get_test_settings()
-            if settings.channel == 1:
-                if settings.impedance == 50:
-                    ext_termination = False
-                    break
+            if settings.channel == 1 and settings.impedance == 50:  # type: ignore
+                ext_termination = False
+                break
 
         # now the main test loop
 
