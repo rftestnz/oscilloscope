@@ -458,6 +458,15 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
+    def cursors_on(self) -> None:
+        """
+        cursors_on
+        Turn the markers on
+        """
+
+        self.write("MARK:MODE WAV")
+        self.write("*OPC")
+
     def read_cursor(self, cursor: str) -> float:
         """
 
@@ -466,7 +475,6 @@ class DSOX_3000:
         Enable cursor and read
         """
 
-        self.write("MARK:MODE WAV")
         # TODO which family supprt this command
         if self.family != DSOX_FAMILY.DSOX1000:
             self.write(f"MARK:{cursor}:DISP ON")
