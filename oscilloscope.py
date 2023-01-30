@@ -305,41 +305,51 @@ def test_timebase(filename: str, row: int) -> None:
 
     sg.popup("Connect 33250A output to Ch1", background_color="blue")
 
-    uut.reset()
-
-    uut.set_channel(chan=1, enabled=True)
-
-    uut.set_voltage_scale(chan=1, scale=0.5)
-    uut.set_voltage_offset(chan=1, offset=0)
-
-    uut.set_acquisition(32)
-
-    ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
-    ks33250.enable_output(True)
-
-    uut.set_trigger_level(level=0, chan=1)
-    uut.set_timebase(10e-9)  # TODO add setting to sheet
-    time.sleep(0.1)
-    uut.cursors_on()
-    time.sleep(1.5)
-    ref_x = uut.read_cursor("X1")  # get the reference time
-    ref = uut.read_cursor("Y1")  # get the voltage, so delayed can be adjusted to same
-
-    uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
-
-    uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
-    time.sleep(1)
-
-    uut.adjust_cursor(
-        target=ref
-    )  # adjust the cursor until voltage is the same as measured from the reference pulse
-
-    offset_x = uut.read_cursor("X1")
-
-    error = ref_x - offset_x + 0.001
-    print(f"TB Error {error}")
-
     with ExcelInterface(filename=filename) as excel:
+
+        setting = excel.get_tb_test_settings(row=row)
+
+        uut.reset()
+
+        uut.set_channel(chan=1, enabled=True)
+
+        uut.set_voltage_scale(chan=1, scale=0.5)
+        uut.set_voltage_offset(chan=1, offset=0)
+
+        uut.set_acquisition(32)
+
+        ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
+        ks33250.enable_output(True)
+
+        uut.set_trigger_level(level=0, chan=1)
+
+        if setting.timebase:  # type: ignore
+            uut.set_timebase(setting.timebase / 1e9)  # type: ignore
+        else:
+            uut.set_timebase(10e-9)
+
+        time.sleep(0.1)
+        uut.cursors_on()
+        time.sleep(1.5)
+        ref_x = uut.read_cursor("X1")  # get the reference time
+        ref = uut.read_cursor(
+            "Y1"
+        )  # get the voltage, so delayed can be adjusted to same
+
+        uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+
+        uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
+        time.sleep(1)
+
+        uut.adjust_cursor(
+            target=ref
+        )  # adjust the cursor until voltage is the same as measured from the reference pulse
+
+        offset_x = uut.read_cursor("X1")
+
+        error = ref_x - offset_x + 0.001
+        print(f"TB Error {error}")
+
         if uut.manufacturer[:3].lower() in {"key", "agi"}:
             # results in ppm
             ppm = error / 1e-3 * 1e6
