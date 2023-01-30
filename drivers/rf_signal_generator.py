@@ -254,16 +254,16 @@ class RF_Signal_Generator:
 
         self.write(f"SOUR:FREQ {freq} MHz")
 
-    def set_level(self, level: float) -> None:
+    def set_level(self, level: float, units: str = "dBm") -> None:
         """
         set_level
         Set the level
 
         Args:
-            level (float): dBm
+            level (float):
         """
 
-        self.write(f"POW {level} dBm")
+        self.write(f"POW {level} {units}")
 
     def set_output_state(self, state: bool) -> None:
         """
