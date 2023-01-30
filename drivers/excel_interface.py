@@ -440,3 +440,9 @@ if __name__ == "__main__":
         print(f"Available: {excel.check_excel_available()}")
 
         pprint(excel.get_test_types())
+
+        rows = excel.get_all_test_settings("TIME")
+        if len(rows):
+            pprint(rows)
+            setting = excel.get_tb_test_settings(rows[0].row)
+            print(setting.timebase)
