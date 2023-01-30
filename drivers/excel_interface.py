@@ -413,7 +413,9 @@ class ExcelInterface:
 
         return self.ws.cell(column=self.__units_col, row=self.row).value
 
-    def write_result(self, result: float, save: bool = True, col: int = 0) -> None:
+    def write_result(
+        self, result: float | str, save: bool = True, col: int = 0
+    ) -> None:
         """
         write_result
         Write the data to the sheet at the current row
