@@ -479,7 +479,11 @@ class DSOX_3000:
         if self.family != DSOX_FAMILY.DSOX1000:
             self.write(f"MARK:{cursor}:DISP ON")
         self.write("*OPC")
-        return self.read_query(f"MARK:{cursor}P?")
+        pos = self.read_query(f"MARK:{cursor}P?")
+        if pos > 9e37:
+            time.sleep(0.2)
+            pos = self.read_query(f"MARK:{cursor}P?")
+        return pos
 
     def read_cursor_avg(self) -> float:
         """
