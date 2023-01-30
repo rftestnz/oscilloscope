@@ -479,6 +479,29 @@ def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
         for row in test_rows:
             excel.row = row
 
+            settings = excel.get_test_settings()
+
+            feedthru_msg = (
+                "via 50 Ohm Feedthru"
+                if ext_termination or settings.channel.upper() == "EXT"  # type: ignore
+                else ""
+            )
+
+            sg.popup(
+                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",  # type: ignore
+                background_color="blue",
+            )
+
+            mxg.set_frequency_MHz(settings.frequency)  # type: ignore
+            mxg.set_level(settings.voltage, units="mV")  # type: ignore
+            mxg.set_output_state(True)
+
+            if settings.channel.upper() != "EXT":  # type: ignore
+                uut.set_channel(chan=settings.channel, enabled=True)  # type: ignore
+                uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
+                uut.set_voltage_offset(chan=settings.channel, offset=0)  # type: ignore
+                uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+
 
 if __name__ == "__main__":
     sg.theme("black")
