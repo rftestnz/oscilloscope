@@ -346,6 +346,19 @@ class DSOX_3000:
         self.write(f"CHAN{chan}:BWL {state}")
         self.write("*OPC")
 
+    def set_channel_impedance(self, chan: int, impedance: str) -> None:
+        """
+        set_channel_impedance _summary_
+
+        Args:
+            chan (int): _description_
+            imedance (str): _description_
+        """
+
+        imp = "FIFTY" if impedance == "50" else "ONEMEG"
+
+        self.write(f"CHAN{chan}:IMP {imp}")
+
     def set_channel(self, chan: int, enabled: bool) -> None:
         """
         set_channel

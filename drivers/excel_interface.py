@@ -314,7 +314,15 @@ class ExcelInterface:
 
         settings = namedtuple(
             "settings",
-            ["function", "row", "channel", "coupling", "scale", "voltage", "offset"],
+            [
+                "function",
+                "channel",
+                "coupling",
+                "scale",
+                "voltage",
+                "offset",
+                "impedance",
+            ],
         )
 
         col = self.__data_col
@@ -329,15 +337,17 @@ class ExcelInterface:
         voltage = self.ws.cell(column=col, row=row).value
         col += 1
         offset = self.ws.cell(column=col, row=row).value
+        col += 1
+        impedance = self.ws.cell(column=col, row=row).value
 
         return settings(
             function=func,
-            row=row,
             channel=chan,
             coupling=coupling,
             scale=scale,
             voltage=voltage,
             offset=offset,
+            impedance=impedance,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
@@ -441,8 +451,8 @@ if __name__ == "__main__":
 
         pprint(excel.get_test_types())
 
-        rows = excel.get_all_test_settings("TIME")
+        rows = excel.get_test_rows("TIME")
         if len(rows):
             pprint(rows)
-            setting = excel.get_tb_test_settings(rows[0].row)
+            setting = excel.get_tb_test_settings(rows[0])
             print(setting.timebase)
