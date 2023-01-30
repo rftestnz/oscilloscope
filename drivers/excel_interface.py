@@ -314,7 +314,7 @@ class ExcelInterface:
 
         settings = namedtuple(
             "settings",
-            ["function", "channel", "coupling", "scale", "voltage", "offset"],
+            ["function", "row", "channel", "coupling", "scale", "voltage", "offset"],
         )
 
         col = self.__data_col
@@ -332,6 +332,7 @@ class ExcelInterface:
 
         return settings(
             function=func,
+            row=row,
             channel=chan,
             coupling=coupling,
             scale=scale,
