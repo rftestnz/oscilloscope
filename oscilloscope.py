@@ -320,6 +320,8 @@ def test_timebase(filename: str, row: int) -> None:
     uut.set_trigger_level(level=0, chan=1)
     uut.set_timebase(10e-9)  # TODO add setting to sheet
     time.sleep(0.1)
+    uut.cursors_on()
+    time.sleep(1.5)
     ref_x = uut.read_cursor("X1")  # get the reference time
     ref = uut.read_cursor("Y1")  # get the voltage, so delayed can be adjusted to same
 
