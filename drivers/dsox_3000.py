@@ -445,7 +445,11 @@ class DSOX_3000:
         self.write("TRIG:SWE AUTO")
         self.write("*OPC")
 
-    def set_trigger_level(self, level: float, chan: int) -> None:
+    def set_trigger_level(
+        self,
+        chan: int,
+        level: float,
+    ) -> None:
         """
         set_trigger_level
         Set the trigger level and source
@@ -620,7 +624,10 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=0, chan=1)
+    dsox3034t.set_trigger_level(
+        chan=1,
+        level=0,
+    )
 
     dsox3034t.set_timebase(20e-9)
 
