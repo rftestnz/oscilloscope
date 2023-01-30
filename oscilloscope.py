@@ -439,6 +439,48 @@ def test_timebase(filename: str, row: int) -> None:
     uut.close()
 
 
+def test_trigger_sensitivity(self, filename: str, test_rows: List) -> None:
+    """
+    test_trigger_sensitivity
+
+    Do a simpler test of sensitivity than the Keysight method
+
+    No other manufacturer tests sensitivity, and it is likely a design time issue rather than
+    degradation problem
+
+    Args:
+        filename (str): _description_
+        test_rows (list): _description_
+    """
+
+    global mxg
+    global uut
+
+    uut.reset()
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    # Need to know if the UUT has 50 Ohm input or not
+
+    ext_termination = True
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+            settings = excel.get_test_settings()
+            if settings.channel == 1:
+                if settings.impedance == 50:
+                    ext_termination = False
+                    break
+
+        # now the main test loop
+
+        for row in test_rows:
+            excel.row = row
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
