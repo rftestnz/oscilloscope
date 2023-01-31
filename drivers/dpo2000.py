@@ -380,10 +380,10 @@ class DPO_2000:
 
         self.write("MEASU:MEAS1:TYPE MEAN")
 
-        self.write(f"MEAS:SOURCE CH{chan}")
-        self.write(f"MEASU:MEAS{chan}:STATE ON")
+        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
+        self.write("MEASU:MEAS1:STATE ON")
 
-        return self.read_query(f"MEASU:MEAS{chan}:MEAN?")
+        return self.read_query("MEASU:MEAS1:MEAN?")
 
     def read_cursor(self, cursor: str) -> float:
         """
