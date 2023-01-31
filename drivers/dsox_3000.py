@@ -77,7 +77,11 @@ class DSOX3000_Simulator:
         if command == "*IDN?":
             return "Keysight,DSOX3034G,MY_Simulated,B.00.00"
 
-        return str(0.5 + random()) if command.startswith("READ") else ""
+        return (
+            str(0.5 + random())
+            if command.startswith("READ") or command.startswith("MEAS")
+            else ""
+        )
 
 
 class DSOX_3000:
@@ -477,6 +481,25 @@ class DSOX_3000:
         self.write(f"MEAS:SOURCE CHAN{chan}")
 
         return self.read_query("MEAS:VAV?")
+
+    def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
+        """
+        measure_risetime
+        Use the measure function to mneasure the rise time average of n measurements
+
+        Args:
+            chan (int): _description_
+            num_readings (int, optional): _description_. Defaults to 1.
+
+        Returns:
+            float: _description_
+        """
+
+        self.write(f"MEAS:SOURCE CHAN{chan}")
+
+        total = sum(self.read_query("MEAS:RISE?") for _ in range(num_readings))
+
+        return total / num_readings
 
     def cursors_on(self) -> None:
         """

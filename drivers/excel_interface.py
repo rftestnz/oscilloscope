@@ -286,14 +286,16 @@ class ExcelInterface:
         if row == -1:
             row = self.row
 
-        settings = namedtuple("settings", ["function", "timebase"])
+        settings = namedtuple("settings", ["function", "channel", "timebase"])
 
         col = self.__data_col
         func = self.ws.cell(column=col, row=row).value
         col += 1
+        channel = self.ws.cell(column=col, row=row).value
+        col += 1
         tb = self.ws.cell(column=col, row=row).value
 
-        return settings(function=func, timebase=tb)
+        return settings(function=func, channel=channel, timebase=tb)
 
     def get_test_settings(self, row: int = -1) -> NamedTuple:
         """

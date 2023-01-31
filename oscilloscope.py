@@ -528,6 +528,46 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     uut.close()
 
 
+def test_risetime(filename: str, test_rows: List) -> None:
+    """
+    test_risetime
+    Use fast pulse generator to test rise time of each channel
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+
+    uut.reset()
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_tb_test_settings()
+
+            # TODO feedthru
+
+            sg.popup(f"Connect fast pulse generator to channel {settings.channel}", background_color="blue")  # type: ignore
+
+            for chan in range(uut.num_channels):
+                uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)  # type: ignore
+
+            uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
+
+            # TODO set impedance if 50 Ohm
+
+            uut.set_timebase(settings.timebase * 10e-9)  # type: ignore
+            uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+
+            risetime = uut.measure_risetime(chan=settings.channel, num_readings=10)  # type: ignore
+
+            excel.write_result(risetime, save=True, col=2)
+
+    uut.reset()
+    uut.close()
+
+
 def round_range(val: float) -> float:
     """
     round_range
@@ -667,6 +707,7 @@ if __name__ == "__main__":
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
             sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
+            sg.Button("Test Risetime", size=(12, 1), key="-TEST_RISE-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -722,7 +763,7 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-"]:
+        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-", "-TEST_RISE-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -773,15 +814,19 @@ if __name__ == "__main__":
                     if len(test_rows):
                         test_cursor(filename=values["-FILE-"], test_rows=test_rows)
 
-                if event == "-TEST_TB-":
+                elif event == "-TEST_TB-":
                     test_rows = excel.get_test_rows("TIME")
                     test_timebase(filename=values["-FILE-"], row=test_rows[0])
 
-                if event == "-TEST_TRIG-":
+                elif event == "-TEST_TRIG-":
                     test_rows = excel.get_test_rows("TRIG")
                     test_trigger_sensitivity(
                         filename=values["-FILE-"], test_rows=test_rows
                     )
+
+                elif event == "-TEST_RISE-":
+                    test_rows = excel.get_test_rows("RISE")
+                    test_risetime(filename=values["-FILE-"], test_rows=test_rows)
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
