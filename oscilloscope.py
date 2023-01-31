@@ -202,6 +202,27 @@ def test_connections() -> Dict:
     }
 
 
+def test_dc_balance(filename: str, test_rows: List) -> None:
+    """
+    test_dc_balance
+    Test the dc balance of each channel with no signal applied
+
+    Args:
+        filename (str): _description_
+        test_rows (int): _description_
+    """
+
+    sg.popup("Remove inputs from all channels", background_color="blue")
+
+    uut.reset()
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     # sourcery skip: extract-method
     """
