@@ -854,7 +854,7 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            uut = DSOX_3000(simulate=simulating)
+            # uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
 
             uut.open_connection()
