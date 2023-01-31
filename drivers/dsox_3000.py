@@ -478,6 +478,25 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
+    def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
+        """
+        measure_risetime
+        Use the measure function to mneasure the rise time average of n measurements
+
+        Args:
+            chan (int): _description_
+            num_readings (int, optional): _description_. Defaults to 1.
+
+        Returns:
+            float: _description_
+        """
+
+        self.write(f"MEAS:SOURCE CHAN{chan}")
+
+        total = sum(self.read_query("MEAS:RISE?") for _ in range(num_readings))
+
+        return total / num_readings
+
     def cursors_on(self) -> None:
         """
         cursors_on
