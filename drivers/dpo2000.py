@@ -405,18 +405,24 @@ class DPO_2000:
             float: _description_
         """
 
+        # Tek cannot reste the statistics, so a hack is to change timebase
+
+        timebase = self.read_query("HOR:SCAL?")
+
+        self.set_timebase(timebase=timebase * 2)
+        self.set_timebase(timebase=timebase)
+
         self.write("MEASU:MEAS:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        time.sleep(1)  # allow time to measure
+        print(self.read_query("MEASU:MEAS1:COUNT?"))
 
-        total = 0
-        for _ in range(num_readings):
-            total += self.read_query("MEASU:MEAS:RIS?")
-            time.sleep(0.1)
+        time.sleep(2)  # allow time to measure
 
-        return total / num_readings
+        # Tek will automatically average successive readings
+
+        return self.read_query("MEASU:MEAS1:MEAN?")
 
     def read_cursor(self, cursor: str) -> float:
         """
