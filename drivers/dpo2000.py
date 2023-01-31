@@ -76,6 +76,7 @@ class DPO_2000:
     serial = ""
     timeout = 5000
     num_channels: int = 4
+    keysight: bool = False
 
     def __init__(self, simulate=False):
         self.simulating = simulate
@@ -517,6 +518,15 @@ class DPO_2000:
                     break
         else:
             ...
+
+    def cursors_on(self) -> None:
+        """
+        cursors_on
+        Turn the markers on
+        """
+
+        self.write("CURS:FUNC WAV")
+        self.write("*OPC")
 
 
 if __name__ == "__main__":
