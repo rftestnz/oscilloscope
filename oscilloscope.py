@@ -510,6 +510,10 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
                 uut.set_trigger_level(chan=0, level=0)
 
             period = 1 / settings.frequency / 1e6  # type: ignore
+            # Round it off to a nice value of 1, 2, 5 or multiple
+
+            period = round_range(period)
+
             uut.set_timebase(period * 2)
 
             triggered = uut.check_triggered(sweep_time=0.1)  # actual sweep time is ns
