@@ -10,6 +10,7 @@ from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
+from drivers.dpo2000 import DPO_2000
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 import os
@@ -157,6 +158,25 @@ def connections_check_form() -> None:
             )
 
     window.close()
+
+
+def select_uut_driver(address: str) -> None:
+    """
+    select_uut_driver
+    Make a generic enquiry of the uut and set the member var to the correct driver
+    """
+
+    global uut
+
+    check = DSOX_3000(simulate=False)
+    check.visa_address = address
+    check.open_connection()
+    print(check.manufacturer)
+
+    if check.manufacturer.upper().split(" ")[0] in {"KEYSIGHT", "AGILENT"}:
+        uut = DSOX_3000()
+    elif check.manufacturer == "TEKTRONIX":
+        uut = DPO_2000()
 
 
 def test_connections() -> Dict:
