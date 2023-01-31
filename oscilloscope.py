@@ -724,6 +724,7 @@ if __name__ == "__main__":
             ),
         ],
         [sg.Text()],
+        [sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-")],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
@@ -864,8 +865,14 @@ if __name__ == "__main__":
             ks33250.open_connection()
             mxg.visa_address = mxg_address
             mxg.open_connection()
+            uut.visa_address = values["-UUT_ADDRESS-"]
+            uut.open_connection()
+
             connections_check_form()
             continue
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
+
+        if event == "-CHECK_UUT-":
+            select_uut_driver(values["-UUT_ADDRESS-"])
