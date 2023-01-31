@@ -11,12 +11,13 @@ from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
 from drivers.excel_interface import ExcelInterface
+from drivers.rf_signal_generator import RF_Signal_Generator
 import os
 import sys
 import time
 from pathlib import Path
 from datetime import datetime
-
+import math
 
 VERSION = "A.00.00"
 
@@ -24,6 +25,7 @@ VERSION = "A.00.00"
 calibrator = Fluke5700A()
 ks33250 = Ks33250A()
 uut = DSOX_3000()
+mxg = RF_Signal_Generator()
 simulating: bool = False
 
 cursor_results: List = []
@@ -90,6 +92,7 @@ def connections_check_form() -> None:
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
+        [sg.Text("RF Generator", size=(20, 1)), led_indicator("-RFGEN_CONN-")],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
@@ -109,6 +112,11 @@ def connections_check_form() -> None:
         window,
         "-33250_CONN-",
         color="green" if connected["33250A"] else "red",
+    )
+    set_led(
+        window,
+        "-RFGEN_CONN-",
+        color="green" if connected["RFGEN"] else "red",
     )
     set_led(
         window,
@@ -134,6 +142,16 @@ def connections_check_form() -> None:
             )
             set_led(
                 window,
+                "-33250_CONN-",
+                color="green" if connected["33250A"] else "red",
+            )
+            set_led(
+                window,
+                "-RFGEN_CONN-",
+                color="green" if connected["RFGEN"] else "red",
+            )
+            set_led(
+                window,
                 "-UUT-",
                 color="green" if connected["DSO"] else "red",
             )
@@ -148,13 +166,20 @@ def test_connections() -> Dict:
 
     global calibrator
     global ks33250
+    global mxg
     global uut
 
     fluke_5700a_conn = calibrator.is_connected()
     ks33250_conn = ks33250.is_connected()
+    rfgen_conn = mxg.is_connected()
     uut_conn = uut.is_connected()
 
-    return {"FLUKE_5700A": fluke_5700a_conn, "33250A": ks33250_conn, "DSO": uut_conn}
+    return {
+        "FLUKE_5700A": fluke_5700a_conn,
+        "33250A": ks33250_conn,
+        "RFGEN": rfgen_conn,
+        "DSO": uut_conn,
+    }
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
@@ -214,8 +239,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
-                if settings.impedance:
-                    uut.set_channel_impedance(settings.impedance)
+                if settings.impedance:  # type: ignore
+                    uut.set_channel_impedance(settings.impedance)  # type: ignore
                     set_impedance = True
 
                 uut.set_cursor_xy_source(chan=1, cursor=1)
@@ -338,7 +363,7 @@ def test_timebase(filename: str, row: int) -> None:
         ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
         ks33250.enable_output(True)
 
-        uut.set_trigger_level(level=0, chan=1)
+        uut.set_trigger_level(chan=1, level=0)
 
         if setting.timebase:  # type: ignore
             uut.set_timebase(setting.timebase / 1e9)  # type: ignore
@@ -412,6 +437,130 @@ def test_timebase(filename: str, row: int) -> None:
     ks33250.close()
     uut.reset()
     uut.close()
+
+
+def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
+    """
+    test_trigger_sensitivity
+
+    Do a simpler test of sensitivity than the Keysight method
+
+    No other manufacturer tests sensitivity, and it is likely a design time issue rather than
+    degradation problem
+
+    Args:
+        filename (str): _description_
+        test_rows (list): _description_
+    """
+
+    global mxg
+    global uut
+
+    uut.reset()
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    # Need to know if the UUT has 50 Ohm input or not
+
+    ext_termination = True
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+            settings = excel.get_test_settings()
+            if settings.channel == 1 and settings.impedance == 50:  # type: ignore
+                ext_termination = False
+                break
+
+        # now the main test loop
+
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            feedthru_msg = (
+                "via 50 Ohm Feedthru"
+                if ext_termination or str(settings.channel).upper() == "EXT"  # type: ignore
+                else ""
+            )
+
+            sg.popup(
+                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",  # type: ignore
+                background_color="blue",
+            )
+
+            mxg.set_frequency_MHz(settings.frequency)  # type: ignore
+            mxg.set_level(settings.voltage, units="mV")  # type: ignore
+            mxg.set_output_state(True)
+
+            if str(settings.channel).upper() != "EXT":  # type: ignore
+                for chan in range(1, uut.num_channels + 1):
+                    uut.set_channel(chan=chan, enabled=chan == settings.channel)  # type: ignore
+                uut.set_channel(chan=settings.channel, enabled=True)  # type: ignore
+                uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
+                uut.set_voltage_offset(chan=settings.channel, offset=0)  # type: ignore
+                uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+
+            else:
+                # external. use channel 1
+                uut.set_channel(chan=1, enabled=True)
+                uut.set_trigger_level(chan=0, level=0)
+
+            period = 1 / settings.frequency / 1e6  # type: ignore
+            # Round it off to a nice value of 1, 2, 5 or multiple
+
+            period = round_range(period)
+
+            uut.set_timebase(period * 2)
+
+            triggered = uut.check_triggered(sweep_time=0.1)  # actual sweep time is ns
+
+            test_result = "Pass" if triggered else "Fail"
+            excel.write_result(result=test_result, save=True, col=2)
+
+    mxg.set_output_state(False)
+    mxg.close()
+
+    uut.reset()
+    uut.close()
+
+
+def round_range(val: float) -> float:
+    """
+    round_range
+    Round the setting (voltage or time) to the closest 1, 2, 5 multiple
+
+    Args:
+        val (float): _description_
+
+    Returns:
+        float: _description_
+    """
+
+    # Using logs to get the multiplier
+
+    lg = math.log10(val)
+    decade = int(lg)
+
+    # for less than 1 we want to multiply
+    if val < 1:
+        decade -= 1
+
+    # normalize. Anything greater than 1 will work fine here, but less than 1 need to multiply, hence the -decade
+    normalized = val * math.pow(10, -decade)
+    first_digit = int(str(normalized)[0])
+
+    if first_digit < 2:
+        first_digit = 1
+    elif first_digit < 5:
+        first_digit = 2
+    else:
+        first_digit = 5
+
+    return first_digit * math.pow(10, decade)
 
 
 if __name__ == "__main__":
@@ -490,6 +639,21 @@ if __name__ == "__main__":
             ),
         ],
         [
+            sg.Text("RF Gen", size=(15, 1)),
+            sg.Combo(
+                gpib_ifc_list,
+                size=(10, 1),
+                key="GPIB_IFC_RFGEN",
+                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_IFC-"),
+            ),
+            sg.Combo(
+                gpib_addresses,
+                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_ADDR-"),
+                size=(6, 1),
+                key="GPIB_ADDR_RFGEN",
+            ),
+        ],
+        [
             sg.Text("UUT", size=(15, 1)),
             sg.Input(
                 default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
@@ -502,6 +666,7 @@ if __name__ == "__main__":
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
+            sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -532,6 +697,8 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
         sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
+        sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
+        sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
         sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
@@ -549,10 +716,13 @@ if __name__ == "__main__":
             f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
         )
 
+        mxg.simulating = simulating
+        mxg_address = f"{values['GPIB_IFC_RFGEN']}::{values['GPIB_ADDR_RFGEN']}::INSTR"
+
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-", "-TEST_TB-"]:
+        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-"]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -574,10 +744,12 @@ if __name__ == "__main__":
                 calibrator = M142(simulate=simulating)
             else:
                 calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address  # type: ignore
+            calibrator.visa_address = calibrator_address
             calibrator.open_connection()
-            ks33250.visa_address = ks33250_address  # type: ignore
+            ks33250.visa_address = ks33250_address
             ks33250.open_connection()
+            mxg.visa_address = mxg_address
+            mxg.open_connection()
 
             uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
@@ -600,9 +772,16 @@ if __name__ == "__main__":
                     test_rows = excel.get_test_rows("CURS")
                     if len(test_rows):
                         test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+
                 if event == "-TEST_TB-":
                     test_rows = excel.get_test_rows("TIME")
                     test_timebase(filename=values["-FILE-"], row=test_rows[0])
+
+                if event == "-TEST_TRIG-":
+                    test_rows = excel.get_test_rows("TRIG")
+                    test_trigger_sensitivity(
+                        filename=values["-FILE-"], test_rows=test_rows
+                    )
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
@@ -616,6 +795,8 @@ if __name__ == "__main__":
             calibrator.open_connection()
             ks33250.visa_address = ks33250_address
             ks33250.open_connection()
+            mxg.visa_address = mxg_address
+            mxg.open_connection()
             connections_check_form()
             continue
 

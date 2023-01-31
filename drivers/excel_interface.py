@@ -322,6 +322,7 @@ class ExcelInterface:
                 "voltage",
                 "offset",
                 "impedance",
+                "frequency",
             ],
         )
 
@@ -339,6 +340,8 @@ class ExcelInterface:
         offset = self.ws.cell(column=col, row=row).value
         col += 1
         impedance = self.ws.cell(column=col, row=row).value
+        col += 1
+        frequency = self.ws.cell(column=col, row=row).value
 
         return settings(
             function=func,
@@ -348,6 +351,7 @@ class ExcelInterface:
             voltage=voltage,
             offset=offset,
             impedance=impedance,
+            frequency=frequency,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
@@ -409,7 +413,9 @@ class ExcelInterface:
 
         return self.ws.cell(column=self.__units_col, row=self.row).value
 
-    def write_result(self, result: float, save: bool = True, col: int = 0) -> None:
+    def write_result(
+        self, result: float | str, save: bool = True, col: int = 0
+    ) -> None:
         """
         write_result
         Write the data to the sheet at the current row

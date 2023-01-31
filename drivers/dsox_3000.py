@@ -445,17 +445,23 @@ class DSOX_3000:
         self.write("TRIG:SWE AUTO")
         self.write("*OPC")
 
-    def set_trigger_level(self, level: float, chan: int) -> None:
+    def set_trigger_level(
+        self,
+        chan: int,
+        level: float,
+    ) -> None:
         """
         set_trigger_level
         Set the trigger level and source
 
         Args:
             level (float): _description_
-            chan (int): _description_
+            chan (int): 0 for ext, else channel number
         """
 
-        self.write(f"TRIG:EDGE:SOUR CHAN{chan}")
+        source = f"CHAN{chan}" if chan else "EXT"
+
+        self.write(f"TRIG:EDGE:SOUR {source}")
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
@@ -590,6 +596,24 @@ class DSOX_3000:
         else:
             ...
 
+    def check_triggered(self, sweep_time: float = 0.1) -> bool:
+        """
+        check_triggered
+        Check if the scope is triggered
+        clears it first then waits for a sweep and returns the status
+
+        Returns:
+            bool: _description_
+        """
+
+        self.write("*CLS")
+
+        time.sleep(sweep_time)
+
+        triggered = self.query("TER?")
+
+        return triggered == "1"
+
 
 if __name__ == "__main__":
 
@@ -620,7 +644,10 @@ if __name__ == "__main__":
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
 
-    dsox3034t.set_trigger_level(level=0, chan=1)
+    dsox3034t.set_trigger_level(
+        chan=1,
+        level=0,
+    )
 
     dsox3034t.set_timebase(20e-9)
 
