@@ -135,9 +135,7 @@ class DPO_2000:
         """
         return bool(
             self.open_connection()
-            and (
-                not self.simulating and self.model.find("3034") >= 0 or self.simulating
-            )
+            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
         )
 
     def write(self, command: str) -> None:
