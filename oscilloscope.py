@@ -811,7 +811,13 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-", "-TEST_RISE-"]:
+        if event in [
+            "-TEST_DCV-",
+            "-TEST_TB-",
+            "-TEST_TRIG-",
+            "-TEST_RISE-",
+            "-TEST_BAL-",
+        ]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -883,6 +889,10 @@ if __name__ == "__main__":
                 elif event == "-TEST_RISE-":
                     test_rows = excel.get_test_rows("RISE")
                     test_risetime(filename=values["-FILE-"], test_rows=test_rows)
+
+                elif event == "-TEST_BAL-":
+                    test_rows = excel.get_test_rows("BAL")
+                    test_dc_balance(filename=values["-FILE-"], test_rows=test_rows)
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
