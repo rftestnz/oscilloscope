@@ -3,8 +3,8 @@
 # DK Jan 2023
 """
 
-from collections import namedtuple
-from typing import Tuple, NamedTuple, List, Any
+
+from typing import Tuple, List, Any
 import openpyxl
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
 import os
@@ -12,9 +12,36 @@ import time
 import re
 from datetime import datetime
 from pprint import pprint
-
+from dataclasses import dataclass
 
 VERSION = "A.00.01"
+
+
+@dataclass(frozen=True)
+class DCV_Settings:
+
+    function: str
+    channel: str | int  # Allow for EXT
+    coupling: str
+    scale: float
+    voltage: float
+    offset: float
+    impedance: str
+    frequency: float
+
+
+@dataclass(frozen=True)
+class Timebase_Settings:
+    function: str
+    channel: int
+    timebase: float
+
+
+@dataclass
+class Cell:
+    col: int
+    row: int
+    value: Any
 
 
 class ExcelInterface:
@@ -167,7 +194,7 @@ class ExcelInterface:
 
         return [col, row]  # type: ignore
 
-    def get_named_cell(self, name: str) -> NamedTuple:
+    def get_named_cell(self, name: str) -> Cell:
         """
         get_named_cell
         Get the cell coordinates from a named range.
@@ -191,11 +218,9 @@ class ExcelInterface:
 
             tabname, coord = next(dests)
 
-            cell = namedtuple("Cell", ["col", "row", "value"])
-
             cd = self.get_column_row_number(coord)
 
-            return cell(col=cd[0], row=cd[1], value=self.ws[coord].value)
+            return Cell(col=cd[0], row=cd[1], value=self.ws[coord].value)
         except KeyError:
             return None  # type: ignore
 
@@ -270,7 +295,7 @@ class ExcelInterface:
 
         return test_rows
 
-    def get_tb_test_settings(self, row: int = -1) -> NamedTuple:
+    def get_tb_test_settings(self, row: int = -1) -> Timebase_Settings:
         """
         get_tb_test_settings
         Get the settings relevant to the timebase test
@@ -285,8 +310,6 @@ class ExcelInterface:
         if row == -1:
             row = self.row
 
-        settings = namedtuple("settings", ["function", "channel", "timebase"])
-
         col = self.__data_col
         func = self.ws.cell(column=col, row=row).value
         col += 1
@@ -294,9 +317,9 @@ class ExcelInterface:
         col += 1
         tb = self.ws.cell(column=col, row=row).value
 
-        return settings(function=func, channel=channel, timebase=tb)
+        return Timebase_Settings(function=func, channel=channel, timebase=tb)
 
-    def get_test_settings(self, row: int = -1) -> NamedTuple:
+    def get_test_settings(self, row: int = -1) -> DCV_Settings:
         """
         get_test_settings
         Read the current row as a test setting
@@ -312,20 +335,6 @@ class ExcelInterface:
 
         if row == -1:
             row = self.row
-
-        settings = namedtuple(
-            "settings",
-            [
-                "function",
-                "channel",
-                "coupling",
-                "scale",
-                "voltage",
-                "offset",
-                "impedance",
-                "frequency",
-            ],
-        )
 
         col = self.__data_col
         func = self.ws.cell(column=col, row=row).value
@@ -344,7 +353,7 @@ class ExcelInterface:
         col += 1
         frequency = self.ws.cell(column=col, row=row).value
 
-        return settings(
+        return DCV_Settings(
             function=func,
             channel=chan,
             coupling=coupling,
