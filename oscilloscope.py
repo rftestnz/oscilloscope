@@ -254,6 +254,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     Set the calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
     """
 
+    global calibrator
+    global uut
     global simulating
     global cursor_results
 
@@ -376,6 +378,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 # Keysight simple test. 0V is measured for the cursors only
                 excel.write_result(reading)
 
+        calibrator.reset()
         calibrator.close()
 
         # Turn off all channels but 1
