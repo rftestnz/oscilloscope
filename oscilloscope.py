@@ -365,7 +365,16 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             calibrator.standby()
 
-            excel.write_result(reading)  # auto saving
+            if units.startswith("m"):
+                reading *= 1000
+                reading1 *= 1000
+
+            if settings.function == "DCV-BAL":
+                diff = reading1 - reading
+                excel.write_result(diff)  # auto saving
+            else:
+                # Keysight simple test. 0V is measured for the cursors only
+                excel.write_result(reading)
 
         calibrator.close()
 
