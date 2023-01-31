@@ -177,6 +177,7 @@ def select_uut_driver(address: str) -> None:
         uut = DSOX_3000()
     elif check.manufacturer == "TEKTRONIX":
         uut = DPO_2000()
+        uut.num_channels = check.num_channels
 
 
 def test_connections() -> Dict:
