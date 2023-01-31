@@ -524,6 +524,41 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     uut.close()
 
 
+def round_range(val: float) -> float:
+    """
+    round_range
+    Round the setting (voltage or time) to the closest 1, 2, 5 multiple
+
+    Args:
+        val (float): _description_
+
+    Returns:
+        float: _description_
+    """
+
+    # Using logs to get the multiplier
+
+    lg = math.log10(val)
+    decade = int(lg)
+
+    # for less than 1 we want to multiply
+    if val < 1:
+        decade -= 1
+
+    # normalize. Anything greater than 1 will work fine here, but less than 1 need to multiply, hence the -decade
+    normalized = val * math.pow(10, -decade)
+    first_digit = int(str(normalized)[0])
+
+    if first_digit < 2:
+        first_digit = 1
+    elif first_digit < 5:
+        first_digit = 2
+    else:
+        first_digit = 5
+
+    return first_digit * math.pow(10, decade)
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
