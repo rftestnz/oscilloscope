@@ -746,7 +746,10 @@ if __name__ == "__main__":
             ),
         ],
         [sg.Text()],
-        [sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-")],
+        [
+            sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
+            sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
+        ],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
