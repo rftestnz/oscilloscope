@@ -284,6 +284,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             settings = excel.get_test_settings()
 
+            units = excel.get_units()
+
             calibrator.set_voltage_dc(0)
 
             channel = int(settings.channel)
@@ -342,10 +344,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 time.sleep(1)
 
             reading = uut.measure_voltage(chan=channel)
-            units = excel.get_units()
-
-            if units.startswith("m"):
-                reading *= 1000
 
             voltage2 = uut.read_cursor_avg()
 
