@@ -77,7 +77,11 @@ class DSOX3000_Simulator:
         if command == "*IDN?":
             return "Keysight,DSOX3034G,MY_Simulated,B.00.00"
 
-        return str(0.5 + random()) if command.startswith("READ") else ""
+        return (
+            str(0.5 + random())
+            if command.startswith("READ") or command.startswith("MEAS")
+            else ""
+        )
 
 
 class DSOX_3000:
