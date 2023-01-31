@@ -229,14 +229,19 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            uut.set_channel(chan=settings.channel, enabled=True, only=True)
-            uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
-            uut.set_voltage_offset(chan=settings.channel, offset=0)
-            uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
+            if settings.function == "BAL":
+                uut.set_channel(chan=settings.channel, enabled=True, only=True)
+                uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+                uut.set_voltage_offset(chan=settings.channel, offset=0)
+                uut.set_channel_coupling(
+                    chan=settings.channel, coupling=settings.coupling
+                )
 
-            reading = uut.measure_voltage(chan=settings.channel)
+                reading = (
+                    uut.measure_voltage(chan=settings.channel, delay=2) * 1000
+                )  # mV
 
-            excel.write_result(reading)
+                excel.write_result(reading)
 
     uut.reset()
 
