@@ -213,15 +213,30 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
         test_rows (int): _description_
     """
 
+    global uut
+
     sg.popup("Remove inputs from all channels", background_color="blue")
 
     uut.reset()
+
+    uut.set_timebase(0.001)
 
     with ExcelInterface(filename=filename) as excel:
         for row in test_rows:
             excel.row = row
 
             settings = excel.get_test_settings()
+
+            uut.set_channel(chan=settings.channel, enabled=True, only=True)
+            uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=settings.channel, offset=0)
+            uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
+
+            reading = uut.measure_voltage(chan=settings.channel)
+
+            excel.write_result(reading)
+
+    uut.reset()
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
