@@ -379,7 +379,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:IMP {imp}")
 
-    def set_channel(self, chan: int, enabled: bool) -> None:
+    def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
         Turn display of channel on or off
@@ -387,11 +387,18 @@ class DSOX_3000:
         Args:
             chan (int): _description_
             enabled (bool): _description_
+            only (bool): True if turn off all other channels
         """
 
-        state = "ON" if enabled else "OFF"
+        if only:
+            for channel in range(1, self.num_channels + 1):
+                state = "ON" if channel == chan else "OFF"
+                self.write(f"CHAN{chan}:DISP {state}")
 
-        self.write(f"CHAN{chan}:DISP {state}")
+        else:
+            state = "ON" if enabled else "OFF"
+            self.write(f"CHAN{chan}:DISP {state}")
+
         self.write("*OPC")
 
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
