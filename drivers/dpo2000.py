@@ -271,7 +271,7 @@ class DPO_2000:
         if only:
             for channel in range(1, self.num_channels + 1):
                 state = "ON" if channel == chan else "OFF"
-                self.write(f"SEL:CH{chan} {state}")
+                self.write(f"SEL:CH{channel} {state}")
 
         else:
             state = "ON" if enabled else "OFF"
