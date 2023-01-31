@@ -483,7 +483,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
             feedthru_msg = (
                 "via 50 Ohm Feedthru"
-                if ext_termination or settings.channel.upper() == "EXT"  # type: ignore
+                if ext_termination or str(settings.channel).upper() == "EXT"  # type: ignore
                 else ""
             )
 
@@ -496,7 +496,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
             mxg.set_level(settings.voltage, units="mV")  # type: ignore
             mxg.set_output_state(True)
 
-            if settings.channel.upper() != "EXT":  # type: ignore
+            if str(settings.channel).upper() != "EXT":  # type: ignore
                 for chan in range(1, uut.num_channels + 1):
                     uut.set_channel(chan=chan, enabled=chan == settings.channel)  # type: ignore
                 uut.set_channel(chan=settings.channel, enabled=True)  # type: ignore
