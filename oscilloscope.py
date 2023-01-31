@@ -707,7 +707,7 @@ if __name__ == "__main__":
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
             sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
-            sg.Button("Test Risetime (BW)", size=(12, 1), key="-TEST_RISE-"),
+            sg.Button("Test Risetime", size=(12, 1), key="-TEST_RISE-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
