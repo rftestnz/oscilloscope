@@ -393,7 +393,7 @@ class DSOX_3000:
         if only:
             for channel in range(1, self.num_channels + 1):
                 state = "ON" if channel == chan else "OFF"
-                self.write(f"CHAN{chan}:DISP {state}")
+                self.write(f"CHAN{channel}:DISP {state}")
 
         else:
             state = "ON" if enabled else "OFF"
@@ -503,7 +503,7 @@ class DSOX_3000:
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
-    def measure_voltage(self, chan: int) -> float:
+    def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
         measure_voltage
         Return the average voltage
@@ -513,6 +513,8 @@ class DSOX_3000:
         """
 
         self.write(f"MEAS:SOURCE CHAN{chan}")
+
+        time.sleep(delay)
 
         return self.read_query("MEAS:VAV?")
 

@@ -369,19 +369,26 @@ class DPO_2000:
         self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
         self.write(f"TRIG:A:LEV {level}")
 
-    def measure_voltage(self, chan: int) -> float:
+    def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
-        measure_voltage
-        Return the average voltage
+        measure_voltage _summary_
+
+        Args:
+            chan (int): _description_
+            delay (float, optional): Number seconds to allow measurement. Defaults to 1.
 
         Returns:
             float: _description_
         """
 
+        # Only using measurement 1
+
         self.write("MEASU:MEAS1:TYPE MEAN")
 
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
+
+        time.sleep(delay)
 
         return self.read_query("MEASU:MEAS1:MEAN?")
 
