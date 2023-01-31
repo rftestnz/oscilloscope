@@ -425,6 +425,57 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
+def test_position(filename: str, test_rows: List) -> None:
+    """
+    test_position
+    Test vertical position
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+    global calibrator
+    global uut
+
+    uut.reset()
+
+    uut.set_acquisition(32)
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
+            uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
+            uut.set_voltage_offset(chan=int(settings.channel), offset=settings.offset)
+
+            calibrator.set_voltage_dc(settings.voltage)
+
+            calibrator.operate()
+
+            time.sleep(1)
+
+            reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
+
+            # TODO limit is 0.2 Div
+
+            print(reading)
+
+            calibrator.standby()
+
+    calibrator.reset()
+    calibrator.close()
+
+    uut.reset()
+    uut.close()
+
+
 # DELAY_PERIOD = 0.00099998  # 1 ms
 # DELAY_PERIOD = 0.00100002  # 1 ms
 DELAY_PERIOD = 0.001  # 1 ms
