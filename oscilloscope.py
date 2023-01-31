@@ -322,6 +322,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
+            if settings.function == "DCV-BAL":
+                # Non keysight, apply the half the voltage and the offset then do the reverse
+
+                calibrator.set_voltage_dc(settings.voltage)
+
+            # 0V test
             calibrator.operate()
 
             if not simulating:
