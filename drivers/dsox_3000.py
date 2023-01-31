@@ -494,10 +494,13 @@ class DSOX_3000:
         Returns:
             float: _description_
         """
+        self.write(f"MEAS:RIS CHAN{chan}")
+        self.write("*OPC")
 
-        self.write(f"MEAS:SOURCE CHAN{chan}")
-
-        total = sum(self.read_query("MEAS:RISE?") for _ in range(num_readings))
+        total = 0
+        for _ in range(num_readings):
+            total += self.read_query(f"MEAS:RIS? CHAN{chan}")
+            time.sleep(0.1)
 
         return total / num_readings
 
@@ -658,7 +661,7 @@ if __name__ == "__main__":
     dsox3034t.set_voltage_offset(chan=1, offset=0)
     dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
     dsox3034t.set_timebase(0.001)
-
+    dsox3034t.set_timebase(5e-9)
     dsox3034t.set_acquisition(64)
 
     dsox3034t.set_trigger_mode("EDGE")
@@ -666,6 +669,8 @@ if __name__ == "__main__":
     time.sleep(1)
 
     print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
+
+    print(f"Measurement {dsox3034t.measure_risetime(chan=1, num_readings=10)}")
 
     dsox3034t.set_trigger_level(
         chan=1,

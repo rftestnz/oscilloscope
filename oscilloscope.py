@@ -557,10 +557,12 @@ def test_risetime(filename: str, test_rows: List) -> None:
 
             # TODO set impedance if 50 Ohm
 
-            uut.set_timebase(settings.timebase * 10e-9)  # type: ignore
+            uut.set_timebase(settings.timebase * 1e-9)  # type: ignore
             uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
 
-            risetime = uut.measure_risetime(chan=settings.channel, num_readings=10)  # type: ignore
+            risetime = uut.measure_risetime(chan=settings.channel, num_readings=1) * 1e9  # type: ignore
+
+            # save in ns
 
             excel.write_result(risetime, save=True, col=2)
 
