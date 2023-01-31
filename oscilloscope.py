@@ -336,8 +336,16 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 time.sleep(1)
 
             voltage1 = uut.read_cursor_avg()
+            reading1 = uut.measure_voltage(chan=channel)
 
-            calibrator.set_voltage_dc(settings.voltage)
+            if settings.function == "DCV-BAL":
+                # still set up for the + voltage
+
+                calibrator.set_voltage_dc(-settings.voltage)
+                uut.set_voltage_offset(chan=channel, offset=-settings.offset)
+            else:
+                calibrator.set_voltage_dc(settings.voltage)
+
             calibrator.operate()
 
             if not simulating:
