@@ -528,6 +528,46 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     uut.close()
 
 
+def test_risetime(self, filename: str, test_rows: List) -> None:
+    """
+    test_risetime
+    Use fast pulse generator to test rise time of each channel
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+
+    uut.reset()
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_tb_test_settings()
+
+            # TODO feedthru
+
+            sg.popup(f"Connect fast pulse generator to channel {settings.channel}", background_color="blue")  # type: ignore
+
+            for chan in range(uut.num_channels):
+                uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)  # type: ignore
+
+            uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
+
+            # TODO set impedance if 50 Ohm
+
+            uut.set_timebase(settings.timebase * 10e-9)  # type: ignore
+            uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+
+            risetime = uut.measure_risetime(chan=settings.channel, num_readings=10)  # type: ignore
+
+            excel.write_result(risetime, save=True, col=2)
+
+    uut.reset()
+    uut.close()
+
+
 def round_range(val: float) -> float:
     """
     round_range
