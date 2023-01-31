@@ -230,15 +230,15 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
             settings = excel.get_test_settings()
 
             if settings.function == "BAL":
-                uut.set_channel(chan=settings.channel, enabled=True, only=True)
-                uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
-                uut.set_voltage_offset(chan=settings.channel, offset=0)
+                uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
+                uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
+                uut.set_voltage_offset(chan=int(settings.channel), offset=0)
                 uut.set_channel_coupling(
-                    chan=settings.channel, coupling=settings.coupling
+                    chan=int(settings.channel), coupling=settings.coupling
                 )
 
                 reading = (
-                    uut.measure_voltage(chan=settings.channel, delay=2) * 1000
+                    uut.measure_voltage(chan=int(settings.channel), delay=2) * 1000
                 )  # mV
 
                 excel.write_result(reading)
@@ -284,9 +284,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             settings = excel.get_test_settings()
 
-            calibrator.set_voltage_dc(0)  # type: ignore
+            calibrator.set_voltage_dc(0)
 
-            channel = settings.channel  # type: ignore
+            channel = int(settings.channel)
 
             if channel > uut.num_channels:
                 continue
@@ -303,8 +303,10 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
-                if settings.impedance:  # type: ignore
-                    uut.set_channel_impedance(settings.impedance)  # type: ignore
+                if settings.impedance:
+                    uut.set_channel_impedance(
+                        chan=channel, impedance=settings.impedance
+                    )
                     set_impedance = True
 
                 uut.set_cursor_xy_source(chan=1, cursor=1)
@@ -317,8 +319,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
-            uut.set_voltage_scale(chan=channel, scale=settings.scale)  # type: ignore
-            uut.set_voltage_offset(chan=channel, offset=settings.offset)  # type: ignore
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
             calibrator.operate()
 
@@ -327,7 +329,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             voltage1 = uut.read_cursor_avg()
 
-            calibrator.set_voltage_dc(settings.voltage)  # type: ignore
+            calibrator.set_voltage_dc(settings.voltage)
             calibrator.operate()
 
             if not simulating:
@@ -341,13 +343,17 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             voltage2 = uut.read_cursor_avg()
 
-            cursor_results.append({"chan": channel, "scale": settings.scale, "result": voltage2 - voltage1})  # type: ignore
+            cursor_results.append(
+                {
+                    "chan": channel,
+                    "scale": settings.scale,
+                    "result": voltage2 - voltage1,
+                }
+            )
 
             calibrator.standby()
 
             excel.write_result(reading)  # auto saving
-
-        # excel.save_sheet()
 
         calibrator.close()
 
@@ -382,8 +388,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
             if len(cursor_results):
                 for res in cursor_results:
                     if (
-                        res["chan"] == settings.channel  # type: ignore
-                        and res["scale"] == settings.scale  # type: ignore
+                        res["chan"] == settings.channel
+                        and res["scale"] == settings.scale
                     ):
                         units = excel.get_units()
                         result = res["result"]
@@ -429,8 +435,8 @@ def test_timebase(filename: str, row: int) -> None:
 
         uut.set_trigger_level(chan=1, level=0)
 
-        if setting.timebase:  # type: ignore
-            uut.set_timebase(setting.timebase / 1e9)  # type: ignore
+        if setting.timebase:
+            uut.set_timebase(setting.timebase / 1e9)
         else:
             uut.set_timebase(10e-9)
 
@@ -534,7 +540,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
         for row in test_rows:
             excel.row = row
             settings = excel.get_test_settings()
-            if settings.channel == 1 and settings.impedance == 50:  # type: ignore
+            if settings.channel == 1 and settings.impedance == 50:
                 ext_termination = False
                 break
 
@@ -547,33 +553,33 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
             feedthru_msg = (
                 "via 50 Ohm Feedthru"
-                if ext_termination or str(settings.channel).upper() == "EXT"  # type: ignore
+                if ext_termination or str(settings.channel).upper() == "EXT"
                 else ""
             )
 
             sg.popup(
-                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",  # type: ignore
+                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
                 background_color="blue",
             )
 
-            mxg.set_frequency_MHz(settings.frequency)  # type: ignore
-            mxg.set_level(settings.voltage, units="mV")  # type: ignore
+            mxg.set_frequency_MHz(settings.frequency)
+            mxg.set_level(settings.voltage, units="mV")
             mxg.set_output_state(True)
 
-            if str(settings.channel).upper() != "EXT":  # type: ignore
+            if str(settings.channel).upper() != "EXT":
                 for chan in range(1, uut.num_channels + 1):
-                    uut.set_channel(chan=chan, enabled=chan == settings.channel)  # type: ignore
-                uut.set_channel(chan=settings.channel, enabled=True)  # type: ignore
-                uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
-                uut.set_voltage_offset(chan=settings.channel, offset=0)  # type: ignore
-                uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+                    uut.set_channel(chan=chan, enabled=chan == settings.channel)
+                uut.set_channel(chan=int(settings.channel), enabled=True)
+                uut.set_voltage_scale(chan=int(settings.channel), scale=0.5)
+                uut.set_voltage_offset(chan=int(settings.channel), offset=0)
+                uut.set_trigger_level(chan=int(settings.channel), level=0)
 
             else:
                 # external. use channel 1
                 uut.set_channel(chan=1, enabled=True)
                 uut.set_trigger_level(chan=0, level=0)
 
-            period = 1 / settings.frequency / 1e6  # type: ignore
+            period = 1 / settings.frequency / 1e6
             # Round it off to a nice value of 1, 2, 5 or multiple
 
             period = round_range(period)
@@ -612,19 +618,22 @@ def test_risetime(filename: str, test_rows: List) -> None:
 
             # TODO feedthru
 
-            sg.popup(f"Connect fast pulse generator to channel {settings.channel}", background_color="blue")  # type: ignore
+            sg.popup(
+                f"Connect fast pulse generator to channel {settings.channel}",
+                background_color="blue",
+            )
 
             for chan in range(uut.num_channels):
-                uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)  # type: ignore
+                uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
 
-            uut.set_voltage_scale(chan=settings.channel, scale=0.5)  # type: ignore
+            uut.set_voltage_scale(chan=settings.channel, scale=0.5)
 
             # TODO set impedance if 50 Ohm
 
-            uut.set_timebase(settings.timebase * 1e-9)  # type: ignore
-            uut.set_trigger_level(chan=settings.channel, level=0)  # type: ignore
+            uut.set_timebase(settings.timebase * 1e-9)
+            uut.set_trigger_level(chan=settings.channel, level=0)
 
-            risetime = uut.measure_risetime(chan=settings.channel, num_readings=1) * 1e9  # type: ignore
+            risetime = uut.measure_risetime(chan=settings.channel, num_readings=1) * 1e9
 
             # save in ns
 
