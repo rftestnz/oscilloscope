@@ -84,7 +84,10 @@ class ExcelInterface:
             self.row = nr.row  # type: ignore
             self.__data_col = nr.col  # type: ignore
         elif rw := self.ws.cell(column=self.__data_col, row=1).value:
-            self.row = int(rw)  # type: ignore
+            try:
+                self.row = int(rw)  # type: ignore
+            except ValueError:
+                self.row = self.__start_row
         else:
             self.row = self.__start_row
 
