@@ -401,6 +401,17 @@ class DSOX_3000:
 
         self.write("*OPC")
 
+    def set_channel_coupling(self, chan: int, coupling: str) -> None:
+        """
+        set_channel_coupling _summary_
+
+        Args:
+            chan (int): _description_
+            coupling (str): _description_
+        """
+
+        self.write(f"CHAN{chan}:COUP {coupling}")
+
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
         set_voltage_scale _summary_

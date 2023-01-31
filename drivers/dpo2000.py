@@ -279,6 +279,17 @@ class DPO_2000:
 
         self.write("*OPC")
 
+    def set_channel_coupling(self, chan: int, coupling: str) -> None:
+        """
+        set_channel_coupling _summary_
+
+        Args:
+            chan (int): _description_
+            coupling (str): _description_
+        """
+
+        self.write(f"CH{chan}:COUP {coupling}")
+
     def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
         set_voltage_scale _summary_
