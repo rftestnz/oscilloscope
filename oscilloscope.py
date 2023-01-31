@@ -219,6 +219,8 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
     uut.reset()
 
+    uut.set_acquisition(64)
+
     uut.set_timebase(0.001)
 
     with ExcelInterface(filename=filename) as excel:
