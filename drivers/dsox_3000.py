@@ -307,13 +307,29 @@ class DSOX_3000:
         # use model for now until figuring out timeout
 
         valid = False
-        model_fields = self.model.split(" ")
-        if len(model_fields) > 1:
-            try:
-                self.num_channels = int(model_fields[1][3])
+
+        start_index = 0
+        model_index = 0
+        while model_index < len(self.model):
+            if self.model[model_index].isnumeric():
+                start_index = model_index
+                break
+            model_index += 1
+
+        if start_index:
+            model_number = self.model[start_index : start_index + 4]
+            if model_number[-1].isnumeric():
+                self.num_channels = int(model_number[-1])
                 valid = True
-            except (ValueError, IndexError):
-                valid = False
+
+        else:
+            model_fields = self.model.split(" ")
+            if len(model_fields) > 1:
+                try:
+                    self.num_channels = int(model_fields[1][3])
+                    valid = True
+                except (ValueError, IndexError):
+                    valid = False
 
         if not valid:
             tmo = self.instr.timeout  # type: ignore
