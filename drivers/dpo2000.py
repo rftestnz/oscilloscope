@@ -75,6 +75,7 @@ class DPO_2000:
     manufacturer = ""
     serial = ""
     timeout = 5000
+    num_channels: int = 4
 
     def __init__(self, simulate=False):
         self.simulating = simulate
