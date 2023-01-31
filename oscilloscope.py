@@ -17,7 +17,7 @@ import sys
 import time
 from pathlib import Path
 from datetime import datetime
-
+import math
 
 VERSION = "A.00.00"
 
@@ -780,7 +780,7 @@ if __name__ == "__main__":
                 if event == "-TEST_TRIG-":
                     test_rows = excel.get_test_rows("TRIG")
                     test_trigger_sensitivity(
-                        filename=values["-FILE"], test_rows=test_rows
+                        filename=values["-FILE-"], test_rows=test_rows
                     )
 
             sg.popup("Finished", background_color="blue")
