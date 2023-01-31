@@ -284,6 +284,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             settings = excel.get_test_settings()
 
+            units = excel.get_units()
+
             calibrator.set_voltage_dc(0)
 
             channel = int(settings.channel)
@@ -322,24 +324,34 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
+            if settings.function == "DCV-BAL":
+                # Non keysight, apply the half the voltage and the offset then do the reverse
+
+                calibrator.set_voltage_dc(settings.voltage)
+
+            # 0V test
             calibrator.operate()
 
             if not simulating:
                 time.sleep(1)
 
             voltage1 = uut.read_cursor_avg()
+            reading1 = uut.measure_voltage(chan=channel)
 
-            calibrator.set_voltage_dc(settings.voltage)
+            if settings.function == "DCV-BAL":
+                # still set up for the + voltage
+
+                calibrator.set_voltage_dc(-settings.voltage)
+                uut.set_voltage_offset(chan=channel, offset=-settings.offset)
+            else:
+                calibrator.set_voltage_dc(settings.voltage)
+
             calibrator.operate()
 
             if not simulating:
                 time.sleep(1)
 
             reading = uut.measure_voltage(chan=channel)
-            units = excel.get_units()
-
-            if units.startswith("m"):
-                reading *= 1000
 
             voltage2 = uut.read_cursor_avg()
 
@@ -353,7 +365,16 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             calibrator.standby()
 
-            excel.write_result(reading)  # auto saving
+            if units.startswith("m"):
+                reading *= 1000
+                reading1 *= 1000
+
+            if settings.function == "DCV-BAL":
+                diff = reading1 - reading
+                excel.write_result(diff)  # auto saving
+            else:
+                # Keysight simple test. 0V is measured for the cursors only
+                excel.write_result(reading)
 
         calibrator.close()
 
