@@ -533,6 +533,8 @@ class DSOX_3000:
         self.write(f"MEAS:RIS CHAN{chan}")
         self.write("*OPC")
 
+        time.sleep(1)  # allow time to measure
+
         total = 0
         for _ in range(num_readings):
             total += self.read_query(f"MEAS:RIS? CHAN{chan}")
