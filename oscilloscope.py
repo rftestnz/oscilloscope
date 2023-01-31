@@ -821,6 +821,14 @@ if __name__ == "__main__":
                 window["-FILE-"].update(background_color="Red")
                 valid = False
 
+            with ExcelInterface(filename=values["-FILE-"]) as excel:
+                if not excel.check_valid_results():
+                    sg.popup_error(
+                        "No Named range for StartCell in results",
+                        background_color="blue",
+                    )
+                    valid = False
+
             if not valid:
                 continue
 
