@@ -10,6 +10,7 @@ from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import DSOX_3000
+from drivers.dpo2000 import DPO_2000
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 import os
@@ -159,6 +160,26 @@ def connections_check_form() -> None:
     window.close()
 
 
+def select_uut_driver(address: str) -> None:
+    """
+    select_uut_driver
+    Make a generic enquiry of the uut and set the member var to the correct driver
+    """
+
+    global uut
+
+    check = DSOX_3000(simulate=False)
+    check.visa_address = address
+    check.open_connection()
+    print(check.manufacturer)
+
+    if check.manufacturer.upper().split(" ")[0] in {"KEYSIGHT", "AGILENT"}:
+        uut = DSOX_3000()
+    elif check.manufacturer == "TEKTRONIX":
+        uut = DPO_2000()
+        uut.num_channels = check.num_channels
+
+
 def test_connections() -> Dict:
     """
     Make sure all of the instruments are connected
@@ -180,6 +201,49 @@ def test_connections() -> Dict:
         "RFGEN": rfgen_conn,
         "DSO": uut_conn,
     }
+
+
+def test_dc_balance(filename: str, test_rows: List) -> None:
+    """
+    test_dc_balance
+    Test the dc balance of each channel with no signal applied
+
+    Args:
+        filename (str): _description_
+        test_rows (int): _description_
+    """
+
+    global uut
+
+    sg.popup("Remove inputs from all channels", background_color="blue")
+
+    uut.reset()
+
+    uut.set_acquisition(64)
+
+    uut.set_timebase(0.001)
+
+    with ExcelInterface(filename=filename) as excel:
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_test_settings()
+
+            if settings.function == "BAL":
+                uut.set_channel(chan=settings.channel, enabled=True, only=True)
+                uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+                uut.set_voltage_offset(chan=settings.channel, offset=0)
+                uut.set_channel_coupling(
+                    chan=settings.channel, coupling=settings.coupling
+                )
+
+                reading = (
+                    uut.measure_voltage(chan=settings.channel, delay=2) * 1000
+                )  # mV
+
+                excel.write_result(reading)
+
+    uut.reset()
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
@@ -705,6 +769,10 @@ if __name__ == "__main__":
         ],
         [sg.Text()],
         [
+            sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
+            sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
+        ],
+        [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
             sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
@@ -765,7 +833,13 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
-        if event in ["-TEST_DCV-", "-TEST_TB-", "-TEST_TRIG-", "-TEST_RISE-"]:
+        if event in [
+            "-TEST_DCV-",
+            "-TEST_TB-",
+            "-TEST_TRIG-",
+            "-TEST_RISE-",
+            "-TEST_BAL-",
+        ]:
             # Common check to make sure everything is in order
 
             valid = True
@@ -777,6 +851,14 @@ if __name__ == "__main__":
             if not values["-FILE-"]:
                 window["-FILE-"].update(background_color="Red")
                 valid = False
+
+            with ExcelInterface(filename=values["-FILE-"]) as excel:
+                if not excel.check_valid_results():
+                    sg.popup_error(
+                        "No Named range for StartCell in results",
+                        background_color="blue",
+                    )
+                    valid = False
 
             if not valid:
                 continue
@@ -794,7 +876,7 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            uut = DSOX_3000(simulate=simulating)
+            # uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
 
             uut.open_connection()
@@ -830,6 +912,10 @@ if __name__ == "__main__":
                     test_rows = excel.get_test_rows("RISE")
                     test_risetime(filename=values["-FILE-"], test_rows=test_rows)
 
+                elif event == "-TEST_BAL-":
+                    test_rows = excel.get_test_rows("BAL")
+                    test_dc_balance(filename=values["-FILE-"], test_rows=test_rows)
+
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
@@ -844,8 +930,14 @@ if __name__ == "__main__":
             ks33250.open_connection()
             mxg.visa_address = mxg_address
             mxg.open_connection()
+            uut.visa_address = values["-UUT_ADDRESS-"]
+            uut.open_connection()
+
             connections_check_form()
             continue
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
+
+        if event == "-CHECK_UUT-":
+            select_uut_driver(values["-UUT_ADDRESS-"])

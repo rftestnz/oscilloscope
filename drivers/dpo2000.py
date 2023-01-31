@@ -75,6 +75,7 @@ class DPO_2000:
     manufacturer = ""
     serial = ""
     timeout = 5000
+    num_channels: int = 4
 
     def __init__(self, simulate=False):
         self.simulating = simulate
@@ -135,9 +136,7 @@ class DPO_2000:
         """
         return bool(
             self.open_connection()
-            and (
-                not self.simulating and self.model.find("3034") >= 0 or self.simulating
-            )
+            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
         )
 
     def write(self, command: str) -> None:
@@ -259,7 +258,7 @@ class DPO_2000:
 
         return response.split(",")
 
-    def set_channel(self, chan: int, enabled: bool) -> None:
+    def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
         Turn display of channel on or off
@@ -269,9 +268,27 @@ class DPO_2000:
             enabled (bool): _description_
         """
 
-        state = "ON" if enabled else "OFF"
+        if only:
+            for channel in range(1, self.num_channels + 1):
+                state = "ON" if channel == chan else "OFF"
+                self.write(f"SEL:CH{channel} {state}")
 
-        self.write(f"SEL:CH{chan} {state}")
+        else:
+            state = "ON" if enabled else "OFF"
+            self.write(f"SEL:CH{chan} {state}")
+
+        self.write("*OPC")
+
+    def set_channel_coupling(self, chan: int, coupling: str) -> None:
+        """
+        set_channel_coupling _summary_
+
+        Args:
+            chan (int): _description_
+            coupling (str): _description_
+        """
+
+        self.write(f"CH{chan}:COUP {coupling}")
 
     def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
@@ -352,21 +369,60 @@ class DPO_2000:
         self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
         self.write(f"TRIG:A:LEV {level}")
 
-    def measure_voltage(self, chan: int) -> float:
+    def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
-        measure_voltage
-        Return the average voltage
+        measure_voltage _summary_
+
+        Args:
+            chan (int): _description_
+            delay (float, optional): Number seconds to allow measurement. Defaults to 1.
 
         Returns:
             float: _description_
         """
 
+        # Only using measurement 1
+
         self.write("MEASU:MEAS1:TYPE MEAN")
 
-        self.write(f"MEAS:SOURCE CH{chan}")
-        self.write(f"MEASU:MEAS{chan}:STATE ON")
+        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
+        self.write("MEASU:MEAS1:STATE ON")
 
-        return self.read_query(f"MEASU:MEAS{chan}:MEAN?")
+        time.sleep(delay)
+
+        return self.read_query("MEASU:MEAS1:MEAN?")
+
+    def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
+        """
+        measure_risetime
+        Use the measure function to mneasure the rise time average of n measurements
+
+        Args:
+            chan (int): _description_
+            num_readings (int, optional): _description_. Defaults to 1.
+
+        Returns:
+            float: _description_
+        """
+
+        # Tek cannot reste the statistics, so a hack is to change timebase
+
+        timebase = self.read_query("HOR:SCAL?")
+
+        self.set_timebase(timebase=timebase * 2)
+        self.set_timebase(timebase=timebase)
+
+        self.write("MEASU:MEAS:TYPE RISE")
+        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
+        self.write("MEASU:MEAS1:STATE ON")
+
+        print(self.read_query("MEASU:MEAS1:COUNT?"))
+
+        time.sleep(2)  # allow time to measure
+
+        # Tek will automatically average successive readings
+
+        return self.read_query("MEASU:MEAS1:MEAN?")
 
     def read_cursor(self, cursor: str) -> float:
         """

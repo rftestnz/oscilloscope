@@ -84,7 +84,10 @@ class ExcelInterface:
             self.row = nr.row  # type: ignore
             self.__data_col = nr.col  # type: ignore
         elif rw := self.ws.cell(column=self.__data_col, row=1).value:
-            self.row = int(rw)  # type: ignore
+            try:
+                self.row = int(rw)  # type: ignore
+            except ValueError:
+                self.row = self.__start_row
         else:
             self.row = self.__start_row
 
@@ -112,14 +115,10 @@ class ExcelInterface:
             bool: _description_
         """
 
-        # TODO cell must be named in sheet
-        try:
-            model = self.get_named_cell("Model").value  # type: ignore
-        except AttributeError:
-            model = None
+        # TODO make sure start cell defined
+        nr = self.get_named_cell("StartCell")
 
-        # TODO list of valid models
-        return model in [8207]
+        return bool(nr)
 
     def backup(self) -> None:
         """
@@ -435,7 +434,7 @@ class ExcelInterface:
 
 if __name__ == "__main__":
 
-    with ExcelInterface("testsheets\\666_Keysight_DSOX3034A.xlsx") as excel:
+    with ExcelInterface("testsheets\\666_Tektronix_DPO20141.xlsx") as excel:
         excel.backup()
         start_cell = excel.get_named_cell("StartCell")
         print(start_cell)

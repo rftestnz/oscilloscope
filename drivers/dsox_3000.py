@@ -307,13 +307,29 @@ class DSOX_3000:
         # use model for now until figuring out timeout
 
         valid = False
-        model_fields = self.model.split(" ")
-        if len(model_fields) > 1:
-            try:
-                self.num_channels = int(model_fields[1][3])
+
+        start_index = 0
+        model_index = 0
+        while model_index < len(self.model):
+            if self.model[model_index].isnumeric():
+                start_index = model_index
+                break
+            model_index += 1
+
+        if start_index:
+            model_number = self.model[start_index : start_index + 4]
+            if model_number[-1].isnumeric():
+                self.num_channels = int(model_number[-1])
                 valid = True
-            except (ValueError, IndexError):
-                valid = False
+
+        else:
+            model_fields = self.model.split(" ")
+            if len(model_fields) > 1:
+                try:
+                    self.num_channels = int(model_fields[1][3])
+                    valid = True
+                except (ValueError, IndexError):
+                    valid = False
 
         if not valid:
             tmo = self.instr.timeout  # type: ignore
@@ -363,7 +379,7 @@ class DSOX_3000:
 
         self.write(f"CHAN{chan}:IMP {imp}")
 
-    def set_channel(self, chan: int, enabled: bool) -> None:
+    def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
         Turn display of channel on or off
@@ -371,12 +387,30 @@ class DSOX_3000:
         Args:
             chan (int): _description_
             enabled (bool): _description_
+            only (bool): True if turn off all other channels
         """
 
-        state = "ON" if enabled else "OFF"
+        if only:
+            for channel in range(1, self.num_channels + 1):
+                state = "ON" if channel == chan else "OFF"
+                self.write(f"CHAN{channel}:DISP {state}")
 
-        self.write(f"CHAN{chan}:DISP {state}")
+        else:
+            state = "ON" if enabled else "OFF"
+            self.write(f"CHAN{chan}:DISP {state}")
+
         self.write("*OPC")
+
+    def set_channel_coupling(self, chan: int, coupling: str) -> None:
+        """
+        set_channel_coupling _summary_
+
+        Args:
+            chan (int): _description_
+            coupling (str): _description_
+        """
+
+        self.write(f"CHAN{chan}:COUP {coupling}")
 
     def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
         """
@@ -469,7 +503,7 @@ class DSOX_3000:
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
-    def measure_voltage(self, chan: int) -> float:
+    def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
         measure_voltage
         Return the average voltage
@@ -479,6 +513,8 @@ class DSOX_3000:
         """
 
         self.write(f"MEAS:SOURCE CHAN{chan}")
+
+        time.sleep(delay)
 
         return self.read_query("MEAS:VAV?")
 
@@ -496,6 +532,8 @@ class DSOX_3000:
         """
         self.write(f"MEAS:RIS CHAN{chan}")
         self.write("*OPC")
+
+        time.sleep(1)  # allow time to measure
 
         total = 0
         for _ in range(num_readings):
