@@ -258,7 +258,7 @@ class DPO_2000:
 
         return response.split(",")
 
-    def set_channel(self, chan: int, enabled: bool) -> None:
+    def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
         Turn display of channel on or off
@@ -268,9 +268,16 @@ class DPO_2000:
             enabled (bool): _description_
         """
 
-        state = "ON" if enabled else "OFF"
+        if only:
+            for channel in range(1, self.num_channels + 1):
+                state = "ON" if channel == chan else "OFF"
+                self.write(f"SEL:CH{chan} {state}")
 
-        self.write(f"SEL:CH{chan} {state}")
+        else:
+            state = "ON" if enabled else "OFF"
+            self.write(f"SEL:CH{chan} {state}")
+
+        self.write("*OPC")
 
     def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
