@@ -392,6 +392,32 @@ class DPO_2000:
 
         return self.read_query("MEASU:MEAS1:MEAN?")
 
+    def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
+        """
+        measure_risetime
+        Use the measure function to mneasure the rise time average of n measurements
+
+        Args:
+            chan (int): _description_
+            num_readings (int, optional): _description_. Defaults to 1.
+
+        Returns:
+            float: _description_
+        """
+
+        self.write("MEASU:MEAS:TYPE RISE")
+        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
+        self.write("MEASU:MEAS1:STATE ON")
+
+        time.sleep(1)  # allow time to measure
+
+        total = 0
+        for _ in range(num_readings):
+            total += self.read_query("MEASU:MEAS:RIS?")
+            time.sleep(0.1)
+
+        return total / num_readings
+
     def read_cursor(self, cursor: str) -> float:
         """
 
