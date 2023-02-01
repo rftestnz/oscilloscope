@@ -263,6 +263,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     uut.reset()
 
+    uut.set_timebase(1e-3)
+
     cursor_results = []  # save results for cursor tests
 
     if parallel_channels:
