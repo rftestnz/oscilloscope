@@ -346,7 +346,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(1)
 
-            voltage1 = uut.read_cursor_avg()
+            if uut.keysight:
+                voltage1 = uut.read_cursor_avg()
+
             reading1 = uut.measure_voltage(chan=channel)
 
             if settings.function == "DCV-BAL":
@@ -371,15 +373,17 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             reading = uut.measure_voltage(chan=channel)
 
-            voltage2 = uut.read_cursor_avg()
+            if uut.keysight:
+                voltage2 = uut.read_cursor_avg()
 
-            cursor_results.append(
-                {
-                    "chan": channel,
-                    "scale": settings.scale,
-                    "result": voltage2 - voltage1,
-                }
-            )
+            if uut.keysight:
+                cursor_results.append(
+                    {
+                        "chan": channel,
+                        "scale": settings.scale,
+                        "result": voltage2 - voltage1,
+                    }
+                )
 
             calibrator.standby()
 
