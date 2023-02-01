@@ -445,29 +445,52 @@ def test_position(filename: str, test_rows: List) -> None:
 
     uut.set_acquisition(32)
 
+    last_channel = -1
+
     with ExcelInterface(filename=filename) as excel:
         for row in test_rows:
             excel.row = row
 
             settings = excel.get_test_settings()
 
+            if settings.channel != last_channel:
+                sg.popup(
+                    f"Connect calibrator output to channel {settings.channel}",
+                    background_color="blue",
+                )
+                last_channel = settings.channel
+
             uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
+            uut.set_channel_bw_limit(chan=int(settings.channel), bw_limit=True)
             uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
+            pos = -4 if settings.offset > 0 else 4
+            uut.set_voltage_position(
+                chan=int(settings.channel), position=pos
+            )  # divisions
             uut.set_voltage_offset(chan=int(settings.channel), offset=settings.offset)
 
+            uut.set_acquisition(1)  # Too slow to adjust otherwise
             calibrator.set_voltage_dc(settings.voltage)
 
             calibrator.operate()
 
-            time.sleep(1)
+            uut.set_acquisition(32)
+
+            uut.measure_voltage_clear()
 
             reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
 
             # TODO limit is 0.2 Div
 
+            response = sg.popup_yes_no("Trace within 0.2 div of center?")
+
             print(reading)
 
+            result = "Pass" if response == "Yes" else "Fail"
+
             calibrator.standby()
+
+            excel.write_result(result=result)
 
     calibrator.reset()
     calibrator.close()
@@ -855,6 +878,7 @@ if __name__ == "__main__":
         [
             sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
             sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
+            sg.Button("Offset Accuracy", size=(12, 1), key="-TEST_POS-"),
         ],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
@@ -923,6 +947,7 @@ if __name__ == "__main__":
             "-TEST_TRIG-",
             "-TEST_RISE-",
             "-TEST_BAL-",
+            "-TEST_POS-",
         ]:
             # Common check to make sure everything is in order
 
@@ -999,6 +1024,10 @@ if __name__ == "__main__":
                 elif event == "-TEST_BAL-":
                     test_rows = excel.get_test_rows("BAL")
                     test_dc_balance(filename=values["-FILE-"], test_rows=test_rows)
+
+                elif event == "-TEST_POS-":
+                    test_rows = excel.get_test_rows("POS")
+                    test_position(filename=values["-FILE-"], test_rows=test_rows)
 
             sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
