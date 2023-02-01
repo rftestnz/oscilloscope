@@ -9,6 +9,8 @@ import pyvisa
 import time
 from random import random
 from typing import List
+import numpy as np
+from struct import unpack
 
 VERSION = "A.00.00"
 
@@ -258,6 +260,21 @@ class DPO_2000:
         self.instr.timeout = self.timeout  # type: ignore
 
         return response.split(",")
+
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+        """
+        set_channel_bw_limit
+        Set bandwidth limit on or off
+
+        Args:
+            chan (int): _description_
+            bw_limit (bool): _description_
+        """
+
+        state = "TWE" if bw_limit else "FULL"
+
+        self.write(f"CH{chan}:BAND {state}")
+        self.write("*OPC")
 
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
