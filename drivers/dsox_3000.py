@@ -531,6 +531,13 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
+    def measure_voltage_clear(self) -> None:
+        """
+        measure_voltage_clear _summary_
+        """
+
+        pass
+
     def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
         """
         measure_risetime
