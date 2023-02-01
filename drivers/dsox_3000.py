@@ -437,6 +437,19 @@ class DSOX_3000:
         self.write(f"CHAN{chan}:OFFS {offset}")
         self.write("*OPC")
 
+    def set_voltage_position(self, chan: int, position: float) -> None:
+        """
+        set_voltage_offset _summary_
+        For Keysight, offset and position are the same thing
+
+        Args:
+            chan (int): _description_
+            offset (float): _description_
+        """
+
+        self.write(f"CHAN{chan}:OFFS {position}")
+        self.write("*OPC")
+
     def set_timebase(self, timebase: float) -> None:
         """
         set_timebase _summary_

@@ -305,15 +305,26 @@ class DPO_2000:
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
-        set_voltage_offset _summary_
+        set_voltage_offset
+        For Tek, offset is the center of the vertical acquisition window
 
         Args:
             chan (int): _description_
             offset (float): _description_
         """
 
-        # TODO Is it offset or pos?
-        self.write(f"CH{chan}:POS {offset}")
+        self.write(f"CH{chan}:OFFS {offset}")
+
+    def set_voltage_position(self, chan: int, position: float) -> None:
+        """
+        set_voltage_position _summary_
+
+        Args:
+            chan (int): _description_
+            position (float): _description_
+        """
+
+        self.write(f"CH{chan}:POS {position}")
 
     def set_timebase(self, timebase: float) -> None:
         """
