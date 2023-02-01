@@ -456,9 +456,9 @@ class DPO_2000:
         except IndexError:
             return 0, 0
 
-    def measure_voltage_clear(self) -> None:
+    def measure_clear(self) -> None:
         """
-        measure_voltage_clear _summary_
+        measure_clear _summary_
         """
 
         self.write("MEASU:MEAS1:STATE OFF")
@@ -478,10 +478,7 @@ class DPO_2000:
 
         # Tek cannot reste the statistics, so a hack is to change timebase
 
-        timebase = self.read_query("HOR:SCAL?")
-
-        self.set_timebase(timebase=timebase * 2)
-        self.set_timebase(timebase=timebase)
+        self.measure_clear()
 
         self.write("MEASU:MEAS:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")

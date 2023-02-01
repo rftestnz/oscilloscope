@@ -531,7 +531,7 @@ class DSOX_3000:
 
         return self.read_query("MEAS:VAV?")
 
-    def measure_voltage_clear(self) -> None:
+    def measure_clear(self) -> None:
         """
         measure_voltage_clear _summary_
         """
