@@ -336,6 +336,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             # 0V test
             calibrator.operate()
 
+            uut.set_acquisition(1)
+
+            if not simulating:
+                time.sleep(0.2)
+
+            uut.set_acquisition(64)
+
             if not simulating:
                 time.sleep(1)
 
@@ -351,6 +358,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 calibrator.set_voltage_dc(settings.voltage)
 
             calibrator.operate()
+
+            uut.set_acquisition(1)
+
+            if not simulating:
+                time.sleep(0.2)
+
+            uut.set_acquisition(64)
 
             if not simulating:
                 time.sleep(1)
