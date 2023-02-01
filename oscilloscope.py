@@ -519,85 +519,110 @@ def test_timebase(filename: str, row: int) -> None:
 
         uut.reset()
 
-        uut.set_channel(chan=1, enabled=True)
-
-        uut.set_voltage_scale(chan=1, scale=0.5)
-        uut.set_voltage_offset(chan=1, offset=0)
-
-        uut.set_acquisition(32)
-
-        ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
-        ks33250.enable_output(True)
-
-        uut.set_trigger_level(chan=1, level=0)
-
-        if setting.timebase:
-            uut.set_timebase(setting.timebase / 1e9)
-        else:
-            uut.set_timebase(10e-9)
-
-        time.sleep(0.1)
-        uut.cursors_on()
-        time.sleep(1.5)
-        ref_x = uut.read_cursor("X1")  # get the reference time
-        ref = uut.read_cursor(
-            "Y1"
-        )  # get the voltage, so delayed can be adjusted to same
-
-        uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
-
-        uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
-        time.sleep(1)
-
-        uut.adjust_cursor(
-            target=ref
-        )  # adjust the cursor until voltage is the same as measured from the reference pulse
-
-        offset_x = uut.read_cursor("X1")
-
-        error = ref_x - offset_x + 0.001
-        print(f"TB Error {error}")
-
-        if uut.keysight:
-            code = sg.popup_get_text(
-                "Enter date code from serial label (0 if no code)",
-                background_color="blue",
-            )
-
-            age = 10
-
-            try:
-                val = int(code)  # type: ignore
-                print(f"{val/100}, {datetime.now().year-2000}")
-                if val // 100 > datetime.now().year - 2000:
-                    val = 0
-                age = datetime.now().year - (val / 100) - 2000
-
-            except ValueError:
-                val = 0
-
-            if not val:
-                # work it out from serial
-                # All the modern Agilent/Keysight have 2 character manufacturing site, then 4 digits for date
-
-                if len(uut.serial) >= 10:
-                    code = uut.serial[2:6]
-
-                    try:
-                        val = int(code)
-                        # start is from 1960
-                        age = datetime.now().year - (val - 4000) / 100 - 2000
-                    except ValueError:
-                        # Invalid. Just assume 10
-                        age = 10
-
-            age_years = int(age + 0.5)
-
-            # results in ppm
-            ppm = error / 1e-3 * 1e6
+        with ExcelInterface(filename=filename) as excel:
             excel.row = row
-            excel.write_result(ppm, save=False, col=2)
-            excel.write_result(age_years, save=True, col=1)
+            uut.set_channel(chan=1, enabled=True)
+
+            uut.set_voltage_scale(chan=1, scale=0.5)
+            uut.set_voltage_offset(chan=1, offset=0)
+
+            uut.set_acquisition(32)
+
+            ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
+            ks33250.enable_output(True)
+
+            uut.set_trigger_level(chan=1, level=0)
+
+            if setting.timebase:
+                uut.set_timebase(setting.timebase / 1e9)
+            else:
+                uut.set_timebase(10e-9)
+
+            if uut.keysight:
+                time.sleep(0.1)
+                uut.cursors_on()
+                time.sleep(1.5)
+
+                ref_x = uut.read_cursor("X1")  # get the reference time
+                ref = uut.read_cursor(
+                    "Y1"
+                )  # get the voltage, so delayed can be adjusted to same
+            else:
+                sg.popup(
+                    "Adjust Horz position so waveform is on center graticule",
+                    background_color="blue",
+                )
+
+            uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+
+            if not uut.keysight:
+                valid = False
+                while not valid:
+                    result = sg.popup_get_text(
+                        "Enter difference in div of waveform crossing from center?",
+                        background_color="blue",
+                    )
+                    try:
+                        val = float(result)  # type: ignore
+                        valid = True
+                    except ValueError:
+                        valid = False
+
+                excel.write_result(result=val, col=3)  # type: ignore
+
+            else:
+                # Keysight
+                uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
+                time.sleep(1)
+
+                uut.adjust_cursor(
+                    target=ref  # type: ignore
+                )  # adjust the cursor until voltage is the same as measured from the reference pulse
+
+                offset_x = uut.read_cursor("X1")
+
+                error = ref_x - offset_x + 0.001  # type: ignore
+                print(f"TB Error {error}")
+
+                code = sg.popup_get_text(
+                    "Enter date code from serial label (0 if no code)",
+                    background_color="blue",
+                )
+
+                age = 10
+
+                try:
+                    val = int(code)  # type: ignore
+                    print(f"{val/100}, {datetime.now().year-2000}")
+                    if val // 100 > datetime.now().year - 2000:
+                        val = 0
+                    age = datetime.now().year - (val / 100) - 2000
+
+                except ValueError:
+                    val = 0
+
+                if not val:
+                    # work it out from serial
+                    # All the modern Agilent/Keysight have 2 character manufacturing site, then 4 digits for date
+
+                    if len(uut.serial) >= 10:
+                        code = uut.serial[2:6]
+
+                        try:
+                            val = int(code)
+                            # start is from 1960
+                            age = datetime.now().year - (val - 4000) / 100 - 2000
+                        except ValueError:
+                            # Invalid. Just assume 10
+                            age = 10
+
+                age_years = int(age + 0.5)
+
+                # results in ppm
+                ppm = error / 1e-3 * 1e6
+                excel.row = row
+                excel.write_result(ppm, save=False, col=2)
+                excel.write_result(age_years, save=True, col=1)
 
     ks33250.enable_output(False)
     ks33250.close()
