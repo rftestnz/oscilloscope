@@ -371,6 +371,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(1)
 
+            uut.measure_voltage_clear()
+
             reading = uut.measure_voltage(chan=channel)
 
             if uut.keysight:
