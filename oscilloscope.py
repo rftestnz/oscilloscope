@@ -349,6 +349,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if uut.keysight:
                 voltage1 = uut.read_cursor_avg()
 
+            uut.measure_clear()
             reading1 = uut.measure_voltage(chan=channel)
 
             if settings.function == "DCV-BAL":
@@ -371,7 +372,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(1)
 
-            uut.measure_voltage_clear()
+            uut.measure_clear()
 
             reading = uut.measure_voltage(chan=channel)
 
