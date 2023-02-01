@@ -556,12 +556,19 @@ def test_timebase(filename: str, row: int) -> None:
             uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
 
             if not uut.keysight:
-                result = sg.popup_get_text(
-                    "Enter difference in div of waveform crossing from center?",
-                    background_color="blue",
-                )
+                valid = False
+                while not valid:
+                    result = sg.popup_get_text(
+                        "Enter difference in div of waveform crossing from center?",
+                        background_color="blue",
+                    )
+                    try:
+                        val = float(result)  # type: ignore
+                        valid = True
+                    except ValueError:
+                        valid = False
 
-                excel.write_result(result=result, col=3)
+                excel.write_result(result=val, col=3)  # type: ignore
 
             else:
                 # Keysight
@@ -569,12 +576,12 @@ def test_timebase(filename: str, row: int) -> None:
                 time.sleep(1)
 
                 uut.adjust_cursor(
-                    target=ref
+                    target=ref  # type: ignore
                 )  # adjust the cursor until voltage is the same as measured from the reference pulse
 
                 offset_x = uut.read_cursor("X1")
 
-                error = ref_x - offset_x + 0.001
+                error = ref_x - offset_x + 0.001  # type: ignore
                 print(f"TB Error {error}")
 
                 code = sg.popup_get_text(
