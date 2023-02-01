@@ -476,21 +476,19 @@ def test_position(filename: str, test_rows: List) -> None:
 
             uut.set_acquisition(32)
 
-            uut.measure_voltage_clear()
+            # uut.measure_voltage_clear()
 
-            reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
+            # reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
 
-            # TODO limit is 0.2 Div
-
-            response = sg.popup_yes_no("Trace within 0.2 div of center?")
-
-            print(reading)
+            response = sg.popup_yes_no(
+                "Trace within 0.2 div of center?", background_color="blue"
+            )
 
             result = "Pass" if response == "Yes" else "Fail"
 
             calibrator.standby()
 
-            excel.write_result(result=result)
+            excel.write_result(result=result, col=2)
 
     calibrator.reset()
     calibrator.close()
