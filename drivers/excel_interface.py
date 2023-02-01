@@ -26,8 +26,9 @@ class DCV_Settings:
     scale: float
     voltage: float
     offset: float
+    bandwidth: str
     impedance: str
-    frequency: float
+    invert: bool
 
 
 @dataclass(frozen=True)
@@ -349,9 +350,12 @@ class ExcelInterface:
         col += 1
         offset = self.ws.cell(column=col, row=row).value
         col += 1
+        bandwidth = self.ws.cell(column=col, row=row).value
+        col += 1
         impedance = self.ws.cell(column=col, row=row).value
         col += 1
-        frequency = self.ws.cell(column=col, row=row).value
+        invert = str(self.ws.cell(column=col, row=row).value)
+        inverted = bool(invert and invert.lower() == "y") or invert == "1"
 
         return DCV_Settings(
             function=func,
@@ -360,8 +364,9 @@ class ExcelInterface:
             scale=scale,
             voltage=voltage,
             offset=offset,
+            bandwidth=bandwidth,
             impedance=impedance,
-            frequency=frequency,
+            invert=inverted,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
