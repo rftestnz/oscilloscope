@@ -9,6 +9,8 @@ import pyvisa
 import time
 from random import random
 from typing import List
+import numpy as np
+from struct import unpack
 
 VERSION = "A.00.00"
 
@@ -259,6 +261,21 @@ class DPO_2000:
 
         return response.split(",")
 
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+        """
+        set_channel_bw_limit
+        Set bandwidth limit on or off
+
+        Args:
+            chan (int): _description_
+            bw_limit (bool): _description_
+        """
+
+        state = "TWE" if bw_limit else "FULL"
+
+        self.write(f"CH{chan}:BAND {state}")
+        self.write("*OPC")
+
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
@@ -305,15 +322,26 @@ class DPO_2000:
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
-        set_voltage_offset _summary_
+        set_voltage_offset
+        For Tek, offset is the center of the vertical acquisition window
 
         Args:
             chan (int): _description_
             offset (float): _description_
         """
 
-        # TODO Is it offset or pos?
-        self.write(f"CH{chan}:POS {offset}")
+        self.write(f"CH{chan}:OFFS {offset}")
+
+    def set_voltage_position(self, chan: int, position: float) -> None:
+        """
+        set_voltage_position _summary_
+
+        Args:
+            chan (int): _description_
+            position (float): _description_
+        """
+
+        self.write(f"CH{chan}:POS {position}")
 
     def set_timebase(self, timebase: float) -> None:
         """
@@ -392,6 +420,48 @@ class DPO_2000:
         time.sleep(delay)
 
         return self.read_query("MEASU:MEAS1:MEAN?")
+
+    def get_waveform(self, chan: int, delay: float) -> None:
+        """
+        measure_voltage _summary_
+
+        Args:
+            chan (int): _description_
+            delay (float): _description_
+        """
+
+        try:
+            self.write(f"DATA:SOURCE CH{chan}")
+            self.write("DATA:WIDTH 1")
+            self.write("DATA:ENC RPB")
+            self.write("DATA:START 1")
+            self.write("DATA:STOP 1000")
+
+            ymult = float(self.query("WFMINPRE:YMULT?"))
+            yzero = float(self.query("WFMINPRE:YZERO?"))
+            yoff = float(self.query("WFMINPRE:YOFF?"))
+            xincr = float(self.query("WFMINPRE:XINCR?"))
+            xdelay = float(self.query("HORizontal:POSition?"))
+            self.write("CURVE?")
+            data = self.instr.read_raw()
+            headerlen = 2 + int(data[1])
+            header = data[:headerlen]
+            ADC_wave = data[headerlen:-1]
+            ADC_wave = np.array(unpack("%sB" % len(ADC_wave), ADC_wave))
+            Volts = (ADC_wave - yoff) * ymult + yzero
+            Time = np.arange(0, (xincr * len(Volts)), xincr) - (
+                (xincr * len(Volts)) / 2 - xdelay
+            )
+            return Time, Volts
+        except IndexError:
+            return 0, 0
+
+    def measure_voltage_clear(self) -> None:
+        """
+        measure_voltage_clear _summary_
+        """
+
+        self.write("MEASU:MEAS1:STATE OFF")
 
     def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
         """
