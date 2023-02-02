@@ -69,6 +69,17 @@ class ExcelInterface:
 
     row: int = 1
 
+    supported_test_names = {
+        "BAL",
+        "DCV",
+        "DCV-BAL",
+        "POS",
+        "CURS",
+        "RISE",
+        "TIME",
+        "TRIG",
+    }
+
     def __init__(self, filename, sheetindex=0) -> None:
         self.__filename = filename
         self.wb = openpyxl.load_workbook(
@@ -269,7 +280,7 @@ class ExcelInterface:
         while True:
             val = self.ws.cell(column=self.__data_col, row=self.row).value
 
-            if val and str(val).lower() not in ["function", "test"]:  # TODO keywords
+            if val and str(val).upper() in self.supported_test_names:
                 break
 
             self.row += 1
