@@ -331,6 +331,48 @@ class ExcelInterface:
 
         return Timebase_Settings(function=func, channel=channel, timebase=tb)
 
+    def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
+        """
+        get_trigger_settings
+        Read the settings for the specified or current ro for trigger sensitivty test
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            Trigger_Settings: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        col = self.__data_col
+        func = self.ws.cell(column=col, row=row).value
+        col += 1
+        channel = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        impedance = self.ws.cell(column=col, row=row).value
+        col += 1
+        frequency = self.ws.cell(column=col, row=row).value
+        col += 1
+        edge = self.ws.cell(column=col, row=row).value
+
+        edge_select = "F" if edge and edge.lower() == "f" else "R"
+
+        return Trigger_Settings(
+            function=func,
+            channel=channel,
+            scale=scale,
+            voltage=voltage,
+            impedance=impedance,
+            frequency=frequency,
+            edge=edge_select,
+        )
+
     def get_test_settings(self, row: int = -1) -> DCV_Settings:
         """
         get_test_settings
@@ -488,3 +530,9 @@ if __name__ == "__main__":
             pprint(rows)
             setting = excel.get_tb_test_settings(rows[0])
             print(setting.timebase)
+
+        rows = excel.get_test_rows("TRIG")
+        pprint(rows)
+        if len(rows):
+            settings = excel.get_trigger_settings(rows[0])
+            pprint(settings)
