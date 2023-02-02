@@ -72,7 +72,7 @@ class DSOX3000_Simulator:
 
         # sourcery skip: instance-method-first-arg-name
 
-        print(f"DRIVER_NAME <- {command}")
+        print(f"DSOX3000 <- {command}")
 
         if command == "*IDN?":
             return "Keysight,DSOX3034G,MY_Simulated,B.00.00"
