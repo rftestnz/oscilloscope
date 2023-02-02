@@ -372,8 +372,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     uut.set_channel(chan=last_channel, enabled=False)
                     uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
                     uut.set_channel(chan=channel, enabled=True)
-                    if set_impedance:
-                        uut.set_channel_impedance(chan=last_channel, impedance="1M")
+                    uut.set_channel_impedance(
+                        chan=last_channel, impedance="1M"
+                    )  # always
 
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
