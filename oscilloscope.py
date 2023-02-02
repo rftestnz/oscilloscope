@@ -259,8 +259,6 @@ def run_tests(filename: str, test_rows: List) -> None:
                 test_dc_balance(filename=filename, test_rows=testing_rows)
 
             elif test_name == "CURS":
-                # TODO make sure dcv tested first
-                # TODO make sure old results cleared if testing a different unit
                 test_cursor(filename=filename, test_rows=testing_rows)
 
             elif test_name == "RISE":
