@@ -1005,7 +1005,10 @@ def load_uut_driver(address: str) -> None:
     with SCPI_ID(address=address) as scpi_uut:
         manfacturer = scpi_uut.get_manufacturer()
 
-        if manfacturer == "KEYSIGHT":
+        if manfacturer == "":
+            sg.popup_error("Unable to contact UUT. Is address correct?")
+            return False
+        elif manfacturer == "KEYSIGHT":
             uut = DSOX_3000()
         elif manfacturer == "TEKTRONIX":
             uut = DPO_2000()
