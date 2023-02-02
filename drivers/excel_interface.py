@@ -70,10 +70,10 @@ class ExcelInterface:
     row: int = 1
 
     supported_test_names = [
-        "POS",
         "BAL",
         "DCV",
         "DCV-BAL",
+        "POS",
         "CURS",
         "RISE",
         "TIME",
