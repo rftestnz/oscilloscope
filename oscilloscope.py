@@ -1083,17 +1083,9 @@ if __name__ == "__main__":
         ],
         [sg.Text()],
         [
-            sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
-            sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
-            sg.Button("Offset Accuracy", size=(12, 1), key="-TEST_POS-"),
-            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
-        ],
-        [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
-            sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
-            sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
-            sg.Button("Test Risetime", size=(12, 1), key="-TEST_RISE-"),
+            sg.Button("Check UUT", size=(12, 1), key="-CHECK_UUT-"),
+            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
