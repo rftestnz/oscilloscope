@@ -13,6 +13,7 @@ from drivers.dsox_3000 import DSOX_3000
 from drivers.dpo2000 import DPO_2000
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
+from drivers.scpi_id import SCPI_ID
 import os
 import sys
 import time
@@ -158,26 +159,6 @@ def connections_check_form() -> None:
             )
 
     window.close()
-
-
-def select_uut_driver(address: str) -> None:
-    """
-    select_uut_driver
-    Make a generic enquiry of the uut and set the member var to the correct driver
-    """
-
-    global uut
-
-    check = DSOX_3000(simulate=False)
-    check.visa_address = address
-    check.open_connection()
-    print(check.manufacturer)
-
-    if check.manufacturer.upper().split(" ")[0] in {"KEYSIGHT", "AGILENT"}:
-        uut = DSOX_3000()
-    elif check.manufacturer == "TEKTRONIX":
-        uut = DPO_2000()
-        uut.num_channels = check.num_channels
 
 
 def test_connections() -> Dict:
@@ -993,6 +974,34 @@ def individual_tests(filename: str) -> List:
     return sorted(test_steps)
 
 
+def load_uut_driver(address: str) -> bool:
+    """
+    load_uut_driver
+    Use a generic driver to figure out which driver of the scope should be used
+    """
+
+    global uut
+
+    with SCPI_ID(address=address) as scpi_uut:
+        manfacturer = scpi_uut.get_manufacturer()
+
+        if manfacturer == "":
+            sg.popup_error("Unable to contact UUT. Is address correct?")
+            return False
+        elif manfacturer == "KEYSIGHT":
+            uut = DSOX_3000()
+        elif manfacturer == "TEKTRONIX":
+            uut = DPO_2000()
+
+        else:
+            sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
+            uut = DPO_2000()
+
+        uut.num_channels = scpi_uut.get_number_channels()
+
+        return True
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -1094,7 +1103,6 @@ if __name__ == "__main__":
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Check UUT", size=(12, 1), key="-CHECK_UUT-"),
             sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
@@ -1190,23 +1198,24 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            uut.visa_address = values["-UUT_ADDRESS-"]
-            uut.open_connection()
+            if load_uut_driver(address=values["-UUT_ADDRESS-"]):
+                uut.visa_address = values["-UUT_ADDRESS-"]
+                uut.open_connection()
 
-            test_rows = individual_tests(filename=values["-FILE-"])
-            if len(test_rows):
-                parallel = sg.popup_yes_no(
-                    "Will you connect all channels in parallel?",
-                    title="Parallel Channels",
-                    background_color="blue",
-                )
-                run_tests(
-                    filename=values["-FILE-"],
-                    test_rows=test_rows,
-                    parallel_channels=parallel == "Yes",
-                )
+                test_rows = individual_tests(filename=values["-FILE-"])
+                if len(test_rows):
+                    parallel = sg.popup_yes_no(
+                        "Will you connect all channels in parallel?",
+                        title="Parallel Channels",
+                        background_color="blue",
+                    )
+                    run_tests(
+                        filename=values["-FILE-"],
+                        test_rows=test_rows,
+                        parallel_channels=parallel == "Yes",
+                    )
 
-                sg.popup("Finished", background_color="blue")
+                    sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         if event == "-TEST_CONNECTIONS-":
@@ -1228,6 +1237,3 @@ if __name__ == "__main__":
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
-
-        if event == "-CHECK_UUT-":
-            select_uut_driver(values["-UUT_ADDRESS-"])

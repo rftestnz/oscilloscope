@@ -3,6 +3,7 @@ Basic driver to get ID of equipment
 DK Feb 23
 """
 
+
 import pyvisa
 from typing import List
 
@@ -27,8 +28,13 @@ class SCPI_ID:
         """
         open_connection _summary_
         """
-        self.instr = self.rm.open_resource(self.visa_address, write_termination="\n")
-        self.instr.timeout = 2000
+        try:
+            self.instr = self.rm.open_resource(
+                self.visa_address, write_termination="\n"
+            )
+            self.instr.timeout = 2000
+        except pyvisa.VisaIOError:
+            ...
 
     def close(self) -> None:
         """
@@ -53,7 +59,7 @@ class SCPI_ID:
                 self.model = identity[1]
                 self.serial = identity[2]
 
-        except pyvisa.VisaIOError:
+        except (pyvisa.VisaIOError, AttributeError):
             self.model = ""
             self.manufacturer = ""
             self.serial = ""
