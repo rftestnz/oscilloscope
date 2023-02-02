@@ -26,8 +26,9 @@ class DCV_Settings:
     scale: float
     voltage: float
     offset: float
+    bandwidth: str
     impedance: str
-    frequency: float
+    invert: bool
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,17 @@ class Timebase_Settings:
     function: str
     channel: int
     timebase: float
+
+
+@dataclass(frozen=True)
+class Trigger_Settings:
+    function: str
+    channel: int
+    scale: float
+    voltage: float
+    impedance: str
+    frequency: float
+    edge: str
 
 
 @dataclass
@@ -319,6 +331,48 @@ class ExcelInterface:
 
         return Timebase_Settings(function=func, channel=channel, timebase=tb)
 
+    def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
+        """
+        get_trigger_settings
+        Read the settings for the specified or current ro for trigger sensitivty test
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            Trigger_Settings: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        col = self.__data_col
+        func = self.ws.cell(column=col, row=row).value
+        col += 1
+        channel = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        impedance = self.ws.cell(column=col, row=row).value
+        col += 1
+        frequency = self.ws.cell(column=col, row=row).value
+        col += 1
+        edge = self.ws.cell(column=col, row=row).value
+
+        edge_select = "F" if edge and edge.lower() == "f" else "R"
+
+        return Trigger_Settings(
+            function=func,
+            channel=channel,
+            scale=scale,
+            voltage=voltage,
+            impedance=impedance,
+            frequency=frequency,
+            edge=edge_select,
+        )
+
     def get_test_settings(self, row: int = -1) -> DCV_Settings:
         """
         get_test_settings
@@ -349,9 +403,12 @@ class ExcelInterface:
         col += 1
         offset = self.ws.cell(column=col, row=row).value
         col += 1
+        bandwidth = self.ws.cell(column=col, row=row).value
+        col += 1
         impedance = self.ws.cell(column=col, row=row).value
         col += 1
-        frequency = self.ws.cell(column=col, row=row).value
+        invert = str(self.ws.cell(column=col, row=row).value)
+        inverted = bool(invert and invert.lower() == "y") or invert == "1"
 
         return DCV_Settings(
             function=func,
@@ -360,8 +417,9 @@ class ExcelInterface:
             scale=scale,
             voltage=voltage,
             offset=offset,
+            bandwidth=bandwidth,
             impedance=impedance,
-            frequency=frequency,
+            invert=inverted,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
@@ -443,7 +501,7 @@ class ExcelInterface:
 
 if __name__ == "__main__":
 
-    with ExcelInterface("testsheets\\666_Tektronix_DPO20141.xlsx") as excel:
+    with ExcelInterface("testsheets\\666_Tektronix_TDS3034C.xlsx") as excel:
         excel.backup()
         start_cell = excel.get_named_cell("StartCell")
         print(start_cell)
@@ -472,3 +530,9 @@ if __name__ == "__main__":
             pprint(rows)
             setting = excel.get_tb_test_settings(rows[0])
             print(setting.timebase)
+
+        rows = excel.get_test_rows("TRIG")
+        pprint(rows)
+        if len(rows):
+            settings = excel.get_trigger_settings(rows[0])
+            pprint(settings)
