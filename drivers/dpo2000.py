@@ -276,6 +276,21 @@ class DPO_2000:
         self.write(f"CH{chan}:BAND {state}")
         self.write("*OPC")
 
+    def set_channel_impedance(self, chan: int, impedance: str) -> None:
+        """
+        set_channel_impedance
+
+        Although not all models can set impedance, command is available for compatibility
+
+        Args:
+            chan (int): _description_
+            imedance (str): _description_
+        """
+
+        imp = "FIFTY" if impedance == "50" else "MEG"
+
+        self.write(f"CH{chan}:IMP {imp}")
+
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
