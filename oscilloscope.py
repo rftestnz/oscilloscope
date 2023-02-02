@@ -257,7 +257,11 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 )
 
             elif test_name == "POS":
-                test_position(filename=filename, test_rows=testing_rows)
+                test_position(
+                    filename=filename,
+                    test_rows=testing_rows,
+                    parallel_channels=parallel_channels,
+                )
 
             elif test_name == "BAL":
                 test_dc_balance(filename=filename, test_rows=testing_rows)
@@ -532,7 +536,9 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
-def test_position(filename: str, test_rows: List) -> None:
+def test_position(
+    filename: str, test_rows: List, parallel_channels: bool = False
+) -> None:
     """
     test_position
     Test vertical position
@@ -568,7 +574,7 @@ def test_position(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            if settings.channel != last_channel:
+            if settings.channel != last_channel and not parallel_channels:
                 sg.popup(
                     f"Connect calibrator output to channel {settings.channel}",
                     background_color="blue",
