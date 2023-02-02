@@ -69,16 +69,16 @@ class ExcelInterface:
 
     row: int = 1
 
-    supported_test_names = {
+    supported_test_names = [
+        "POS",
         "BAL",
         "DCV",
         "DCV-BAL",
-        "POS",
         "CURS",
         "RISE",
         "TIME",
         "TRIG",
-    }
+    ]  # In order of test sequence preference - need list instead of set
 
     def __init__(self, filename, sheetindex=0) -> None:
         self.__filename = filename
@@ -547,3 +547,6 @@ if __name__ == "__main__":
         if len(rows):
             settings = excel.get_trigger_settings(rows[0])
             pprint(settings)
+
+        for name in excel.supported_test_names:
+            print(name)
