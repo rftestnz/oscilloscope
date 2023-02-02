@@ -63,7 +63,7 @@ class DPO2000_Simulator:
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class DPO_2000:
+class Tektronix_Oscilloscope:
     """
      _summary_
 
@@ -613,7 +613,7 @@ class DPO_2000:
 
 if __name__ == "__main__":
 
-    dpo2014 = DPO_2000()
+    dpo2014 = Tektronix_Oscilloscope()
     dpo2014.visa_address = "USB0::0x0699::0x0373::C010049::INSTR"
 
     dpo2014.open_connection()

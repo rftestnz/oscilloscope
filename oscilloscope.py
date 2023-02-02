@@ -10,7 +10,7 @@ from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.dsox_3000 import Keysight_Oscilloscope
-from drivers.dpo2000 import DPO_2000
+from drivers.dpo2000 import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
@@ -991,11 +991,11 @@ def load_uut_driver(address: str) -> bool:
         elif manfacturer == "KEYSIGHT":
             uut = Keysight_Oscilloscope()
         elif manfacturer == "TEKTRONIX":
-            uut = DPO_2000()
+            uut = Tektronix_Oscilloscope()
 
         else:
             sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
-            uut = DPO_2000()
+            uut = Tektronix_Oscilloscope()
 
         uut.num_channels = scpi_uut.get_number_channels()
 
