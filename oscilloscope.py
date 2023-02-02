@@ -215,6 +215,8 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
     global uut
 
+    # no equipment required
+
     sg.popup("Remove inputs from all channels", background_color="blue")
 
     uut.reset()
@@ -260,6 +262,14 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     global cursor_results
 
     last_channel = -1
+
+    connections = test_connections()
+
+    # require calibrator
+
+    if not connections["FLUKE_5700A"]:
+        sg.popup_error("Cannot find calibrator")
+        return
 
     uut.reset()
 
@@ -426,6 +436,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
+    # no equipment as using buffered results
+
     with ExcelInterface(filename) as excel:
         for row in test_rows:
             excel.row = row
@@ -463,6 +475,14 @@ def test_position(filename: str, test_rows: List) -> None:
 
     global calibrator
     global uut
+
+    connections = test_connections()
+
+    # require calibrator
+
+    if not connections["FLUKE_5700A"]:
+        sg.popup_error("Cannot find calibrator")
+        return
 
     uut.reset()
 
@@ -533,6 +553,14 @@ def test_timebase(filename: str, row: int) -> None:
     Args:
         row (int): _description_
     """
+
+    connections = test_connections()
+
+    # require RF gen
+
+    if not connections["33250A"]:
+        sg.popup_error("Cannot find 33250A Generator")
+        return
 
     sg.popup("Connect 33250A output to Ch1", background_color="blue")
 
@@ -670,6 +698,14 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     global mxg
     global uut
 
+    connections = test_connections()
+
+    # require RF gen
+
+    if not connections["RFGEN"]:
+        sg.popup_error("Cannot find RF Signal Generator")
+        return
+
     uut.reset()
 
     # Turn off all channels but 1
@@ -751,6 +787,8 @@ def test_risetime(filename: str, test_rows: List) -> None:
         filename (str): _description_
         test_rows (List): _description_
     """
+
+    # only pulse gen required
 
     uut.reset()
 
