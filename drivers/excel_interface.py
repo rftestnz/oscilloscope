@@ -38,6 +38,17 @@ class Timebase_Settings:
     timebase: float
 
 
+@dataclass(frozen=True)
+class Trigger_Settings:
+    function: str
+    channel: int
+    scale: float
+    voltage: float
+    impedance: str
+    frequency: float
+    edge: str
+
+
 @dataclass
 class Cell:
     col: int
