@@ -776,7 +776,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     with ExcelInterface(filename=filename) as excel:
         for row in test_rows:
             excel.row = row
-            settings = excel.get_test_settings()
+            settings = excel.get_trigger_settings()
             if settings.channel == 1 and settings.impedance == 50:
                 ext_termination = False
                 break
@@ -786,7 +786,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_trigger_settings()
 
             feedthru_msg = (
                 "via 50 Ohm Feedthru"
