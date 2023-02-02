@@ -1219,23 +1219,24 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            uut.visa_address = values["-UUT_ADDRESS-"]
-            uut.open_connection()
+            if load_uut_driver(address=values["-UUT_ADDRESS-"]):
+                uut.visa_address = values["-UUT_ADDRESS-"]
+                uut.open_connection()
 
-            test_rows = individual_tests(filename=values["-FILE-"])
-            if len(test_rows):
-                parallel = sg.popup_yes_no(
-                    "Will you connect all channels in parallel?",
-                    title="Parallel Channels",
-                    background_color="blue",
-                )
-                run_tests(
-                    filename=values["-FILE-"],
-                    test_rows=test_rows,
-                    parallel_channels=parallel == "Yes",
-                )
+                test_rows = individual_tests(filename=values["-FILE-"])
+                if len(test_rows):
+                    parallel = sg.popup_yes_no(
+                        "Will you connect all channels in parallel?",
+                        title="Parallel Channels",
+                        background_color="blue",
+                    )
+                    run_tests(
+                        filename=values["-FILE-"],
+                        test_rows=test_rows,
+                        parallel_channels=parallel == "Yes",
+                    )
 
-                sg.popup("Finished", background_color="blue")
+                    sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         if event == "-TEST_CONNECTIONS-":
