@@ -273,7 +273,7 @@ class Tektronix_Oscilloscope:
 
         if type(bw_limit) is bool:
             state = "TWE" if bw_limit else "FULL"
-        elif bw_limit == "150":
+        elif bw_limit == 150:
             state = "ONEFIFTY"
         elif bw_limit == 20:
             state = "TWENTY"
