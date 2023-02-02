@@ -161,26 +161,6 @@ def connections_check_form() -> None:
     window.close()
 
 
-def select_uut_driver(address: str) -> None:
-    """
-    select_uut_driver
-    Make a generic enquiry of the uut and set the member var to the correct driver
-    """
-
-    global uut
-
-    check = DSOX_3000(simulate=False)
-    check.visa_address = address
-    check.open_connection()
-    print(check.manufacturer)
-
-    if check.manufacturer.upper().split(" ")[0] in {"KEYSIGHT", "AGILENT"}:
-        uut = DSOX_3000()
-    elif check.manufacturer == "TEKTRONIX":
-        uut = DPO_2000()
-        uut.num_channels = check.num_channels
-
-
 def test_connections() -> Dict:
     """
     Make sure all of the instruments are connected
@@ -1123,7 +1103,6 @@ if __name__ == "__main__":
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Check UUT", size=(12, 1), key="-CHECK_UUT-"),
             sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
@@ -1258,6 +1237,3 @@ if __name__ == "__main__":
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
-
-        if event == "-CHECK_UUT-":
-            select_uut_driver(values["-UUT_ADDRESS-"])
