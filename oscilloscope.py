@@ -228,9 +228,14 @@ def run_tests(filename: str, test_rows: List) -> None:
             settings = excel.get_test_settings(row=row)
             test_names.add(settings.function)
 
-        print(test_names)
+        # python sets are unordered, and not deterministic. We need the set to be in a specific order for the sequencer
+        # eg can't do cursor tests before dcv
 
-        for test_name in test_names:
+        ordered_test_names = [
+            name for name in excel.supported_test_names if name in test_names
+        ]
+
+        for test_name in ordered_test_names:
             testing_rows = excel.get_test_rows(test_name)
             # At the moment we only do full tests, so we can get the test rows form the excel sheet
 
