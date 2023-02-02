@@ -203,7 +203,7 @@ def test_connections() -> Dict:
     }
 
 
-def run_tests(filename: str, test_rows: List) -> None:
+def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     """
     run_tests
     Main test sequencer
@@ -250,7 +250,11 @@ def run_tests(filename: str, test_rows: List) -> None:
             # TODO use functional method
 
             if "DCV" in test_name:
-                test_dcv(filename=filename, test_rows=testing_rows)
+                test_dcv(
+                    filename=filename,
+                    test_rows=testing_rows,
+                    parallel_channels=parallel_channels,
+                )
 
             elif test_name == "POS":
                 test_position(filename=filename, test_rows=testing_rows)
