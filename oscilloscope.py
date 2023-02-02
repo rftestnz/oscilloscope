@@ -994,7 +994,7 @@ def individual_tests(filename: str) -> List:
     return sorted(test_steps)
 
 
-def load_uut_driver(address: str) -> None:
+def load_uut_driver(address: str) -> bool:
     """
     load_uut_driver
     Use a generic driver to figure out which driver of the scope should be used
@@ -1016,6 +1016,10 @@ def load_uut_driver(address: str) -> None:
         else:
             sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
             uut = DPO_2000()
+
+        uut.num_channels = scpi_uut.get_number_channels()
+
+        return True
 
 
 if __name__ == "__main__":
