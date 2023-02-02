@@ -448,7 +448,7 @@ class ExcelInterface:
 
 if __name__ == "__main__":
 
-    with ExcelInterface("testsheets\\666_Tektronix_DPO20141.xlsx") as excel:
+    with ExcelInterface("testsheets\\666_Tektronix_TDS3034C.xlsx") as excel:
         excel.backup()
         start_cell = excel.get_named_cell("StartCell")
         print(start_cell)
