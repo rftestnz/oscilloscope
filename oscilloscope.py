@@ -878,7 +878,10 @@ def individual_tests(filename: str) -> List:
                 "Select tests to perform:", background_color="blue", text_color="white"
             )
         ],
-        [[sg.Checkbox(name, key=name, background_color="blue")] for name in test_names],
+        [
+            [sg.Checkbox(name, key=name, background_color="blue", default=True)]
+            for name in test_names
+        ],
         [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
     ]
 
