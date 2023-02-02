@@ -261,7 +261,7 @@ class Tektronix_Oscilloscope:
 
         return response.split(",")
 
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
@@ -271,7 +271,14 @@ class Tektronix_Oscilloscope:
             bw_limit (bool): _description_
         """
 
-        state = "TWE" if bw_limit else "FULL"
+        if type(bw_limit) is bool:
+            state = "TWE" if bw_limit else "FULL"
+        elif bw_limit == "150":
+            state = "ONEFIFTY"
+        elif bw_limit == 20:
+            state = "TWENTY"
+        else:
+            state = "FULL"
 
         self.write(f"CH{chan}:BAND {state}")
         self.write("*OPC")
@@ -528,10 +535,9 @@ class Tektronix_Oscilloscope:
             float: _description_
         """
 
+        # TODO what functions do Tek support?
         self.write("MARK:MODE WAV")
-        if self.family == DSOX_FAMILY.DSOX3000:
-            self.write("MARK:Y1:DISP ON")
-            self.write("MARK:Y2:DISP ON")
+
         y1 = self.read_query("MARK:Y1P?")
         y2 = self.read_query("MARK:Y1P?")
 
