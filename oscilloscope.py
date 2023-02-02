@@ -297,7 +297,7 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
     uut.reset()
 
-    uut.set_acquisition(64)
+    uut.set_acquisition(32)
 
     uut.set_timebase(0.001)
 
@@ -363,7 +363,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-    uut.set_acquisition(64)
+    uut.set_acquisition(32)
 
     set_impedance = False
 
@@ -427,7 +427,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(0.2)
 
-            uut.set_acquisition(64)
+            uut.set_acquisition(32)
 
             if not simulating:
                 time.sleep(1)
@@ -453,7 +453,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(0.2)
 
-            uut.set_acquisition(64)
+            uut.set_acquisition(32)
 
             if not simulating:
                 time.sleep(1)
