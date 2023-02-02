@@ -383,6 +383,11 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     )
                     set_impedance = True
 
+                if settings.bandwidth:
+                    uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+                else:
+                    uut.set_channel_bw_limit(chan=channel, bw_limit=False)
+
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
                 if not parallel_channels:
