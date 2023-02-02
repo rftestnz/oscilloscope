@@ -203,6 +203,63 @@ def test_connections() -> Dict:
     }
 
 
+def run_tests(filename: str, test_rows: List) -> None:
+    """
+    run_tests
+    Main test sequencer
+    From the list of test rows, work out the test names and call the appropriate functions
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+
+    # TODO the test rows are generated from the list of names
+    # then need to be converted back into a list of test names
+
+    # Get the test names
+
+    with ExcelInterface(filename=filename) as excel:
+        excel.backup()
+
+        test_names = set()
+
+        for row in test_rows:
+            settings = excel.get_test_settings(row=row)
+            test_names.add(settings.function)
+
+        print(test_names)
+
+        for test_name in test_names:
+            testing_rows = excel.get_test_rows(test_name)
+            # At the moment we only do full tests, so we can get the test rows form the excel sheet
+
+            # TODO use functional method
+
+            if "DCV" in test_name:
+                test_dcv(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "POS":
+                test_position(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "BAL":
+                test_dc_balance(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "CURS":
+                # TODO make sure dcv tested first
+                # TODO make sure old results cleared if testing a different unit
+                test_cursor(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "RISE":
+                test_risetime(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "TIME":
+                test_timebase(filename=filename, row=testing_rows[0])
+
+            elif test_name == "TRIG":
+                test_trigger_sensitivity(filename=filename, test_rows=testing_rows)
+
+
 def test_dc_balance(filename: str, test_rows: List) -> None:
     """
     test_dc_balance
