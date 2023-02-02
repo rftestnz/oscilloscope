@@ -980,7 +980,7 @@ def individual_tests(filename: str) -> List:
     return sorted(test_steps)
 
 
-def load_uut_driver(address: str) -> bool:
+def load_uut_driver(address: str, simulating: bool = False) -> bool:
     """
     load_uut_driver
     Use a generic driver to figure out which driver of the scope should be used
@@ -995,13 +995,15 @@ def load_uut_driver(address: str) -> bool:
             sg.popup_error("Unable to contact UUT. Is address correct?")
             return False
         elif manfacturer == "KEYSIGHT":
-            uut = Keysight_Oscilloscope()
+            uut = Keysight_Oscilloscope(simulate=simulating)
+            uut.open_connection()
         elif manfacturer == "TEKTRONIX":
-            uut = Tektronix_Oscilloscope()
-
+            uut = Tektronix_Oscilloscope(simulate=simulating)
+            uut.open_connection()
         else:
             sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
-            uut = Tektronix_Oscilloscope()
+            uut = Tektronix_Oscilloscope(simulate=simulating)
+            uut.open_connection()
 
         uut.num_channels = scpi_uut.get_number_channels()
 
@@ -1204,7 +1206,7 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            if load_uut_driver(address=values["-UUT_ADDRESS-"]):
+            if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
 
