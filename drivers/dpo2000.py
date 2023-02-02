@@ -280,7 +280,8 @@ class Tektronix_Oscilloscope:
         else:
             state = "FULL"
 
-        self.write(f"CH{chan}:BAND {state}")
+        # Some use BAN and some BAND, so use the full command
+        self.write(f"CH{chan}:BANDWIDTH {state}")
         self.write("*OPC")
 
     def set_channel_impedance(self, chan: int, impedance: str) -> None:
