@@ -377,16 +377,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
-                if settings.impedance:
-                    uut.set_channel_impedance(
-                        chan=channel, impedance=settings.impedance
-                    )
-                    set_impedance = True
-
-                if settings.bandwidth:
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
-                else:
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
@@ -400,6 +390,15 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             uut.set_channel(chan=channel, enabled=True)
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
+
+            if settings.impedance:
+                uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+                set_impedance = True
+
+            if settings.bandwidth:
+                uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+            else:
+                uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
             if settings.function == "DCV-BAL":
                 # Non keysight, apply the half the voltage and the offset then do the reverse
