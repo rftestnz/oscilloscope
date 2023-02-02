@@ -351,7 +351,7 @@ class Keysight_Oscilloscope:
 
             self.timeout = tmo
 
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool | str) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
