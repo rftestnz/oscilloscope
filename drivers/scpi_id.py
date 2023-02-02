@@ -79,9 +79,42 @@ class SCPI_ID:
 
         return manufacturer
 
+    def get_number_channels(self) -> int:
+        """
+        get_number_channels
+        Assume all models have the same format of some letters, then 4 digit model number where the last
+        digit is the number of channels
+
+        Returns:
+            int: _description_
+        """
+
+        num_channels = 0
+
+        start_index = 0
+        model_index = 0
+
+        while model_index < len(self.model):
+            if self.model[model_index].isnumeric():
+                start_index = model_index
+                break
+            model_index += 1
+
+        if start_index:
+            try:
+                model_number = self.model[start_index : start_index + 4]
+                if model_number[-1].isnumeric():
+                    num_channels = int(model_number[-1])
+            except IndexError:
+                num_channels = 0
+
+        return num_channels
+
 
 if __name__ == "__main__":
     with SCPI_ID(address="USB0::0x0699::0x03A3::C044602::INSTR") as scpi:
         print(scpi.get_id())
 
         print(scpi.get_manufacturer())
+
+        print(scpi.get_number_channels())
