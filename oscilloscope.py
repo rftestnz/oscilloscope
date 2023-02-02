@@ -1142,12 +1142,7 @@ if __name__ == "__main__":
         uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event in [
-            "-TEST_DCV-",
-            "-TEST_TB-",
-            "-TEST_TRIG-",
-            "-TEST_RISE-",
-            "-TEST_BAL-",
-            "-TEST_POS-",
+            "-INDIVIDUAL-",
         ]:
             # Common check to make sure everything is in order
 
@@ -1185,51 +1180,23 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            # uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
-
             uut.open_connection()
 
-            with ExcelInterface(values["-FILE-"]) as excel:
-                if event == "-TEST_DCV-":
-                    parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel?",
-                        title="Parallel Channels",
-                        background_color="blue",
-                    )
-                    test_rows = excel.get_test_rows("DCV")
-                    test_dcv(
-                        filename=values["-FILE-"],
-                        test_rows=test_rows,
-                        parallel_channels=(parallel == "Yes"),
-                    )
-                    test_rows = excel.get_test_rows("CURS")
-                    if len(test_rows):
-                        test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+            test_rows = individual_tests(filename=values["-FILE-"])
+            if len(test_rows):
+                parallel = sg.popup_yes_no(
+                    "Will you connect all channels in parallel?",
+                    title="Parallel Channels",
+                    background_color="blue",
+                )
+                run_tests(
+                    filename=values["-FILE-"],
+                    test_rows=test_rows,
+                    parallel_channels=parallel == "Yes",
+                )
 
-                elif event == "-TEST_TB-":
-                    test_rows = excel.get_test_rows("TIME")
-                    test_timebase(filename=values["-FILE-"], row=test_rows[0])
-
-                elif event == "-TEST_TRIG-":
-                    test_rows = excel.get_test_rows("TRIG")
-                    test_trigger_sensitivity(
-                        filename=values["-FILE-"], test_rows=test_rows
-                    )
-
-                elif event == "-TEST_RISE-":
-                    test_rows = excel.get_test_rows("RISE")
-                    test_risetime(filename=values["-FILE-"], test_rows=test_rows)
-
-                elif event == "-TEST_BAL-":
-                    test_rows = excel.get_test_rows("BAL")
-                    test_dc_balance(filename=values["-FILE-"], test_rows=test_rows)
-
-                elif event == "-TEST_POS-":
-                    test_rows = excel.get_test_rows("POS")
-                    test_position(filename=values["-FILE-"], test_rows=test_rows)
-
-            sg.popup("Finished", background_color="blue")
+                sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         if event == "-TEST_CONNECTIONS-":
@@ -1254,8 +1221,3 @@ if __name__ == "__main__":
 
         if event == "-CHECK_UUT-":
             select_uut_driver(values["-UUT_ADDRESS-"])
-
-        if event == "-INDIVIDUAL-":
-            test_rows = individual_tests(filename=values["-FILE-"])
-            if len(test_rows):
-                run_tests(filename=values["-FILE-"], test_rows=test_rows)
