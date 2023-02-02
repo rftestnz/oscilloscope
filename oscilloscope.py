@@ -203,6 +203,82 @@ def test_connections() -> Dict:
     }
 
 
+def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
+    """
+    run_tests
+    Main test sequencer
+    From the list of test rows, work out the test names and call the appropriate functions
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+    """
+
+    # TODO the test rows are generated from the list of names
+    # then need to be converted back into a list of test names
+
+    # Get the test names
+
+    with ExcelInterface(filename=filename) as excel:
+        excel.backup()
+
+        test_names = set()
+
+        for row in test_rows:
+            settings = excel.get_test_settings(row=row)
+            test_names.add(settings.function)
+
+        # Get all the tests. If there are cursor tests, then automatically select them if dcv selected as they cannot be done in isolation
+        all_tests = excel.get_test_types()
+
+        if "CURS" in all_tests and "DCV" in test_names:
+            test_names.add(
+                "CURS"
+            )  # It is a set, so doesn't matter if it was already in
+
+        # python sets are unordered, and not deterministic. We need the set to be in a specific order for the sequencer
+        # eg can't do cursor tests before dcv
+
+        ordered_test_names = [
+            name for name in excel.supported_test_names if name in test_names
+        ]
+
+        for test_name in ordered_test_names:
+            testing_rows = excel.get_test_rows(test_name)
+            # At the moment we only do full tests, so we can get the test rows form the excel sheet
+
+            # TODO use functional method
+
+            if "DCV" in test_name:
+                test_dcv(
+                    filename=filename,
+                    test_rows=testing_rows,
+                    parallel_channels=parallel_channels,
+                )
+
+            elif test_name == "POS":
+                test_position(
+                    filename=filename,
+                    test_rows=testing_rows,
+                    parallel_channels=parallel_channels,
+                )
+
+            elif test_name == "BAL":
+                test_dc_balance(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "CURS":
+                test_cursor(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "RISE":
+                test_risetime(filename=filename, test_rows=testing_rows)
+
+            elif test_name == "TIME":
+                test_timebase(filename=filename, row=testing_rows[0])
+
+            elif test_name == "TRIG":
+                test_trigger_sensitivity(filename=filename, test_rows=testing_rows)
+
+
 def test_dc_balance(filename: str, test_rows: List) -> None:
     """
     test_dc_balance
@@ -214,6 +290,8 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
     """
 
     global uut
+
+    # no equipment required
 
     sg.popup("Remove inputs from all channels", background_color="blue")
 
@@ -260,6 +338,14 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     global cursor_results
 
     last_channel = -1
+
+    connections = test_connections()
+
+    # require calibrator
+
+    if not connections["FLUKE_5700A"]:
+        sg.popup_error("Cannot find calibrator")
+        return
 
     uut.reset()
 
@@ -426,6 +512,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
     global simulating
     global cursor_results
 
+    # no equipment as using buffered results
+
     with ExcelInterface(filename) as excel:
         for row in test_rows:
             excel.row = row
@@ -448,7 +536,9 @@ def test_cursor(filename: str, test_rows: List) -> None:
         excel.save_sheet()
 
 
-def test_position(filename: str, test_rows: List) -> None:
+def test_position(
+    filename: str, test_rows: List, parallel_channels: bool = False
+) -> None:
     """
     test_position
     Test vertical position
@@ -464,6 +554,14 @@ def test_position(filename: str, test_rows: List) -> None:
     global calibrator
     global uut
 
+    connections = test_connections()
+
+    # require calibrator
+
+    if not connections["FLUKE_5700A"]:
+        sg.popup_error("Cannot find calibrator")
+        return
+
     uut.reset()
 
     uut.set_acquisition(32)
@@ -476,7 +574,7 @@ def test_position(filename: str, test_rows: List) -> None:
 
             settings = excel.get_test_settings()
 
-            if settings.channel != last_channel:
+            if settings.channel != last_channel and not parallel_channels:
                 sg.popup(
                     f"Connect calibrator output to channel {settings.channel}",
                     background_color="blue",
@@ -533,6 +631,14 @@ def test_timebase(filename: str, row: int) -> None:
     Args:
         row (int): _description_
     """
+
+    connections = test_connections()
+
+    # require RF gen
+
+    if not connections["33250A"]:
+        sg.popup_error("Cannot find 33250A Generator")
+        return
 
     sg.popup("Connect 33250A output to Ch1", background_color="blue")
 
@@ -670,6 +776,14 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     global mxg
     global uut
 
+    connections = test_connections()
+
+    # require RF gen
+
+    if not connections["RFGEN"]:
+        sg.popup_error("Cannot find RF Signal Generator")
+        return
+
     uut.reset()
 
     # Turn off all channels but 1
@@ -683,7 +797,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     with ExcelInterface(filename=filename) as excel:
         for row in test_rows:
             excel.row = row
-            settings = excel.get_test_settings()
+            settings = excel.get_trigger_settings()
             if settings.channel == 1 and settings.impedance == 50:
                 ext_termination = False
                 break
@@ -693,7 +807,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_trigger_settings()
 
             feedthru_msg = (
                 "via 50 Ohm Feedthru"
@@ -751,6 +865,8 @@ def test_risetime(filename: str, test_rows: List) -> None:
         filename (str): _description_
         test_rows (List): _description_
     """
+
+    # only pulse gen required
 
     uut.reset()
 
@@ -820,6 +936,61 @@ def round_range(val: float) -> float:
         first_digit = 5
 
     return first_digit * math.pow(10, decade)
+
+
+def individual_tests(filename: str) -> List:
+    """
+    individual_tests
+    show form for selecting individual tests
+
+    Returns:
+        List: _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        test_names = excel.get_test_types()
+
+    layout = [
+        [
+            sg.Text(
+                "Select tests to perform:", background_color="blue", text_color="white"
+            )
+        ],
+        [
+            [sg.Checkbox(name, key=name, background_color="blue", default=True)]
+            for name in test_names
+        ],
+        [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
+    ]
+
+    window = sg.Window(
+        "Test individual tests", layout=layout, finalize=True, background_color="blue"
+    )
+
+    event, values = window.read()  # type: ignore
+
+    test_steps = []
+
+    if event not in [sg.WIN_CLOSED, "Cancel"]:
+        # Now work out which are checked
+        # There must be a pythonic way to get the list of values in one line, but couldn't work it out using lambdas and filters
+
+        checked_list = [val for val in values if values[val]]
+
+        print(checked_list)
+
+        # we actually need the list of rows for all of the steps
+
+        for row in checked_list:
+            rows = excel.get_test_rows(row)
+            test_steps.extend(iter(rows))
+        print(test_steps)
+
+    window.close()
+
+    excel.close()
+
+    return sorted(test_steps)
 
 
 if __name__ == "__main__":
@@ -922,16 +1093,9 @@ if __name__ == "__main__":
         ],
         [sg.Text()],
         [
-            sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
-            sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
-            sg.Button("Offset Accuracy", size=(12, 1), key="-TEST_POS-"),
-        ],
-        [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Test DCV", size=(12, 1), key="-TEST_DCV-"),
-            sg.Button("Test Timebase", size=(12, 1), key="-TEST_TB-"),
-            sg.Button("Test Trigger", size=(12, 1), key="-TEST_TRIG-"),
-            sg.Button("Test Risetime", size=(12, 1), key="-TEST_RISE-"),
+            sg.Button("Check UUT", size=(12, 1), key="-CHECK_UUT-"),
+            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -988,12 +1152,7 @@ if __name__ == "__main__":
         uut.visa_address = values["-UUT_ADDRESS-"]
 
         if event in [
-            "-TEST_DCV-",
-            "-TEST_TB-",
-            "-TEST_TRIG-",
-            "-TEST_RISE-",
-            "-TEST_BAL-",
-            "-TEST_POS-",
+            "-INDIVIDUAL-",
         ]:
             # Common check to make sure everything is in order
 
@@ -1031,51 +1190,23 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            # uut = DSOX_3000(simulate=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
-
             uut.open_connection()
 
-            with ExcelInterface(values["-FILE-"]) as excel:
-                if event == "-TEST_DCV-":
-                    parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel?",
-                        title="Parallel Channels",
-                        background_color="blue",
-                    )
-                    test_rows = excel.get_test_rows("DCV")
-                    test_dcv(
-                        filename=values["-FILE-"],
-                        test_rows=test_rows,
-                        parallel_channels=(parallel == "Yes"),
-                    )
-                    test_rows = excel.get_test_rows("CURS")
-                    if len(test_rows):
-                        test_cursor(filename=values["-FILE-"], test_rows=test_rows)
+            test_rows = individual_tests(filename=values["-FILE-"])
+            if len(test_rows):
+                parallel = sg.popup_yes_no(
+                    "Will you connect all channels in parallel?",
+                    title="Parallel Channels",
+                    background_color="blue",
+                )
+                run_tests(
+                    filename=values["-FILE-"],
+                    test_rows=test_rows,
+                    parallel_channels=parallel == "Yes",
+                )
 
-                elif event == "-TEST_TB-":
-                    test_rows = excel.get_test_rows("TIME")
-                    test_timebase(filename=values["-FILE-"], row=test_rows[0])
-
-                elif event == "-TEST_TRIG-":
-                    test_rows = excel.get_test_rows("TRIG")
-                    test_trigger_sensitivity(
-                        filename=values["-FILE-"], test_rows=test_rows
-                    )
-
-                elif event == "-TEST_RISE-":
-                    test_rows = excel.get_test_rows("RISE")
-                    test_risetime(filename=values["-FILE-"], test_rows=test_rows)
-
-                elif event == "-TEST_BAL-":
-                    test_rows = excel.get_test_rows("BAL")
-                    test_dc_balance(filename=values["-FILE-"], test_rows=test_rows)
-
-                elif event == "-TEST_POS-":
-                    test_rows = excel.get_test_rows("POS")
-                    test_position(filename=values["-FILE-"], test_rows=test_rows)
-
-            sg.popup("Finished", background_color="blue")
+                sg.popup("Finished", background_color="blue")
             window["-VIEW-"].update(disabled=False)
 
         if event == "-TEST_CONNECTIONS-":
