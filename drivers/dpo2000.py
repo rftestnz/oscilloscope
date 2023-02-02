@@ -100,7 +100,7 @@ class Tektronix_Oscilloscope:
         """
         try:
             if self.simulating:
-                self.instr = DPO2000_Simulator
+                self.instr = DPO2000_Simulator()
                 self.model = "DPO3034"
                 self.manufacturer = "Tektronix"
                 self.serial = "666"
@@ -619,8 +619,8 @@ class Tektronix_Oscilloscope:
 
 if __name__ == "__main__":
 
-    dpo2014 = Tektronix_Oscilloscope()
-    dpo2014.visa_address = "USB0::0x0699::0x0373::C010049::INSTR"
+    dpo2014 = Tektronix_Oscilloscope(simulate=True)
+    dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
     dpo2014.open_connection()
 
