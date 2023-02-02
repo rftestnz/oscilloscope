@@ -228,6 +228,14 @@ def run_tests(filename: str, test_rows: List) -> None:
             settings = excel.get_test_settings(row=row)
             test_names.add(settings.function)
 
+        # Get all the tests. If there are cursor tests, then automatically select them if dcv selected as they cannot be done in isolation
+        all_tests = excel.get_test_types()
+
+        if "CURS" in all_tests and "DCV" in test_names:
+            test_names.add(
+                "CURS"
+            )  # It is a set, so doesn't matter if it was already in
+
         # python sets are unordered, and not deterministic. We need the set to be in a specific order for the sequencer
         # eg can't do cursor tests before dcv
 
