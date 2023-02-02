@@ -889,7 +889,7 @@ def individual_tests(filename: str) -> List:
         "Test individual tests", layout=layout, finalize=True, background_color="blue"
     )
 
-    event, values = window.read()
+    event, values = window.read()  # type: ignore
 
     test_steps = []
 
@@ -1196,4 +1196,6 @@ if __name__ == "__main__":
             select_uut_driver(values["-UUT_ADDRESS-"])
 
         if event == "-INDIVIDUAL-":
-            individual_tests(filename=values["-FILE-"])
+            test_rows = individual_tests(filename=values["-FILE-"])
+            if len(test_rows):
+                run_tests(filename=values["-FILE-"], test_rows=test_rows)
