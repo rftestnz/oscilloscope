@@ -13,6 +13,7 @@ from drivers.dsox_3000 import DSOX_3000
 from drivers.dpo2000 import DPO_2000
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
+from drivers.scpi_id import SCPI_ID
 import os
 import sys
 import time
@@ -991,6 +992,27 @@ def individual_tests(filename: str) -> List:
     excel.close()
 
     return sorted(test_steps)
+
+
+def load_uut_driver(address: str) -> None:
+    """
+    load_uut_driver
+    Use a generic driver to figure out which driver of the scope should be used
+    """
+
+    global uut
+
+    with SCPI_ID(address=address) as scpi_uut:
+        manfacturer = scpi_uut.get_manufacturer()
+
+        if manfacturer == "KEYSIGHT":
+            uut = DSOX_3000()
+        elif manfacturer == "TEKTRONIX":
+            uut = DPO_2000()
+
+        else:
+            sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
+            uut = DPO_2000()
 
 
 if __name__ == "__main__":
