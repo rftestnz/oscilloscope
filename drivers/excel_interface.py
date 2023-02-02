@@ -26,7 +26,7 @@ class DCV_Settings:
     scale: float
     voltage: float
     offset: float
-    bandwidth: str
+    bandwidth: int
     impedance: str
     invert: bool
 

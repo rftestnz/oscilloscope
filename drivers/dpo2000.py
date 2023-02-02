@@ -63,7 +63,7 @@ class DPO2000_Simulator:
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class DPO_2000:
+class Tektronix_Oscilloscope:
     """
      _summary_
 
@@ -100,7 +100,7 @@ class DPO_2000:
         """
         try:
             if self.simulating:
-                self.instr = DPO2000_Simulator
+                self.instr = DPO2000_Simulator()
                 self.model = "DPO3034"
                 self.manufacturer = "Tektronix"
                 self.serial = "666"
@@ -261,7 +261,7 @@ class DPO_2000:
 
         return response.split(",")
 
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
@@ -271,10 +271,33 @@ class DPO_2000:
             bw_limit (bool): _description_
         """
 
-        state = "TWE" if bw_limit else "FULL"
+        if type(bw_limit) is bool:
+            state = "TWE" if bw_limit else "FULL"
+        elif bw_limit == 150:
+            state = "ONEFIFTY"
+        elif bw_limit == 20:
+            state = "TWENTY"
+        else:
+            state = "FULL"
 
-        self.write(f"CH{chan}:BAND {state}")
+        # Some use BAN and some BAND, so use the full command
+        self.write(f"CH{chan}:BANDWIDTH {state}")
         self.write("*OPC")
+
+    def set_channel_impedance(self, chan: int, impedance: str) -> None:
+        """
+        set_channel_impedance
+
+        Although not all models can set impedance, command is available for compatibility
+
+        Args:
+            chan (int): _description_
+            imedance (str): _description_
+        """
+
+        imp = "FIFTY" if impedance == "50" else "MEG"
+
+        self.write(f"CH{chan}:IMP {imp}")
 
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
@@ -513,10 +536,9 @@ class DPO_2000:
             float: _description_
         """
 
+        # TODO what functions do Tek support?
         self.write("MARK:MODE WAV")
-        if self.family == DSOX_FAMILY.DSOX3000:
-            self.write("MARK:Y1:DISP ON")
-            self.write("MARK:Y2:DISP ON")
+
         y1 = self.read_query("MARK:Y1P?")
         y2 = self.read_query("MARK:Y1P?")
 
@@ -598,8 +620,8 @@ class DPO_2000:
 
 if __name__ == "__main__":
 
-    dpo2014 = DPO_2000()
-    dpo2014.visa_address = "USB0::0x0699::0x0373::C010049::INSTR"
+    dpo2014 = Tektronix_Oscilloscope(simulate=True)
+    dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
     dpo2014.open_connection()
 

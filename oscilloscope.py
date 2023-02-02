@@ -9,8 +9,8 @@ import PySimpleGUI as sg
 from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.dsox_3000 import DSOX_3000
-from drivers.dpo2000 import DPO_2000
+from drivers.dsox_3000 import Keysight_Oscilloscope
+from drivers.dpo2000 import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
@@ -26,7 +26,7 @@ VERSION = "A.00.00"
 
 calibrator = Fluke5700A()
 ks33250 = Ks33250A()
-uut = DSOX_3000()
+uut = Keysight_Oscilloscope()
 mxg = RF_Signal_Generator()
 simulating: bool = False
 
@@ -370,17 +370,14 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     uut.set_voltage_scale(chan=last_channel, scale=1)
                     uut.set_voltage_offset(chan=last_channel, offset=0)
                     uut.set_channel(chan=last_channel, enabled=False)
+                    uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
                     uut.set_channel(chan=channel, enabled=True)
-                    if set_impedance:
-                        uut.set_channel_impedance(chan=last_channel, impedance="1M")
+                    uut.set_channel_impedance(
+                        chan=last_channel, impedance="1M"
+                    )  # always
 
                 uut.set_voltage_scale(chan=channel, scale=5)
                 uut.set_voltage_offset(chan=channel, offset=0)
-                if settings.impedance:
-                    uut.set_channel_impedance(
-                        chan=channel, impedance=settings.impedance
-                    )
-                    set_impedance = True
 
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
@@ -394,6 +391,15 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             uut.set_channel(chan=channel, enabled=True)
             uut.set_voltage_scale(chan=channel, scale=settings.scale)
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
+
+            if settings.impedance:
+                uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+                set_impedance = True
+
+            if settings.bandwidth:
+                uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+            else:
+                uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
             if settings.function == "DCV-BAL":
                 # Non keysight, apply the half the voltage and the offset then do the reverse
@@ -974,7 +980,7 @@ def individual_tests(filename: str) -> List:
     return sorted(test_steps)
 
 
-def load_uut_driver(address: str) -> bool:
+def load_uut_driver(address: str, simulating: bool = False) -> bool:
     """
     load_uut_driver
     Use a generic driver to figure out which driver of the scope should be used
@@ -989,13 +995,15 @@ def load_uut_driver(address: str) -> bool:
             sg.popup_error("Unable to contact UUT. Is address correct?")
             return False
         elif manfacturer == "KEYSIGHT":
-            uut = DSOX_3000()
+            uut = Keysight_Oscilloscope(simulate=simulating)
+            uut.open_connection()
         elif manfacturer == "TEKTRONIX":
-            uut = DPO_2000()
-
+            uut = Tektronix_Oscilloscope(simulate=simulating)
+            uut.open_connection()
         else:
             sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
-            uut = DPO_2000()
+            uut = Tektronix_Oscilloscope(simulate=simulating)
+            uut.open_connection()
 
         uut.num_channels = scpi_uut.get_number_channels()
 
@@ -1198,7 +1206,7 @@ if __name__ == "__main__":
             mxg.visa_address = mxg_address
             mxg.open_connection()
 
-            if load_uut_driver(address=values["-UUT_ADDRESS-"]):
+            if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
 

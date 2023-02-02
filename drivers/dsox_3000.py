@@ -84,7 +84,7 @@ class DSOX3000_Simulator:
         )
 
 
-class DSOX_3000:
+class Keysight_Oscilloscope:
     """
      _summary_
 
@@ -351,7 +351,7 @@ class DSOX_3000:
 
             self.timeout = tmo
 
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
@@ -361,7 +361,10 @@ class DSOX_3000:
             bw_limit (bool): _description_
         """
 
-        state = "ON" if bw_limit else "OFF"
+        if type(bw_limit) is bool:
+            state = "ON" if bw_limit else "OFF"
+        else:
+            state = bw_limit
 
         self.write(f"CHAN{chan}:BWL {state}")
         self.write("*OPC")
@@ -701,7 +704,7 @@ class DSOX_3000:
 
 if __name__ == "__main__":
 
-    dsox3034t = DSOX_3000(simulate=False)
+    dsox3034t = Keysight_Oscilloscope(simulate=False)
     dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
     dsox3034t.open_connection()
