@@ -860,6 +860,58 @@ def round_range(val: float) -> float:
     return first_digit * math.pow(10, decade)
 
 
+def individual_tests(filename: str) -> List:
+    """
+    individual_tests
+    show form for selecting individual tests
+
+    Returns:
+        List: _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        test_names = excel.get_test_types()
+
+    layout = [
+        [
+            sg.Text(
+                "Select tests to perform:", background_color="blue", text_color="white"
+            )
+        ],
+        [[sg.Checkbox(name, key=name, background_color="blue")] for name in test_names],
+        [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
+    ]
+
+    window = sg.Window(
+        "Test individual tests", layout=layout, finalize=True, background_color="blue"
+    )
+
+    event, values = window.read()
+
+    test_steps = []
+
+    if event not in [sg.WIN_CLOSED, "Cancel"]:
+        # Now work out which are checked
+        # There must be a pythonic way to get the list of values in one line, but couldn't work it out using lambdas and filters
+
+        checked_list = [val for val in values if values[val]]
+
+        print(checked_list)
+
+        # we actually need the list of rows for all of the steps
+
+        for row in checked_list:
+            rows = excel.get_test_rows(row)
+            test_steps.extend(iter(rows))
+        print(test_steps)
+
+    window.close()
+
+    excel.close()
+
+    return sorted(test_steps)
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -963,6 +1015,7 @@ if __name__ == "__main__":
             sg.Button("Check UUT", size=(15, 1), key="-CHECK_UUT-"),
             sg.Button("Test Balance", size=(12, 1), key="-TEST_BAL-"),
             sg.Button("Offset Accuracy", size=(12, 1), key="-TEST_POS-"),
+            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
         ],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
@@ -1138,3 +1191,6 @@ if __name__ == "__main__":
 
         if event == "-CHECK_UUT-":
             select_uut_driver(values["-UUT_ADDRESS-"])
+
+        if event == "-INDIVIDUAL-":
+            individual_tests(filename=values["-FILE-"])
