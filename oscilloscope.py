@@ -9,7 +9,7 @@ import PySimpleGUI as sg
 from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.dsox_3000 import DSOX_3000
+from drivers.dsox_3000 import Keysight_Oscilloscope
 from drivers.dpo2000 import DPO_2000
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
@@ -26,7 +26,7 @@ VERSION = "A.00.00"
 
 calibrator = Fluke5700A()
 ks33250 = Ks33250A()
-uut = DSOX_3000()
+uut = Keysight_Oscilloscope()
 mxg = RF_Signal_Generator()
 simulating: bool = False
 
@@ -989,7 +989,7 @@ def load_uut_driver(address: str) -> bool:
             sg.popup_error("Unable to contact UUT. Is address correct?")
             return False
         elif manfacturer == "KEYSIGHT":
-            uut = DSOX_3000()
+            uut = Keysight_Oscilloscope()
         elif manfacturer == "TEKTRONIX":
             uut = DPO_2000()
 
