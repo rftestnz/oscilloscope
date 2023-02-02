@@ -61,7 +61,27 @@ class SCPI_ID:
 
         return response.split(",")
 
+    def get_manufacturer(self) -> str:
+        """
+        get_manufacturer
+        request the manufacturer
+        keysight and agilent are returned as keysight
+
+        Returns:
+            str: _description_
+        """
+
+        self.get_id()
+
+        manufacturer = self.manufacturer.upper()
+        if "KEYSIGHT" in manufacturer or "AGILENT" in manufacturer:
+            manufacturer = "KEYSIGHT"
+
+        return manufacturer
+
 
 if __name__ == "__main__":
     with SCPI_ID(address="USB0::0x0699::0x03A3::C044602::INSTR") as scpi:
         print(scpi.get_id())
+
+        print(scpi.get_manufacturer())
