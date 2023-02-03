@@ -12,6 +12,11 @@ from typing import List
 import numpy as np
 from struct import unpack
 
+try:
+    from drivers.base_scope_driver import ScopeDriver
+except ModuleNotFoundError:
+    from base_scope_driver import ScopeDriver
+
 VERSION = "A.00.00"
 
 
@@ -63,7 +68,7 @@ class DPO2000_Simulator:
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class Tektronix_Oscilloscope:
+class Tektronix_Oscilloscope(ScopeDriver):
     """
      _summary_
 
@@ -85,11 +90,10 @@ class Tektronix_Oscilloscope:
         self.rm = pyvisa.ResourceManager()
 
     def __enter__(self):
-        self.open_connection()
-        return self
+        return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        return super().__exit__(exc_type, exc_val, exc_tb)
 
     def open_connection(self) -> bool:
         """
@@ -120,15 +124,20 @@ class Tektronix_Oscilloscope:
     def initialize(self) -> None:
         """
         initialize _summary_
+
+        Returns:
+            _type_: _description_
         """
-        self.open_connection()
+        return super().initialize()
 
     def close(self) -> None:
         """
         close _summary_
+
+        Returns:
+            _type_: _description_
         """
-        self.instr.close()  # type: ignore
-        self.connected = False
+        return super().close()
 
     def is_connected(self) -> bool:
         """
@@ -143,45 +152,10 @@ class Tektronix_Oscilloscope:
         )
 
     def write(self, command: str) -> None:
-        """
-        write
-
-        Args:
-            command (str): [description]
-        """
-
-        attempts = 0
-
-        while attempts < 3:
-            try:
-                self.instr.write(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
+        return super().write(command)
 
     def read(self) -> str:
-        """
-        read
-        Read back from the unit
-
-        Returns:
-            str: [description]
-        """
-
-        attempts = 0
-
-        ret: str = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.read()  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
+        return super().read()
 
     def query(self, command: str) -> str:
         """
@@ -193,24 +167,11 @@ class Tektronix_Oscilloscope:
         Returns:
             str: _description_
         """
-
-        attempts = 0
-        ret = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.query(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
+        return super().query(command)
 
     def read_query(self, command: str) -> float:
         """
-        read_query
-        send query command, return a float or -999 if invalid
+        read_query _summary_
 
         Args:
             command (str): _description_
@@ -218,15 +179,7 @@ class Tektronix_Oscilloscope:
         Returns:
             float: _description_
         """
-
-        reply = self.query(command)
-
-        try:
-            val = float(reply)
-        except ValueError:
-            val = 0.0
-
-        return val
+        return super().read_query(command)
 
     def reset(self) -> None:
         """
@@ -234,6 +187,7 @@ class Tektronix_Oscilloscope:
         """
         self.write("*CLS")
         self.write("*RST")
+        self.write("*OPC")
 
     def get_id(self) -> List:
         """
@@ -409,7 +363,7 @@ class Tektronix_Oscilloscope:
         self.write("ACQ:MODE AVE")
         self.write(f"ACQ:NUMAV {num_samples}")
 
-    def set_trigger_mode(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
         set_trigger_mode _summary_
 
@@ -417,7 +371,7 @@ class Tektronix_Oscilloscope:
             mode (str): _description_
         """
 
-        # self.write(f"TRIG:A:MODE {mode}")
+        # TODO implement edge triggering
         self.write("TRIG:SWE AUTO")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
@@ -631,10 +585,26 @@ class Tektronix_Oscilloscope:
         self.write("CURS:FUNC WAV")
         self.write("*OPC")
 
+    def check_triggered(self, sweep_time: float = 0.1) -> bool:
+        """
+        check_triggered
+        Check the state of the trigger
+
+        Args:
+            sweep_time (float, optional): _description_. Defaults to 0.1.
+
+        Returns:
+            bool: _description_
+        """
+
+        response = self.query("TRIG:STATE?").strip()
+
+        return response in ["AUTO", "TRIG"]
+
 
 if __name__ == "__main__":
 
-    dpo2014 = Tektronix_Oscilloscope(simulate=True)
+    dpo2014 = Tektronix_Oscilloscope(simulate=False)
     dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
     dpo2014.open_connection()
@@ -651,9 +621,13 @@ if __name__ == "__main__":
     dpo2014.set_voltage_offset(chan=2, offset=+0.5)
     dpo2014.set_timebase(0.001)
 
-    dpo2014.set_acquisition(64)
+    dpo2014.set_acquisition(32)
 
-    dpo2014.set_trigger_mode("EDGE")
+    print(dpo2014.check_triggered())
+
+    dpo2014.set_trigger_type("EDGE")
+
+    print(dpo2014.check_triggered())
 
     time.sleep(1)
 

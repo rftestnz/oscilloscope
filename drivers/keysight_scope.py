@@ -11,6 +11,11 @@ import time
 from random import random
 from typing import List
 
+try:
+    from drivers.base_scope_driver import ScopeDriver
+except ModuleNotFoundError:
+    from base_scope_driver import ScopeDriver
+
 VERSION = "A.00.00"
 
 
@@ -84,7 +89,7 @@ class DSOX3000_Simulator:
         )
 
 
-class Keysight_Oscilloscope:
+class Keysight_Oscilloscope(ScopeDriver):
     """
      _summary_
 
@@ -107,11 +112,19 @@ class Keysight_Oscilloscope:
         self.rm = pyvisa.ResourceManager()
 
     def __enter__(self):
-        self.open_connection()
-        return self
+        return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        return super().__exit__(exc_type, exc_val, exc_tb)
+
+    def close(self) -> None:
+        """
+        close _summary_
+
+        Returns:
+            _type_: _description_
+        """
+        return super().close()
 
     def open_connection(self) -> bool:
         """
@@ -140,19 +153,6 @@ class Keysight_Oscilloscope:
 
         return self.connected
 
-    def initialize(self) -> None:
-        """
-        initialize _summary_
-        """
-        self.open_connection()
-
-    def close(self) -> None:
-        """
-        close _summary_
-        """
-        self.instr.close()  # type: ignore
-        self.connected = False
-
     def is_connected(self) -> bool:
         """
         is_connected _summary_
@@ -169,44 +169,24 @@ class Keysight_Oscilloscope:
 
     def write(self, command: str) -> None:
         """
-        write
+        write _summary_
 
         Args:
-            command (str): [description]
+            command (str): _description_
+
+        Returns:
+            _type_: _description_
         """
-
-        attempts = 0
-
-        while attempts < 3:
-            try:
-                self.instr.write(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
+        return super().write(command)
 
     def read(self) -> str:
         """
-        read
-        Read back from the unit
+        read _summary_
 
         Returns:
-            str: [description]
+            str: _description_
         """
-
-        attempts = 0
-
-        ret: str = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.read()  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
+        return super().read()
 
     def query(self, command: str) -> str:
         """
@@ -218,24 +198,11 @@ class Keysight_Oscilloscope:
         Returns:
             str: _description_
         """
-
-        attempts = 0
-        ret = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.query(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
+        return super().query(command)
 
     def read_query(self, command: str) -> float:
         """
-        read_query
-        send query command, return a float or -999 if invalid
+        read_query _summary_
 
         Args:
             command (str): _description_
@@ -243,15 +210,7 @@ class Keysight_Oscilloscope:
         Returns:
             float: _description_
         """
-
-        reply = self.query(command)
-
-        try:
-            val = float(reply)
-        except ValueError:
-            val = 0.0
-
-        return val
+        return super().read_query(command)
 
     def reset(self) -> None:
         """
@@ -259,6 +218,7 @@ class Keysight_Oscilloscope:
         """
         self.write("*CLS")
         self.write("*RST")
+        self.write("*OPC")
 
     def get_id(self) -> List:
         """
@@ -499,7 +459,7 @@ class Keysight_Oscilloscope:
         self.write(f"ACQ:COUNT {num_samples}")
         self.write("*OPC")
 
-    def set_trigger_mode(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str) -> None:
         """
         set_trigger_mode _summary_
 
@@ -740,7 +700,7 @@ if __name__ == "__main__":
     dsox3034t.set_timebase(5e-9)
     dsox3034t.set_acquisition(64)
 
-    dsox3034t.set_trigger_mode("EDGE")
+    dsox3034t.set_trigger_type("EDGE")
 
     time.sleep(1)
 
