@@ -86,11 +86,10 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.rm = pyvisa.ResourceManager()
 
     def __enter__(self):
-        self.open_connection()
-        return self
+        return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        return super().__exit__(exc_type, exc_val, exc_tb)
 
     def open_connection(self) -> bool:
         """
@@ -121,15 +120,20 @@ class Tektronix_Oscilloscope(ScopeDriver):
     def initialize(self) -> None:
         """
         initialize _summary_
+
+        Returns:
+            _type_: _description_
         """
-        self.open_connection()
+        return super().initialize()
 
     def close(self) -> None:
         """
         close _summary_
+
+        Returns:
+            _type_: _description_
         """
-        self.instr.close()  # type: ignore
-        self.connected = False
+        return super().close()
 
     def is_connected(self) -> bool:
         """
@@ -143,10 +147,34 @@ class Tektronix_Oscilloscope(ScopeDriver):
             and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
         )
 
+    def write(self, command: str) -> None:
+        return super().write(command)
+
+    def read(self) -> str:
+        return super().read()
+
     def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
         return super().query(command)
 
     def read_query(self, command: str) -> float:
+        """
+        read_query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            float: _description_
+        """
         return super().read_query(command)
 
     def reset(self) -> None:
