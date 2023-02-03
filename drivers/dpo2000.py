@@ -667,9 +667,13 @@ if __name__ == "__main__":
     dpo2014.set_voltage_offset(chan=2, offset=+0.5)
     dpo2014.set_timebase(0.001)
 
-    dpo2014.set_acquisition(64)
+    dpo2014.set_acquisition(32)
+
+    print(dpo2014.check_triggered())
+
     dpo2014.set_trigger_type("EDGE")
 
+    print(dpo2014.check_triggered())
 
     time.sleep(1)
 
