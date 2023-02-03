@@ -452,7 +452,8 @@ class Tektronix_Oscilloscope:
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        time.sleep(delay)
+        if not self.simulating:
+            time.sleep(delay)
 
         return self.read_query("MEASU:MEAS1:MEAN?")
 
@@ -521,7 +522,8 @@ class Tektronix_Oscilloscope:
 
         print(self.read_query("MEASU:MEAS1:COUNT?"))
 
-        time.sleep(2)  # allow time to measure
+        if not self.simulating:
+            time.sleep(2)  # allow time to measure
 
         # Tek will automatically average successive readings
 

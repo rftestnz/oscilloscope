@@ -542,7 +542,8 @@ class Keysight_Oscilloscope:
 
         self.write(f"MEAS:SOURCE CHAN{chan}")
 
-        time.sleep(delay)
+        if not self.simulating:
+            time.sleep(delay)
 
         return self.read_query("MEAS:VAV?")
 
@@ -568,7 +569,8 @@ class Keysight_Oscilloscope:
         self.write(f"MEAS:RIS CHAN{chan}")
         self.write("*OPC")
 
-        time.sleep(1)  # allow time to measure
+        if not self.simulating:
+            time.sleep(1)  # allow time to measure
 
         total = 0
         for _ in range(num_readings):
@@ -707,7 +709,8 @@ class Keysight_Oscilloscope:
 
         self.write("*CLS")
 
-        time.sleep(sweep_time)
+        if not self.simulating:
+            time.sleep(sweep_time)
 
         triggered = self.query("TER?")
 
