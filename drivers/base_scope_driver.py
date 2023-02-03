@@ -73,6 +73,8 @@ class ScopeDriver(metaclass=abc.ABCMeta):
             str: _description_
         """
 
+        assert command[-1] == "?"
+
         attempts = 0
         ret = ""
 
@@ -97,6 +99,8 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         Returns:
             float: _description_
         """
+
+        assert command[-1] == "?"
 
         reply = self.query(command)
 
@@ -250,7 +254,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def set_trigger_mode(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str) -> None:
         """
         set_trigger_mode _summary_
 

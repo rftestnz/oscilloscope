@@ -59,8 +59,8 @@ class TestScope(ScopeDriver):
     def set_acquisition(self, num_samples: int) -> None:
         return super().set_acquisition(num_samples)
 
-    def set_trigger_mode(self, mode: str) -> None:
-        return super().set_trigger_mode(mode)
+    def set_trigger_type(self, mode: str) -> None:
+        return super().set_trigger_type(mode)
 
     def set_trigger_level(self, chan: int, level: float) -> None:
         return super().set_trigger_level(chan, level)

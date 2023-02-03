@@ -409,7 +409,7 @@ class Tektronix_Oscilloscope:
         self.write("ACQ:MODE AVE")
         self.write(f"ACQ:NUMAV {num_samples}")
 
-    def set_trigger_mode(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
         set_trigger_mode _summary_
 
@@ -652,8 +652,8 @@ if __name__ == "__main__":
     dpo2014.set_timebase(0.001)
 
     dpo2014.set_acquisition(64)
+    dpo2014.set_trigger_type("EDGE")
 
-    dpo2014.set_trigger_mode("EDGE")
 
     time.sleep(1)
 

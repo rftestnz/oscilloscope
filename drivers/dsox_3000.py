@@ -10,6 +10,7 @@ import pyvisa
 import time
 from random import random
 from typing import List
+from base_scope_driver import ScopeDriver
 
 VERSION = "A.00.00"
 
@@ -84,7 +85,7 @@ class DSOX3000_Simulator:
         )
 
 
-class Keysight_Oscilloscope:
+class Keysight_Oscilloscope(ScopeDriver):
     """
      _summary_
 
@@ -499,7 +500,7 @@ class Keysight_Oscilloscope:
         self.write(f"ACQ:COUNT {num_samples}")
         self.write("*OPC")
 
-    def set_trigger_mode(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str) -> None:
         """
         set_trigger_mode _summary_
 
@@ -740,7 +741,7 @@ if __name__ == "__main__":
     dsox3034t.set_timebase(5e-9)
     dsox3034t.set_acquisition(64)
 
-    dsox3034t.set_trigger_mode("EDGE")
+    dsox3034t.set_trigger_type("EDGE")
 
     time.sleep(1)
 
