@@ -20,6 +20,55 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         metaclass (_type_, optional): _description_. Defaults to abc.ABCMeta.
     """
 
+    @abc.abstractmethod
+    def __init__(self, simulate=False):
+        self.simulating = simulate
+        self.rm = pyvisa.ResourceManager()
+
+    @abc.abstractmethod
+    def __enter__(self):
+        self.open_connection()
+        return self
+
+    @abc.abstractmethod
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    @abc.abstractmethod
+    def open_connection(self) -> bool:
+        """
+        open_connection _summary_
+
+        Returns:
+            bool: _description_
+        """
+
+    def initialize(self) -> None:
+        """
+        initialize _summary_
+        """
+        self.open_connection()
+
+    @abc.abstractmethod
+    def close(self) -> None:
+        """
+        close _summary_
+        """
+        self.instr.close()  # type: ignore
+        self.connected = False
+
+    @abc.abstractmethod
+    def is_connected(self) -> bool:
+        """
+        is_connected _summary_
+
+        Returns:
+            bool: _description_
+        """
+
+        pass
+
+    @abc.abstractmethod
     def write(self, command: str) -> None:
         """
         write
@@ -39,6 +88,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
                 time.sleep(1)
                 attempts += 1
 
+    @abc.abstractmethod
     def read(self) -> str:
         """
         read
@@ -62,6 +112,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
 
         return ret
 
+    @abc.abstractmethod
     def query(self, command: str) -> str:
         """
         query _summary_
@@ -88,6 +139,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
 
         return ret
 
+    @abc.abstractmethod
     def read_query(self, command: str) -> float:
         """
         read_query
