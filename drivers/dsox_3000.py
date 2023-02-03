@@ -382,6 +382,18 @@ class Keysight_Oscilloscope:
 
         self.write(f"CHAN{chan}:IMP {imp}")
 
+    def set_channel_invert(self, chan: int, inverted: bool) -> None:
+        """
+        set_channel_invert _summary_
+
+        Args:
+            inverted (bool): _description_
+        """
+
+        state = "ON" if inverted else "OFF"
+
+        self.write(f"CHAN{chan}:INV {state}")
+
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
@@ -530,7 +542,8 @@ class Keysight_Oscilloscope:
 
         self.write(f"MEAS:SOURCE CHAN{chan}")
 
-        time.sleep(delay)
+        if not self.simulating:
+            time.sleep(delay)
 
         return self.read_query("MEAS:VAV?")
 
@@ -556,7 +569,8 @@ class Keysight_Oscilloscope:
         self.write(f"MEAS:RIS CHAN{chan}")
         self.write("*OPC")
 
-        time.sleep(1)  # allow time to measure
+        if not self.simulating:
+            time.sleep(1)  # allow time to measure
 
         total = 0
         for _ in range(num_readings):
@@ -695,7 +709,8 @@ class Keysight_Oscilloscope:
 
         self.write("*CLS")
 
-        time.sleep(sweep_time)
+        if not self.simulating:
+            time.sleep(sweep_time)
 
         triggered = self.query("TER?")
 
