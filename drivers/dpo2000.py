@@ -631,10 +631,26 @@ class Tektronix_Oscilloscope:
         self.write("CURS:FUNC WAV")
         self.write("*OPC")
 
+    def check_triggered(self, sweep_time: float = 0.1) -> bool:
+        """
+        check_triggered
+        Check the state of the trigger
+
+        Args:
+            sweep_time (float, optional): _description_. Defaults to 0.1.
+
+        Returns:
+            bool: _description_
+        """
+
+        response = self.query("TRIG:STATE?").strip()
+
+        return response in ["AUTO", "TRIG"]
+
 
 if __name__ == "__main__":
 
-    dpo2014 = Tektronix_Oscilloscope(simulate=True)
+    dpo2014 = Tektronix_Oscilloscope(simulate=False)
     dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
     dpo2014.open_connection()
