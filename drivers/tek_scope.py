@@ -11,7 +11,11 @@ from random import random
 from typing import List
 import numpy as np
 from struct import unpack
-from base_scope_driver import ScopeDriver
+
+try:
+    from drivers.base_scope_driver import ScopeDriver
+except ModuleNotFoundError:
+    from base_scope_driver import ScopeDriver
 
 VERSION = "A.00.00"
 

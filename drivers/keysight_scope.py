@@ -10,7 +10,11 @@ import pyvisa
 import time
 from random import random
 from typing import List
-from base_scope_driver import ScopeDriver
+
+try:
+    from drivers.base_scope_driver import ScopeDriver
+except ModuleNotFoundError:
+    from base_scope_driver import ScopeDriver
 
 VERSION = "A.00.00"
 
@@ -114,6 +118,12 @@ class Keysight_Oscilloscope(ScopeDriver):
         return super().__exit__(exc_type, exc_val, exc_tb)
 
     def close(self) -> None:
+        """
+        close _summary_
+
+        Returns:
+            _type_: _description_
+        """
         return super().close()
 
     def open_connection(self) -> bool:
