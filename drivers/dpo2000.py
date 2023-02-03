@@ -11,6 +11,7 @@ from random import random
 from typing import List
 import numpy as np
 from struct import unpack
+from base_scope_driver import ScopeDriver
 
 VERSION = "A.00.00"
 
@@ -63,7 +64,7 @@ class DPO2000_Simulator:
         return str(0.5 + random()) if command.startswith("READ") else ""
 
 
-class Tektronix_Oscilloscope:
+class Tektronix_Oscilloscope(ScopeDriver):
     """
      _summary_
 
@@ -142,91 +143,11 @@ class Tektronix_Oscilloscope:
             and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
         )
 
-    def write(self, command: str) -> None:
-        """
-        write
-
-        Args:
-            command (str): [description]
-        """
-
-        attempts = 0
-
-        while attempts < 3:
-            try:
-                self.instr.write(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-    def read(self) -> str:
-        """
-        read
-        Read back from the unit
-
-        Returns:
-            str: [description]
-        """
-
-        attempts = 0
-
-        ret: str = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.read()  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
-
     def query(self, command: str) -> str:
-        """
-        query _summary_
-
-        Args:
-            command (str): _description_
-
-        Returns:
-            str: _description_
-        """
-
-        attempts = 0
-        ret = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.query(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
+        return super().query(command)
 
     def read_query(self, command: str) -> float:
-        """
-        read_query
-        send query command, return a float or -999 if invalid
-
-        Args:
-            command (str): _description_
-
-        Returns:
-            float: _description_
-        """
-
-        reply = self.query(command)
-
-        try:
-            val = float(reply)
-        except ValueError:
-            val = 0.0
-
-        return val
+        return super().read_query(command)
 
     def reset(self) -> None:
         """
