@@ -234,6 +234,7 @@ class Tektronix_Oscilloscope:
         """
         self.write("*CLS")
         self.write("*RST")
+        self.write("*OPC")
 
     def get_id(self) -> List:
         """
@@ -417,7 +418,7 @@ class Tektronix_Oscilloscope:
             mode (str): _description_
         """
 
-        # self.write(f"TRIG:A:MODE {mode}")
+        # TODO implement edge triggering
         self.write("TRIG:SWE AUTO")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
