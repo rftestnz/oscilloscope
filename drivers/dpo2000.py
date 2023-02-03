@@ -299,6 +299,18 @@ class Tektronix_Oscilloscope:
 
         self.write(f"CH{chan}:IMP {imp}")
 
+    def set_channel_invert(self, chan: int, inverted: bool) -> None:
+        """
+        set_channel_invert _summary_
+
+        Args:
+            inverted (bool): _description_
+        """
+
+        state = "ON" if inverted else "OFF"
+
+        self.write(f"CH{chan}:INV {state}")
+
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
         set_channel
