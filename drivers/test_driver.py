@@ -10,6 +10,21 @@ class TestScope(ScopeDriver):
     def __init__(self) -> None:
         super().__init__()
 
+    def __enter__(self):
+        return super().__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return super().__exit__(exc_type, exc_val, exc_tb)
+
+    def close(self) -> None:
+        return super().close()
+
+    def is_connected(self) -> bool:
+        return super().is_connected()
+
+    def open_connection(self) -> bool:
+        return super().open_connection()
+
     def write(self, command: str) -> None:
 
         return super().write(command)
@@ -71,11 +86,11 @@ class TestScope(ScopeDriver):
     def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
         return super().measure_risetime(chan, num_readings)
 
-    # def measure_clear(self) -> None:
-    #    return super().measure_clear()
+    def measure_clear(self) -> None:
+        return super().measure_clear()
 
-    # def check_triggered(self, sweep_time: float = 0.1) -> bool:
-    #    return super().check_triggered(sweep_time)
+    def check_triggered(self, sweep_time: float = 0.1) -> bool:
+        return super().check_triggered(sweep_time)
 
 
 if __name__ == "__main__":
@@ -93,6 +108,6 @@ if __name__ == "__main__":
                 search_index += 1
             end_index = message.find('"', search_index)
             missing = message[search_index:end_index].split(",")
-            print(missing)
+            print(f"Missing functions in class {missing}")
         else:
             print(f"Methods missing: {ex.args}")
