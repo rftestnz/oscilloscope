@@ -401,6 +401,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             else:
                 uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
+            if settings.invert:
+                # already casted to a bool
+                uut.set_channel_invert(chan=channel, inverted=settings.invert)
+            else:
+                uut.set_channel_invert(chan=channel, inverted=False)
+
             if settings.function == "DCV-BAL":
                 # Non keysight, apply the half the voltage and the offset then do the reverse
 
