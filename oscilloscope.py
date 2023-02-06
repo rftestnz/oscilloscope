@@ -34,6 +34,7 @@ simulating: bool = False
 cursor_results: List = []
 test_progress: sg.ProgressBar
 test_number: int = 0
+current_test_text: sg.Text
 
 
 def get_path(filename: str) -> str:
@@ -280,8 +281,11 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
     global uut
     global test_progress
     global test_number
+    global current_test_text
 
     # no equipment required
+
+    current_test_text.update("Testing: DCV Balance")
 
     sg.popup("Remove inputs from all channels", background_color="blue")
 
@@ -337,6 +341,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     global cursor_results
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: DC Voltage")
 
     last_channel = -1
 
@@ -534,6 +541,9 @@ def test_cursor(filename: str, test_rows: List) -> None:
     global cursor_results
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: Cursor position")
 
     # no equipment as using buffered results
 
@@ -586,6 +596,9 @@ def test_position(
     global uut
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: DC Position")
 
     connections = test_connections()
 
@@ -676,6 +689,9 @@ def test_timebase(filename: str, row: int) -> None:
 
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: Timebase")
 
     connections = test_connections()
 
@@ -832,6 +848,9 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     global uut
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: Trigger sensitivity")
 
     connections = test_connections()
 
@@ -938,6 +957,9 @@ def test_risetime(filename: str, test_rows: List) -> None:
 
     global test_progress
     global test_number
+    global current_test_text
+
+    current_test_text.update("Testing: Rise time")
 
     # only pulse gen required
 
@@ -1250,6 +1272,7 @@ if __name__ == "__main__":
             ),
             sg.Text("Progress", visible=False, key="-PROG_TEXT-"),
         ],
+        [sg.Text(key="-CURRENT_TEST-")],
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
@@ -1262,6 +1285,7 @@ if __name__ == "__main__":
 
     back_color = window["-FILE-"].BackgroundColor
     test_progress = window["-PROGRESS-"]  # type:ignore
+    current_test_text = window["-CURRENT_TEST-"]  # type:ignore
 
     simulating = False
 
@@ -1369,9 +1393,10 @@ if __name__ == "__main__":
                         parallel_channels=parallel == "Yes",
                     )
 
-                    sg.popup("Finished", background_color="blue")
                     test_progress.update(visible=False)
                     window["-PROG_TEXT-"].update(visible=False)
+                    current_test_text.update("")
+                    sg.popup("Finished", background_color="blue")
 
             window["-VIEW-"].update(disabled=False)
 
