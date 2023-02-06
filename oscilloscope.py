@@ -32,6 +32,8 @@ mxg = RF_Signal_Generator()
 simulating: bool = False
 
 cursor_results: List = []
+test_progress: sg.ProgressBar
+test_number: int = 0
 
 
 def get_path(filename: str) -> str:
@@ -1222,6 +1224,7 @@ if __name__ == "__main__":
     window = sg.Window("Oscilloscope Test", layout=layout, finalize=True)
 
     back_color = window["-FILE-"].BackgroundColor
+    test_progress = window["-PROGRESS-"]  # type:ignore
 
     simulating = False
 
