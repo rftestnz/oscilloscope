@@ -1206,6 +1206,13 @@ if __name__ == "__main__":
         ],
         [sg.Text()],
         [
+            sg.ProgressBar(
+                max_value=100, size=(35, 10), visible=False, key="-PROGRESS-"
+            ),
+            sg.Text("Progress", visible=False, key="-PROG_TEXT-"),
+        ],
+        [sg.Text()],
+        [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
