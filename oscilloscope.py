@@ -1068,7 +1068,11 @@ def individual_tests(filename: str) -> List:
     ]
 
     window = sg.Window(
-        "Test individual tests", layout=layout, finalize=True, background_color="blue"
+        "Test individual tests",
+        layout=layout,
+        finalize=True,
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),
     )
 
     event, values = window.read()  # type: ignore
@@ -1154,7 +1158,11 @@ def select_visa_address() -> str:
         [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
     ]
 
-    window = sg.Window("Addresses selection", layout=layout)
+    window = sg.Window(
+        "Addresses selection",
+        layout=layout,
+        icon=get_path("ui\\scope.ico"),
+    )
 
     event, values = window.read()  # type: ignore
 
@@ -1281,7 +1289,13 @@ if __name__ == "__main__":
         ],
     ]
 
-    window = sg.Window("Oscilloscope Test", layout=layout, finalize=True)
+    window = sg.Window(
+        "Oscilloscope Test",
+        layout=layout,
+        finalize=True,
+        icon=get_path("ui\\scope.ico"),
+        titlebar_icon=get_path("ui\\scope.ico"),
+    )
 
     back_color = window["-FILE-"].BackgroundColor
     test_progress = window["-PROGRESS-"]  # type:ignore
