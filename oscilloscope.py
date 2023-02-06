@@ -203,6 +203,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
 
     # Get the test names
 
+    global test_number
+
+    test_number = 0
+
     with ExcelInterface(filename=filename) as excel:
         excel.backup()
 
@@ -274,6 +278,8 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
     """
 
     global uut
+    global test_progress
+    global test_number
 
     # no equipment required
 
@@ -311,6 +317,8 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
                 )  # mV
 
                 excel.write_result(reading, col=results_col)
+                test_number += 1
+                test_progress.update(test_number)
 
     uut.reset()
 
@@ -327,6 +335,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     global uut
     global simulating
     global cursor_results
+    global test_progress
+    global test_number
 
     last_channel = -1
 
@@ -495,6 +505,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 # Keysight simple test. 0V is measured for the cursors only
                 excel.write_result(reading, col=results_col)
 
+            test_number += 1
+            test_progress.update(test_number)
+
         calibrator.reset()
         calibrator.close()
 
@@ -519,6 +532,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
     """
     global simulating
     global cursor_results
+    global test_progress
+    global test_number
 
     # no equipment as using buffered results
 
@@ -545,6 +560,8 @@ def test_cursor(filename: str, test_rows: List) -> None:
                         if units.startswith("m"):
                             result *= 1000
                         excel.write_result(result, save=False, col=results_col)
+                        test_number += 1
+                        test_progress.update(test_number)
                         break
 
         excel.save_sheet()
@@ -567,6 +584,8 @@ def test_position(
 
     global calibrator
     global uut
+    global test_progress
+    global test_number
 
     connections = test_connections()
 
@@ -631,6 +650,8 @@ def test_position(
             calibrator.standby()
 
             excel.write_result(result=result, col=results_col)
+            test_number += 1
+            test_progress.update(test_number)
 
     calibrator.reset()
     calibrator.close()
@@ -652,6 +673,9 @@ def test_timebase(filename: str, row: int) -> None:
     Args:
         row (int): _description_
     """
+
+    global test_progress
+    global test_number
 
     connections = test_connections()
 
@@ -725,6 +749,8 @@ def test_timebase(filename: str, row: int) -> None:
                         valid = False
 
                 excel.write_result(result=val, col=results_col)  # type: ignore
+                test_number += 1
+                test_progress.update(test_number)
 
             else:
                 # Keysight
@@ -779,6 +805,8 @@ def test_timebase(filename: str, row: int) -> None:
                 excel.row = row
                 excel.write_result(ppm, save=False, col=results_col)
                 excel.write_result(age_years, save=True, col=1)
+                test_number += 1
+                test_progress.update(test_number)
 
     ks33250.enable_output(False)
     ks33250.close()
@@ -802,6 +830,8 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
     global mxg
     global uut
+    global test_progress
+    global test_number
 
     connections = test_connections()
 
@@ -886,6 +916,8 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
             test_result = "Pass" if triggered else "Fail"
             excel.write_result(result=test_result, save=True, col=results_col)
+            test_number += 1
+            test_progress.update(test_number)
 
     mxg.set_output_state(False)
     mxg.close()
@@ -903,6 +935,9 @@ def test_risetime(filename: str, test_rows: List) -> None:
         filename (str): _description_
         test_rows (List): _description_
     """
+
+    global test_progress
+    global test_number
 
     # only pulse gen required
 
@@ -943,6 +978,8 @@ def test_risetime(filename: str, test_rows: List) -> None:
             # save in ns
 
             excel.write_result(risetime, save=True, col=results_col)
+            test_number += 1
+            test_progress.update(test_number)
 
     uut.reset()
     uut.close()
