@@ -1167,6 +1167,7 @@ if __name__ == "__main__":
                 size=(60, 1),
                 key="-UUT_ADDRESS-",
             ),
+            sg.Button("Select", size=(12, 1), key="-SELECT_ADDRESS-"),
         ],
         [sg.Text()],
         [
