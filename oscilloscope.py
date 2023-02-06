@@ -283,6 +283,13 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
     uut.set_timebase(0.001)
 
     with ExcelInterface(filename=filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
+
         for row in test_rows:
             excel.row = row
 
@@ -300,7 +307,7 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
                     uut.measure_voltage(chan=int(settings.channel), delay=2) * 1000
                 )  # mV
 
-                excel.write_result(reading)
+                excel.write_result(reading, col=results_col)
 
     uut.reset()
 
@@ -349,7 +356,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     set_impedance = False
 
     with ExcelInterface(filename) as excel:
-
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
         for row in test_rows:
             excel.row = row
 
@@ -475,10 +487,10 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if settings.function == "DCV-BAL":
                 diff = reading1 - reading
-                excel.write_result(diff)  # auto saving
+                excel.write_result(diff, col=results_col)  # auto saving
             else:
                 # Keysight simple test. 0V is measured for the cursors only
-                excel.write_result(reading)
+                excel.write_result(reading, col=results_col)
 
         calibrator.reset()
         calibrator.close()
@@ -509,6 +521,12 @@ def test_cursor(filename: str, test_rows: List) -> None:
 
     with ExcelInterface(filename) as excel:
         for row in test_rows:
+            results_col = excel.find_results_col(test_rows[0])
+            if results_col == 0:
+                sg.popup_error(
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                )
+                return
             excel.row = row
 
             settings = excel.get_test_settings()
@@ -523,7 +541,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
                         result = res["result"]
                         if units.startswith("m"):
                             result *= 1000
-                        excel.write_result(result, save=False)
+                        excel.write_result(result, save=False, col=results_col)
                         break
 
         excel.save_sheet()
@@ -562,6 +580,13 @@ def test_position(
     last_channel = -1
 
     with ExcelInterface(filename=filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
+
         for row in test_rows:
             excel.row = row
 
@@ -602,7 +627,7 @@ def test_position(
 
             calibrator.standby()
 
-            excel.write_result(result=result, col=2)
+            excel.write_result(result=result, col=results_col)
 
     calibrator.reset()
     calibrator.close()
@@ -636,6 +661,12 @@ def test_timebase(filename: str, row: int) -> None:
     sg.popup("Connect 33250A output to Ch1", background_color="blue")
 
     with ExcelInterface(filename=filename) as excel:
+        results_col = excel.find_results_col(row)
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
 
         setting = excel.get_tb_test_settings(row=row)
 
@@ -690,7 +721,7 @@ def test_timebase(filename: str, row: int) -> None:
                     except ValueError:
                         valid = False
 
-                excel.write_result(result=val, col=3)  # type: ignore
+                excel.write_result(result=val, col=results_col)  # type: ignore
 
             else:
                 # Keysight
@@ -743,7 +774,7 @@ def test_timebase(filename: str, row: int) -> None:
                 # results in ppm
                 ppm = error / 1e-3 * 1e6
                 excel.row = row
-                excel.write_result(ppm, save=False, col=2)
+                excel.write_result(ppm, save=False, col=results_col)
                 excel.write_result(age_years, save=True, col=1)
 
     ks33250.enable_output(False)
@@ -788,6 +819,13 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     ext_termination = True
 
     with ExcelInterface(filename=filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
+
         for row in test_rows:
             excel.row = row
             settings = excel.get_trigger_settings()
@@ -796,6 +834,8 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
                 break
 
         # now the main test loop
+
+        last_channel = 0
 
         for row in test_rows:
             excel.row = row
@@ -808,10 +848,12 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
                 else ""
             )
 
-            sg.popup(
-                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
-                background_color="blue",
-            )
+            if settings.channel != last_channel:
+                sg.popup(
+                    f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
+                    background_color="blue",
+                )
+                last_channel = settings.channel
 
             mxg.set_frequency_MHz(settings.frequency)
             mxg.set_level(settings.voltage, units="mV")
@@ -840,7 +882,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
             triggered = uut.check_triggered(sweep_time=0.1)  # actual sweep time is ns
 
             test_result = "Pass" if triggered else "Fail"
-            excel.write_result(result=test_result, save=True, col=2)
+            excel.write_result(result=test_result, save=True, col=results_col)
 
     mxg.set_output_state(False)
     mxg.close()
@@ -864,6 +906,13 @@ def test_risetime(filename: str, test_rows: List) -> None:
     uut.reset()
 
     with ExcelInterface(filename=filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+            )
+            return
+
         for row in test_rows:
             excel.row = row
 
@@ -890,7 +939,7 @@ def test_risetime(filename: str, test_rows: List) -> None:
 
             # save in ns
 
-            excel.write_result(risetime, save=True, col=2)
+            excel.write_result(risetime, save=True, col=results_col)
 
     uut.reset()
     uut.close()
@@ -993,6 +1042,11 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
     """
 
     global uut
+
+    if simulating:
+        uut = Keysight_Oscilloscope(simulate=simulating)
+        uut.open_connection()
+        return True
 
     with SCPI_ID(address=address) as scpi_uut:
         manfacturer = scpi_uut.get_manufacturer()
