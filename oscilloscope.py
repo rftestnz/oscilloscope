@@ -1075,6 +1075,13 @@ def select_visa_address() -> str:
 
     addresses = SCPI_ID.get_all_attached()
 
+    visa_instruments = []
+
+    for addr in addresses:
+        with SCPI_ID(address=addr) as scpi:
+            idn = scpi.get_id()[0]
+            visa_instruments.append((addr, idn))
+
     layout = [
         [sg.Text("Select item")],
         [
