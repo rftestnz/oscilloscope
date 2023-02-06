@@ -835,6 +835,8 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
         # now the main test loop
 
+        last_channel = 0
+
         for row in test_rows:
             excel.row = row
 
@@ -846,10 +848,12 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
                 else ""
             )
 
-            sg.popup(
-                f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
-                background_color="blue",
-            )
+            if settings.channel != last_channel:
+                sg.popup(
+                    f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
+                    background_color="blue",
+                )
+                last_channel = settings.channel
 
             mxg.set_frequency_MHz(settings.frequency)
             mxg.set_level(settings.voltage, units="mV")
