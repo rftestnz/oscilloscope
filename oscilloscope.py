@@ -1079,9 +1079,7 @@ def select_visa_address() -> str:
         [sg.Text("Select item")],
         [
             [
-                sg.Radio(
-                    addr, "ADDR", default=True if addr.startswith("USB") else False
-                )
+                sg.Radio(addr, "ADDR", default=bool(addr.startswith("USB")))
                 for addr in addresses
             ]
         ],
