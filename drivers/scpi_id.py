@@ -5,7 +5,7 @@ DK Feb 23
 
 
 import pyvisa
-from typing import List
+from typing import List, Tuple
 
 
 class SCPI_ID:
@@ -66,6 +66,22 @@ class SCPI_ID:
             response = ",,,"
 
         return response.split(",")
+
+    @staticmethod
+    def get_all_attached() -> Tuple:
+        """
+        get_all_attached
+        Return a list of all the visa addresses in use
+
+        Returns:
+            List: _description_
+        """
+
+        # this is a static function as making a class we don't have the address
+
+        rm = pyvisa.ResourceManager()
+
+        return rm.list_resources()
 
     def get_manufacturer(self) -> str:
         """
