@@ -1355,6 +1355,9 @@ if __name__ == "__main__":
 
                 test_rows = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
+                    test_progress.update(0, max=len(test_rows))
+                    test_progress.update(visible=True)
+                    window["-PROG_TEXT-"].update(visible=True)
                     parallel = sg.popup_yes_no(
                         "Will you connect all channels in parallel?",
                         title="Parallel Channels",
@@ -1367,6 +1370,9 @@ if __name__ == "__main__":
                     )
 
                     sg.popup("Finished", background_color="blue")
+                    test_progress.update(visible=False)
+                    window["-PROG_TEXT-"].update(visible=False)
+
             window["-VIEW-"].update(disabled=False)
 
         if event == "-TEST_CONNECTIONS-":
