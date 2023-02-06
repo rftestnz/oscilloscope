@@ -239,36 +239,45 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
             # TODO use functional method
 
             if "DCV" in test_name:
-                test_dcv(
+                if not test_dcv(
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
-                )
+                ):
+                    break
 
             elif test_name == "POS":
-                test_position(
+                if not test_position(
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
-                )
+                ):
+                    break
 
             elif test_name == "BAL":
-                test_dc_balance(filename=filename, test_rows=testing_rows)
+                if not test_dc_balance(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "CURS":
-                test_cursor(filename=filename, test_rows=testing_rows)
+                if not test_cursor(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "RISE":
-                test_risetime(filename=filename, test_rows=testing_rows)
+                if not test_risetime(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "TIME":
-                test_timebase(filename=filename, row=testing_rows[0])
+                if not test_timebase(filename=filename, row=testing_rows[0]):
+                    break
 
             elif test_name == "TRIG":
-                test_trigger_sensitivity(filename=filename, test_rows=testing_rows)
+                if not test_trigger_sensitivity(
+                    filename=filename, test_rows=testing_rows
+                ):
+                    break
 
 
-def test_dc_balance(filename: str, test_rows: List) -> None:
+def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
     test_dc_balance
     Test the dc balance of each channel with no signal applied
@@ -287,7 +296,12 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
     current_test_text.update("Testing: DCV Balance")
 
-    sg.popup("Remove inputs from all channels", background_color="blue")
+    response = sg.popup_ok_cancel(
+        "Remove inputs from all channels", background_color="blue"
+    )
+
+    if response == "Cancel":
+        return False
 
     uut.reset()
 
@@ -326,8 +340,10 @@ def test_dc_balance(filename: str, test_rows: List) -> None:
 
     uut.reset()
 
+    return True
 
-def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
+
+def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
     # sourcery skip: extract-method
     """
     test_dcv
@@ -353,7 +369,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     if not connections["FLUKE_5700A"]:
         sg.popup_error("Cannot find calibrator")
-        return
+        return False
 
     uut.reset()
 
@@ -362,10 +378,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     cursor_results = []  # save results for cursor tests
 
     if parallel_channels:
-        sg.popup(
+        response = sg.popup_ok_cancel(
             "Connect calibrator output to all channels in parallel",
             background_color="blue",
         )
+
+        if response == "Cancel":
+            return False
 
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
@@ -381,7 +400,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
             )
-            return
+            return False
         for row in test_rows:
             excel.row = row
 
@@ -414,10 +433,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 uut.set_cursor_xy_source(chan=1, cursor=1)
                 uut.set_cursor_position(cursor="X1", pos=0)
                 if not parallel_channels:
-                    sg.popup(
+                    response = sg.popup_ok_cancel(
                         f"Connect calibrator output to channel {channel}",
                         background_color="blue",
                     )
+                    if response == "Cancel":
+                        return False
                 last_channel = channel
 
             uut.set_channel(chan=channel, enabled=True)
@@ -526,8 +547,10 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         uut.reset()
         uut.close()
 
+    return True
 
-def test_cursor(filename: str, test_rows: List) -> None:
+
+def test_cursor(filename: str, test_rows: List) -> bool:
     """
     test_cursor
     Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
@@ -554,7 +577,7 @@ def test_cursor(filename: str, test_rows: List) -> None:
                 sg.popup_error(
                     f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
-                return
+                return False
             excel.row = row
 
             settings = excel.get_test_settings()
@@ -576,10 +599,12 @@ def test_cursor(filename: str, test_rows: List) -> None:
 
         excel.save_sheet()
 
+    return True
+
 
 def test_position(
     filename: str, test_rows: List, parallel_channels: bool = False
-) -> None:
+) -> bool:
     """
     test_position
     Test vertical position
@@ -606,7 +631,7 @@ def test_position(
 
     if not connections["FLUKE_5700A"]:
         sg.popup_error("Cannot find calibrator")
-        return
+        return False
 
     uut.reset()
 
@@ -620,7 +645,7 @@ def test_position(
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
             )
-            return
+            return False
 
         for row in test_rows:
             excel.row = row
@@ -628,10 +653,13 @@ def test_position(
             settings = excel.get_test_settings()
 
             if settings.channel != last_channel and not parallel_channels:
-                sg.popup(
+                response = sg.popup_ok_cancel(
                     f"Connect calibrator output to channel {settings.channel}",
                     background_color="blue",
                 )
+                if response == "Cancel":
+                    return False
+
                 last_channel = settings.channel
 
             uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
@@ -672,13 +700,15 @@ def test_position(
     uut.reset()
     uut.close()
 
+    return True
+
 
 # DELAY_PERIOD = 0.00099998  # 1 ms
 # DELAY_PERIOD = 0.00100002  # 1 ms
 DELAY_PERIOD = 0.001  # 1 ms
 
 
-def test_timebase(filename: str, row: int) -> None:
+def test_timebase(filename: str, row: int) -> bool:
     """
     test_timebase
     Test the timebase. Simple single row test
@@ -699,9 +729,14 @@ def test_timebase(filename: str, row: int) -> None:
 
     if not connections["33250A"]:
         sg.popup_error("Cannot find 33250A Generator")
-        return
+        return False
 
-    sg.popup("Connect 33250A output to Ch1", background_color="blue")
+    response = sg.popup_ok_cancel(
+        "Connect 33250A output to Ch1", background_color="blue"
+    )
+
+    if response == "Cancel":
+        return False
 
     with ExcelInterface(filename=filename) as excel:
         results_col = excel.find_results_col(row)
@@ -709,7 +744,7 @@ def test_timebase(filename: str, row: int) -> None:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
             )
-            return
+            return False
 
         setting = excel.get_tb_test_settings(row=row)
 
@@ -829,8 +864,10 @@ def test_timebase(filename: str, row: int) -> None:
     uut.reset()
     uut.close()
 
+    return True
 
-def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
+
+def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     """
     test_trigger_sensitivity
 
@@ -858,7 +895,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
 
     if not connections["RFGEN"]:
         sg.popup_error("Cannot find RF Signal Generator")
-        return
+        return False
 
     uut.reset()
 
@@ -876,7 +913,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
             )
-            return
+            return False
 
         for row in test_rows:
             excel.row = row
@@ -901,10 +938,13 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
             )
 
             if settings.channel != last_channel:
-                sg.popup(
+                response = sg.popup_ok_cancel(
                     f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
                     background_color="blue",
                 )
+                if response == "Cancel":
+                    return False
+
                 last_channel = settings.channel
 
             mxg.set_frequency_MHz(settings.frequency)
@@ -944,8 +984,10 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> None:
     uut.reset()
     uut.close()
 
+    return True
 
-def test_risetime(filename: str, test_rows: List) -> None:
+
+def test_risetime(filename: str, test_rows: List) -> bool:
     """
     test_risetime
     Use fast pulse generator to test rise time of each channel
@@ -971,7 +1013,7 @@ def test_risetime(filename: str, test_rows: List) -> None:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
             )
-            return
+            return False
 
         for row in test_rows:
             excel.row = row
@@ -980,10 +1022,12 @@ def test_risetime(filename: str, test_rows: List) -> None:
 
             # TODO feedthru
 
-            sg.popup(
+            response = sg.popup_ok_cancel(
                 f"Connect fast pulse generator to channel {settings.channel}",
                 background_color="blue",
             )
+            if response == "Cancel":
+                return False
 
             for chan in range(uut.num_channels):
                 uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
