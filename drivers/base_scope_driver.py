@@ -124,7 +124,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
             str: _description_
         """
 
-        assert command[-1] == "?"
+        assert command.find("?") > 0
 
         attempts = 0
         ret = ""
@@ -152,7 +152,7 @@ class ScopeDriver(metaclass=abc.ABCMeta):
             float: _description_
         """
 
-        assert command[-1] == "?"
+        assert command.find("?") > 0
 
         reply = self.query(command)
 
