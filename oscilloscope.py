@@ -1086,8 +1086,8 @@ def select_visa_address() -> str:
         [sg.Text("Select item")],
         [
             [
-                sg.Radio(addr, "ADDR", default=bool(addr.startswith("USB")))
-                for addr in addresses
+                sg.Radio(addr, "ADDR", default=bool(addr[0].startswith("USB")))
+                for addr in visa_instruments
             ]
         ],
         [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
