@@ -1039,6 +1039,11 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
     global uut
 
+    if simulating:
+        uut = Keysight_Oscilloscope(simulate=simulating)
+        uut.open_connection()
+        return True
+
     with SCPI_ID(address=address) as scpi_uut:
         manfacturer = scpi_uut.get_manufacturer()
 
