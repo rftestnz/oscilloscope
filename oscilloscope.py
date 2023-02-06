@@ -1338,4 +1338,4 @@ if __name__ == "__main__":
         if event == "-SELECT_ADDRESS-":
             address = select_visa_address()
             if address:
-                window["-UUT_ADDRESS-"].update(text=address)
+                window["-UUT_ADDRESS-"].update(address)  # type: ignore
