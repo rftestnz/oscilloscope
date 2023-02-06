@@ -239,33 +239,42 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
             # TODO use functional method
 
             if "DCV" in test_name:
-                test_dcv(
+                if not test_dcv(
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
-                )
+                ):
+                    break
 
             elif test_name == "POS":
-                test_position(
+                if not test_position(
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
-                )
+                ):
+                    break
 
             elif test_name == "BAL":
-                test_dc_balance(filename=filename, test_rows=testing_rows)
+                if not test_dc_balance(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "CURS":
-                test_cursor(filename=filename, test_rows=testing_rows)
+                if not test_cursor(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "RISE":
-                test_risetime(filename=filename, test_rows=testing_rows)
+                if not test_risetime(filename=filename, test_rows=testing_rows):
+                    break
 
             elif test_name == "TIME":
-                test_timebase(filename=filename, row=testing_rows[0])
+                if not test_timebase(filename=filename, row=testing_rows[0]):
+                    break
 
             elif test_name == "TRIG":
-                test_trigger_sensitivity(filename=filename, test_rows=testing_rows)
+                if not test_trigger_sensitivity(
+                    filename=filename, test_rows=testing_rows
+                ):
+                    break
 
 
 def test_dc_balance(filename: str, test_rows: List) -> None:
