@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 import math
+from pprint import pprint
 
 VERSION = "A.00.00"
 
@@ -1068,6 +1069,35 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         uut.num_channels = scpi_uut.get_number_channels()
 
         return True
+
+
+def select_visa_address() -> str:
+
+    addresses = SCPI_ID.get_all_attached()
+
+    layout = [
+        [sg.Text("Select item")],
+        [
+            [
+                sg.Radio(
+                    addr, "ADDR", default=True if addr.startswith("USB") else False
+                )
+                for addr in addresses
+            ]
+        ],
+        [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
+    ]
+
+    window = sg.Window("Addresses selection", layout=layout)
+
+    event, values = window.read()  # type: ignore
+
+    window.close()
+
+    if event in ["Cancel", sg.WIN_CLOSED]:
+        return ""
+
+    return next((addr for index, addr in enumerate(addresses) if values[index]), "")
 
 
 if __name__ == "__main__":
