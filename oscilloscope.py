@@ -1306,3 +1306,8 @@ if __name__ == "__main__":
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
+
+        if event == "-SELECT_ADDRESS-":
+            address = select_visa_address()
+            if address:
+                window["-UUT_ADDRESS-"].update(text=address)
