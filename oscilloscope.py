@@ -21,6 +21,8 @@ from pathlib import Path
 from datetime import datetime
 import math
 from pprint import pprint
+from zipfile import BadZipFile
+
 
 VERSION = "A.00.00"
 
@@ -1412,13 +1414,20 @@ if __name__ == "__main__":
                 window["-FILE-"].update(background_color="Red")
                 valid = False
 
-            with ExcelInterface(filename=values["-FILE-"]) as excel:
-                if not excel.check_valid_results():
-                    sg.popup_error(
-                        "No Named range for StartCell in results",
-                        background_color="blue",
-                    )
-                    valid = False
+            try:
+                with ExcelInterface(filename=values["-FILE-"]) as excel:
+                    if not excel.check_valid_results():
+                        sg.popup_error(
+                            "No Named range for StartCell in results",
+                            background_color="blue",
+                        )
+                        valid = False
+            except BadZipFile:
+                sg.popup_error(
+                    "Result sheet appears corrupted. Check backups folder for most recent, or generate new from template",
+                    background_color="blue",
+                )
+                valid = False
 
             if not valid:
                 continue
