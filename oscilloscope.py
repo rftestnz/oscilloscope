@@ -1278,13 +1278,13 @@ Columns:
 There are 3 different sets of column tyopes for the tests
 
 DCV, DCV-BAL, POS, BAL
-Function, Channel, Coupling [AC/DC/GND], Scale, Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
+Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
 
 TIME, RISE
 Function, Channel (blank for time), Timebase (ns)
 
 TRIG
-Function, Channel, Scale, Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
+Function, Channel [1-4,EXT], Scale (1x probe), Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
 
 Don't mix tables with different types of tests. The above column headers are not read, just assumed
     """
