@@ -1273,10 +1273,29 @@ CURS - Keysight test of cursor delta
 RISE - Risetime using fast pulse generator
 TIME - Timebase test
 TRIG - Trigger sensitivity test
+
+Columns:
+There are 3 different sets of column tyopes for the tests
+
+DCV, DCV-BAL, POS, BAL
+Function, Channel, Coupling [AC/DC/GND], Scale, Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
+
+TIME, RISE
+Function, Channel (blank for time), Timebase (ns)
+
+TRIG
+Function, Channel, Scale, Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
+
+Don't mix tables with different types of tests. The above column headers are not read, just assumed
     """
 
     layout = [
-        [sg.Text("Ensure the following are followed in creating/modifying template")],
+        [
+            sg.Text(
+                "Ensure the following are followed in creating/modifying template",
+                background_color="blue",
+            )
+        ],
         [sg.Multiline(default_text=help_text, size=(60, 20), disabled=True)],
         [sg.Ok(size=(12, 1))],
     ]
@@ -1285,6 +1304,7 @@ TRIG - Trigger sensitivity test
         "Template setup",
         layout=layout,
         icon=get_path("ui\\scope.ico"),
+        background_color="blue",
     )
 
     window.read()
