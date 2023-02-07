@@ -1257,7 +1257,11 @@ if __name__ == "__main__":
         [sg.Text("DSOX Oscilloscope Test")],
         [sg.Text(f"DK Jan 23 VERSION {VERSION}")],
         [sg.Text()],
-        [sg.Text("Create Excel sheet from template first", text_color="red")],
+        [
+            sg.Text("Create Excel sheet from template first", text_color="red"),
+            sg.Text(" " * 70),
+            sg.Button("Template Help", key="-TEMPLATE_HELP-"),
+        ],
         [
             sg.Text("Results file", size=(10, 1)),
             sg.Input(
