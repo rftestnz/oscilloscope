@@ -1332,6 +1332,7 @@ if __name__ == "__main__":
             sg.Text("Create Excel sheet from template first", text_color="red"),
             sg.Text(" " * 70),
             sg.Button("Template Help", key="-TEMPLATE_HELP-"),
+            sg.Button("Check", size=(12, 1), key="-RESULTS_CHECK-"),
         ],
         [
             sg.Text("Results file", size=(10, 1)),
@@ -1596,3 +1597,6 @@ if __name__ == "__main__":
 
         if event == "-TEMPLATE_HELP-":
             template_help()
+
+        if event == "-RESULTS_CHECK-":
+            results_sheet_check(filename=values["-FILE-"])
