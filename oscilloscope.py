@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 import math
-from pprint import pprint
+from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
@@ -1221,10 +1221,15 @@ def select_visa_address() -> str:
             visa_instruments.append((addr, idn))
 
     layout = [
-        [sg.Text("Select item")],
+        [sg.Text("Select item", background_color="blue")],
         [
             [
-                sg.Radio(addr, "ADDR", default=bool(addr[0].startswith("USB")))
+                sg.Radio(
+                    addr,
+                    group_id="ADDR",
+                    background_color="blue",
+                    default=bool(addr[0].startswith("USB")),
+                )
                 for addr in visa_instruments
             ]
         ],
@@ -1235,6 +1240,7 @@ def select_visa_address() -> str:
         "Addresses selection",
         layout=layout,
         icon=get_path("ui\\scope.ico"),
+        background_color="blue",
     )
 
     event, values = window.read()  # type: ignore
@@ -1312,6 +1318,36 @@ Don't mix tables with different types of tests. The above column headers are not
     window.close()
 
 
+def results_sheet_check(filename: str) -> None:
+    """
+    results_sheet_check
+    Do a check of the results sheet to make sure valid
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        nr = excel.get_named_cell("StartCell")
+        if not nr:
+            sg.popup_error(
+                "No cell named StartCell. Name the first cell with function data StartCell",
+                background_color="blue",
+            )
+
+        valid_tests = excel.get_test_types()
+
+        sg.popup(
+            f"The following tests are found: {pformat( list(valid_tests))}",
+            background_color="blue",
+        )
+
+        invalid_tests = excel.get_invalid_tests()
+
+        if len(invalid_tests):
+            sg.popup(
+                f"The following rows will not be tested: {pformat(invalid_tests)}",
+                background_color="blue",
+            )
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -1326,6 +1362,12 @@ if __name__ == "__main__":
             sg.Text("Create Excel sheet from template first", text_color="red"),
             sg.Text(" " * 70),
             sg.Button("Template Help", key="-TEMPLATE_HELP-"),
+            sg.Button(
+                "Check",
+                size=(12, 1),
+                key="-RESULTS_CHECK-",
+                tooltip="Check results sheet for conformance",
+            ),
         ],
         [
             sg.Text("Results file", size=(10, 1)),
@@ -1426,7 +1468,7 @@ if __name__ == "__main__":
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
+            sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -1590,3 +1632,6 @@ if __name__ == "__main__":
 
         if event == "-TEMPLATE_HELP-":
             template_help()
+
+        if event == "-RESULTS_CHECK-":
+            results_sheet_check(filename=values["-FILE-"])
