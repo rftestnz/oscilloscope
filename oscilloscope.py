@@ -104,7 +104,12 @@ def connections_check_form() -> None:
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
     ]
 
-    window = sg.Window("DSOX Oscilloscope Test", layout, finalize=True)
+    window = sg.Window(
+        "DSOX Oscilloscope Test",
+        layout,
+        finalize=True,
+        icon=get_path("ui\\scope.ico"),
+    )
 
     connected = test_connections()
     window["-CHECK_MSG-"].update(visible=False)
@@ -1441,7 +1446,7 @@ if __name__ == "__main__":
                     test_progress.update(visible=True)
                     window["-PROG_TEXT-"].update(visible=True)
                     parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel?",
+                        "Will you connect all channels in parallel for DCV tests?",
                         title="Parallel Channels",
                         background_color="blue",
                     )
