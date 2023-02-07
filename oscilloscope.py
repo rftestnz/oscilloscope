@@ -1255,7 +1255,7 @@ if __name__ == "__main__":
 
     layout = [
         [sg.Text("DSOX Oscilloscope Test")],
-        [sg.Text(f"DK Jan 23 VERSION {VERSION}")],
+        [sg.Text(f"DK Feb 23 VERSION {VERSION}")],
         [sg.Text()],
         [
             sg.Text("Create Excel sheet from template first", text_color="red"),
@@ -1522,3 +1522,6 @@ if __name__ == "__main__":
             address = select_visa_address()
             if address:
                 window["-UUT_ADDRESS-"].update(address)  # type: ignore
+
+        if event == "-TEMPLATE_HELP-":
+            template_help()
