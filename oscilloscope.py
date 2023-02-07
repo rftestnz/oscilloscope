@@ -1188,6 +1188,14 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
 
 def select_visa_address() -> str:
+    """
+    select_visa_address _summary_
+
+    Show a form with all of the found visa resource strings
+
+    Returns:
+        str: _description_
+    """
 
     addresses = SCPI_ID.get_all_attached()
 
