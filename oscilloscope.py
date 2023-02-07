@@ -1221,10 +1221,15 @@ def select_visa_address() -> str:
             visa_instruments.append((addr, idn))
 
     layout = [
-        [sg.Text("Select item")],
+        [sg.Text("Select item", background_color="blue")],
         [
             [
-                sg.Radio(addr, "ADDR", default=bool(addr[0].startswith("USB")))
+                sg.Radio(
+                    addr,
+                    group_id="ADDR",
+                    background_color="blue",
+                    default=bool(addr[0].startswith("USB")),
+                )
                 for addr in visa_instruments
             ]
         ],
