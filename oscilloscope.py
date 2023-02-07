@@ -1438,7 +1438,7 @@ if __name__ == "__main__":
         [sg.Text()],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Individual Tests", size=(12, 1), key="-INDIVIDUAL-"),
+            sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Exit(size=(12, 1)),
         ],
     ]
