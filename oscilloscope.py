@@ -195,6 +195,19 @@ def test_connections() -> Dict:
     }
 
 
+def update_test_progress() -> None:
+    """
+    update_test_progress
+    Test step complted, increment progress
+    """
+
+    global test_number
+    global test_progress
+
+    test_number += 1
+    test_progress.update(test_number)
+
+
 def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     """
     run_tests
@@ -295,8 +308,6 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
 
     global uut
-    global test_progress
-    global test_number
     global current_test_text
 
     # no equipment required
@@ -343,8 +354,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
                 )  # mV
 
                 excel.write_result(reading, col=results_col)
-                test_number += 1
-                test_progress.update(test_number)
+                update_test_progress()
 
     uut.reset()
 
@@ -363,8 +373,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     global uut
     global simulating
     global cursor_results
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: DC Voltage")
@@ -542,8 +550,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 # Keysight simple test. 0V is measured for the cursors only
                 excel.write_result(reading, col=results_col)
 
-            test_number += 1
-            test_progress.update(test_number)
+            update_test_progress()
 
         calibrator.reset()
         calibrator.close()
@@ -571,8 +578,6 @@ def test_cursor(filename: str, test_rows: List) -> bool:
     """
     global simulating
     global cursor_results
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: Cursor position")
@@ -603,8 +608,7 @@ def test_cursor(filename: str, test_rows: List) -> bool:
                         if units.startswith("m"):
                             result *= 1000
                         excel.write_result(result, save=False, col=results_col)
-                        test_number += 1
-                        test_progress.update(test_number)
+                        update_test_progress()
                         break
 
         excel.save_sheet()
@@ -629,8 +633,6 @@ def test_position(
 
     global calibrator
     global uut
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: DC Position")
@@ -702,8 +704,7 @@ def test_position(
             calibrator.standby()
 
             excel.write_result(result=result, col=results_col)
-            test_number += 1
-            test_progress.update(test_number)
+            update_test_progress()
 
     calibrator.reset()
     calibrator.close()
@@ -728,8 +729,6 @@ def test_timebase(filename: str, row: int) -> bool:
         row (int): _description_
     """
 
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: Timebase")
@@ -861,8 +860,7 @@ def test_timebase(filename: str, row: int) -> bool:
                 excel.row = row
                 excel.write_result(ppm, save=False, col=results_col)
                 excel.write_result(age_years, save=True, col=1)
-            test_number += 1
-            test_progress.update(test_number)
+            update_test_progress()
 
     ks33250.enable_output(False)
     ks33250.close()
@@ -888,8 +886,6 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
 
     global mxg
     global uut
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: Trigger sensitivity")
@@ -981,8 +977,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
 
             test_result = "Pass" if triggered else "Fail"
             excel.write_result(result=test_result, save=True, col=results_col)
-            test_number += 1
-            test_progress.update(test_number)
+            update_test_progress()
 
     mxg.set_output_state(False)
     mxg.close()
@@ -1003,8 +998,6 @@ def test_risetime(filename: str, test_rows: List) -> bool:
         test_rows (List): _description_
     """
 
-    global test_progress
-    global test_number
     global current_test_text
 
     current_test_text.update("Testing: Rise time")
@@ -1051,8 +1044,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             # save in ns
 
             excel.write_result(risetime, save=True, col=results_col)
-            test_number += 1
-            test_progress.update(test_number)
+            update_test_progress()
 
     uut.reset()
     uut.close()
