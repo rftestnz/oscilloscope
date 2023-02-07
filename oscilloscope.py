@@ -1441,7 +1441,7 @@ if __name__ == "__main__":
                     test_progress.update(visible=True)
                     window["-PROG_TEXT-"].update(visible=True)
                     parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel?",
+                        "Will you connect all channels in parallel for DCV tests?",
                         title="Parallel Channels",
                         background_color="blue",
                     )
