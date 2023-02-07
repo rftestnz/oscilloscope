@@ -483,6 +483,29 @@ class ExcelInterface:
 
         return test_types
 
+    def get_invalid_tests(self) -> List:
+        """
+        get_invalid_tests
+        Return a list of rows where the test typoe is not one of the supported tests
+
+        Returns:
+            List: _description_
+        """
+
+        self.initialize()
+
+        invalid_rows = []
+
+        while True:
+            if test_name := self.ws.cell(column=self.__data_col, row=self.row).value:
+                if test_name not in self.supported_test_names:
+                    invalid_rows.append([test_name, self.row])
+
+            if not self.get_next_row(supported_only=False):
+                break
+
+        return invalid_rows
+
     def get_units(self) -> str:
         """
         get_units
@@ -590,3 +613,5 @@ if __name__ == "__main__":
         print(excel.find_results_col(68))
         print(excel.find_results_col(75))
         print(excel.find_results_col(80))
+
+        print(excel.get_invalid_tests())
