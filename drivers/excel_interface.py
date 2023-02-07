@@ -266,7 +266,7 @@ class ExcelInterface:
 
         return number_tests
 
-    def get_next_row(self) -> bool:
+    def get_next_row(self, supported_only: bool = True) -> bool:
         """
         Move down to the next row containing parameters
 
@@ -278,10 +278,12 @@ class ExcelInterface:
         self.row += 1
 
         while True:
-            val = self.ws.cell(column=self.__data_col, row=self.row).value
+            if val := self.ws.cell(column=self.__data_col, row=self.row).value:
+                if str(val).upper() in self.supported_test_names and supported_only:
+                    break
 
-            if val and str(val).upper() in self.supported_test_names:
-                break
+                if not supported_only:
+                    break
 
             self.row += 1
             if self.row >= self.__max_row:
