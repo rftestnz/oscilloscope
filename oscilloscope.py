@@ -320,9 +320,10 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
-            return
+            return False
 
         for row in test_rows:
             excel.row = row
@@ -375,7 +376,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
-        sg.popup_error("Cannot find calibrator")
+        sg.popup_error("Cannot find calibrator", background_color="blue")
         return False
 
     uut.reset()
@@ -405,7 +406,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
             return False
         for row in test_rows:
@@ -523,7 +525,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     {
                         "chan": channel,
                         "scale": settings.scale,
-                        "result": voltage2 - voltage1,
+                        "result": voltage2 - voltage1,  # type: ignore
                     }
                 )
 
@@ -582,7 +584,8 @@ def test_cursor(filename: str, test_rows: List) -> bool:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
                 sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    background_color="blue",
                 )
                 return False
             excel.row = row
@@ -637,7 +640,7 @@ def test_position(
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
-        sg.popup_error("Cannot find calibrator")
+        sg.popup_error("Cannot find calibrator", background_color="blue")
         return False
 
     uut.reset()
@@ -650,7 +653,8 @@ def test_position(
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
             return False
 
@@ -735,7 +739,7 @@ def test_timebase(filename: str, row: int) -> bool:
     # require RF gen
 
     if not connections["33250A"]:
-        sg.popup_error("Cannot find 33250A Generator")
+        sg.popup_error("Cannot find 33250A Generator", background_color="blue")
         return False
 
     response = sg.popup_ok_cancel(
@@ -749,7 +753,8 @@ def test_timebase(filename: str, row: int) -> bool:
         results_col = excel.find_results_col(row)
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
             return False
 
@@ -901,7 +906,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     # require RF gen
 
     if not connections["RFGEN"]:
-        sg.popup_error("Cannot find RF Signal Generator")
+        sg.popup_error("Cannot find RF Signal Generator", background_color="blue")
         return False
 
     uut.reset()
@@ -918,7 +923,8 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
             return False
 
@@ -1018,7 +1024,8 @@ def test_risetime(filename: str, test_rows: List) -> bool:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
             sg.popup_error(
-                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
             )
             return False
 
@@ -1056,6 +1063,8 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
     uut.reset()
     uut.close()
+
+    return True
 
 
 def round_range(val: float) -> float:
@@ -1169,7 +1178,9 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         manfacturer = scpi_uut.get_manufacturer()
 
         if manfacturer == "":
-            sg.popup_error("Unable to contact UUT. Is address correct?")
+            sg.popup_error(
+                "Unable to contact UUT. Is address correct?", background_color="blue"
+            )
             return False
         elif manfacturer == "KEYSIGHT":
             uut = Keysight_Oscilloscope(simulate=simulating)
@@ -1178,7 +1189,10 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
             uut = Tektronix_Oscilloscope(simulate=simulating)
             uut.open_connection()
         else:
-            sg.popup_error(f"No driver for {manfacturer}. Using Tektronix driver")
+            sg.popup_error(
+                f"No driver for {manfacturer}. Using Tektronix driver",
+                background_color="blue",
+            )
             uut = Tektronix_Oscilloscope(simulate=simulating)
             uut.open_connection()
 
