@@ -1247,6 +1247,39 @@ def select_visa_address() -> str:
     return next((addr for index, addr in enumerate(addresses) if values[index]), "")
 
 
+def template_help() -> None:
+    """
+    template_help _summary_
+    """
+
+    help_text = """
+Test data  begins to the right of test data, outside print area.
+There are 3 types of setting data, all columns must be specified, data not required in all columns though
+The presence of the data in the function column determines if this is an automated test row.
+
+For the first row, name the cell in the function column 'StartCell' so the software knows where to start looking.
+
+The software will look for a column including the text 'result' or 'measured' to store the test result for that table
+
+    """
+
+    layout = [
+        [sg.Text("Ensure the following are followed in creating/modifying template")],
+        [sg.Multiline(default_text=help_text, size=(40, 20), disabled=True)],
+        [sg.Ok()],
+    ]
+
+    window = sg.Window(
+        "Template setup",
+        layout=layout,
+        icon=get_path("ui\\scope.ico"),
+    )
+
+    window.read()
+
+    window.close()
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
