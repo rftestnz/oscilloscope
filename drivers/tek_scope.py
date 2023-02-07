@@ -13,59 +13,11 @@ import numpy as np
 from struct import unpack
 
 try:
-    from drivers.base_scope_driver import ScopeDriver
+    from drivers.base_scope_driver import ScopeDriver, Scope_Simulator
 except ModuleNotFoundError:
-    from base_scope_driver import ScopeDriver
+    from base_scope_driver import ScopeDriver, Scope_Simulator
 
 VERSION = "A.00.00"
-
-
-class DPO2000_Simulator:
-    """
-    _summary_
-    """
-
-    def close(self) -> None:
-        """
-        close _summary_
-        """
-        pass
-
-    def write(self, command: str) -> None:
-        """
-        write _summary_
-
-        Args:
-            command (str): _description_
-        """
-        print(f"DPO2000 <- {command}")
-
-    def read(self) -> float | str:
-        """
-        read _summary_
-
-        Returns:
-            float| str: _description_
-        """
-        return 0.5 + random()
-
-    def query(self, command: str) -> str:
-        """
-        query _summary_
-
-        Args:
-            command (str): _description_
-
-        Returns:
-            str: _description_
-        """
-
-        print(f"DRIVER_NAME <- {command}")
-
-        if command == "*IDN?":
-            return "Tektronix,DPO2024,MY_Simulated,B.00.00"
-
-        return str(0.5 + random()) if command.startswith("READ") else ""
 
 
 class Tektronix_Oscilloscope(ScopeDriver):
@@ -104,7 +56,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
         try:
             if self.simulating:
-                self.instr = DPO2000_Simulator()
+                self.instr = Scope_Simulator()
                 self.model = "DPO3034"
                 self.manufacturer = "Tektronix"
                 self.serial = "666"
