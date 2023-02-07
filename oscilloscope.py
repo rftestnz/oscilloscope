@@ -812,9 +812,6 @@ def test_timebase(filename: str, row: int) -> bool:
                         valid = False
 
                 excel.write_result(result=val, col=results_col)  # type: ignore
-                test_number += 1
-                test_progress.update(test_number)
-
             else:
                 # Keysight
                 uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
@@ -846,20 +843,16 @@ def test_timebase(filename: str, row: int) -> bool:
                 except ValueError:
                     val = 0
 
-                if not val:
-                    # work it out from serial
-                    # All the modern Agilent/Keysight have 2 character manufacturing site, then 4 digits for date
+                if not val and len(uut.serial) >= 10:
+                    code = uut.serial[2:6]
 
-                    if len(uut.serial) >= 10:
-                        code = uut.serial[2:6]
-
-                        try:
-                            val = int(code)
-                            # start is from 1960
-                            age = datetime.now().year - (val - 4000) / 100 - 2000
-                        except ValueError:
-                            # Invalid. Just assume 10
-                            age = 10
+                    try:
+                        val = int(code)
+                        # start is from 1960
+                        age = datetime.now().year - (val - 4000) / 100 - 2000
+                    except ValueError:
+                        # Invalid. Just assume 10
+                        age = 10
 
                 age_years = int(age + 0.5)
 
@@ -868,8 +861,8 @@ def test_timebase(filename: str, row: int) -> bool:
                 excel.row = row
                 excel.write_result(ppm, save=False, col=results_col)
                 excel.write_result(age_years, save=True, col=1)
-                test_number += 1
-                test_progress.update(test_number)
+            test_number += 1
+            test_progress.update(test_number)
 
     ks33250.enable_output(False)
     ks33250.close()
