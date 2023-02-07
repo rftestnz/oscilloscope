@@ -12,9 +12,9 @@ from random import random
 from typing import List
 
 try:
-    from drivers.base_scope_driver import ScopeDriver
+    from drivers.base_scope_driver import ScopeDriver, Scope_Simulator
 except ModuleNotFoundError:
-    from base_scope_driver import ScopeDriver
+    from base_scope_driver import ScopeDriver, Scope_Simulator
 
 VERSION = "A.00.00"
 
@@ -31,62 +31,6 @@ class DSOX_FAMILY(Enum):
     DSOX1000 = 1
     DSOX2000 = 2
     DSOX3000 = 3
-
-
-class DSOX3000_Simulator:
-    """
-    _summary_
-    """
-
-    def close(self) -> None:  # type: ignore
-        """
-        close _summary_
-        """
-        pass
-
-    def write(self, command: str) -> None:  # type: ignore
-        """
-        write _summary_
-
-        Args:
-            command (str): _description_
-        """
-        # sourcery skip: instance-method-first-arg-name
-        print(f"DSOX3000 <- {command}")
-
-    def read(self) -> float | str:  # type: ignore
-        """
-        read _summary_
-
-        Returns:
-            float| str: _description_
-        """
-
-        return 0.5 + random()
-
-    def query(self, command: str) -> str:  # type: ignore
-        """
-        query _summary_
-
-        Args:
-            command (str): _description_
-
-        Returns:
-            str: _description_
-        """
-
-        # sourcery skip: instance-method-first-arg-name
-
-        print(f"DSOX3000 <- {command}")
-
-        if command == "*IDN?":
-            return "Keysight,DSOX3034G,MY_Simulated,B.00.00"
-
-        return (
-            str(0.5 + random())
-            if command.startswith("READ") or command.startswith("MEAS")
-            else ""
-        )
 
 
 class Keysight_Oscilloscope(ScopeDriver):
@@ -135,7 +79,7 @@ class Keysight_Oscilloscope(ScopeDriver):
         """
         try:
             if self.simulating:
-                self.instr = DSOX3000_Simulator()
+                self.instr = Scope_Simulator()
                 self.model = "DSO-X 3034T"
                 self.manufacturer = "Keysight"
                 self.serial = "666"
