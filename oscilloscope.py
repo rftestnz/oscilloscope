@@ -1240,6 +1240,7 @@ def select_visa_address() -> str:
         "Addresses selection",
         layout=layout,
         icon=get_path("ui\\scope.ico"),
+        background_color="blue",
     )
 
     event, values = window.read()  # type: ignore
