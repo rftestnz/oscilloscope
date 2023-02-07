@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from datetime import datetime
 import math
-from pprint import pprint
+from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
@@ -1316,6 +1316,36 @@ Don't mix tables with different types of tests. The above column headers are not
     window.read()
 
     window.close()
+
+
+def results_sheet_check(filename: str) -> None:
+    """
+    results_sheet_check
+    Do a check of the results sheet to make sure valid
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        nr = excel.get_named_cell("StartCell")
+        if not nr:
+            sg.popup_error(
+                "No cell named StartCell. Name the first cell with function data StartCell",
+                background_color="blue",
+            )
+
+        valid_tests = excel.get_test_types()
+
+        sg.popup(
+            f"The following tests are found: {pformat( list(valid_tests))}",
+            background_color="blue",
+        )
+
+        invalid_tests = excel.get_invalid_tests()
+
+        if len(invalid_tests):
+            sg.popup(
+                f"The following rows will not be tested: {pformat(invalid_tests)}",
+                background_color="blue",
+            )
 
 
 if __name__ == "__main__":
