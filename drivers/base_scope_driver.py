@@ -9,6 +9,55 @@ import abc  # Abstract Base Class
 import pyvisa
 import time
 from typing import List
+from random import random
+
+
+class Scope_Simulator:
+    """
+    _summary_
+    """
+
+    def close(self) -> None:
+        """
+        close _summary_
+        """
+        pass
+
+    def write(self, command: str) -> None:
+        """
+        write _summary_
+
+        Args:
+            command (str): _description_
+        """
+        print(f"SCOPE <- {command}")
+
+    def read(self) -> float | str:
+        """
+        read _summary_
+
+        Returns:
+            float| str: _description_
+        """
+        return 0.5 + random()
+
+    def query(self, command: str) -> str:
+        """
+        query _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            str: _description_
+        """
+
+        print(f"SCOPE <- {command}")
+
+        if command == "*IDN?":
+            return "Tektronix,DPO2024,MY_Simulated,B.00.00"
+
+        return str(0.5 + random()) if command.startswith("READ") else ""
 
 
 class ScopeDriver(metaclass=abc.ABCMeta):
