@@ -582,65 +582,65 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
 if __name__ == "__main__":
 
-    dpo2014 = Tektronix_Oscilloscope(simulate=False)
-    dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
+    rth1004 = RohdeSchwarz_Oscilloscope(simulate=False)
+    rth1004.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
-    dpo2014.open_connection()
+    rth1004.open_connection()
 
-    print(f"Model {dpo2014.model}")
+    print(f"Model {rth1004.model}")
 
-    dpo2014.reset()
+    rth1004.reset()
 
-    dpo2014.set_channel(chan=1, enabled=True)
-    dpo2014.set_channel(chan=2, enabled=True)
-    dpo2014.set_voltage_scale(chan=1, scale=1)
-    dpo2014.set_voltage_scale(chan=2, scale=0.2)
-    dpo2014.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
-    dpo2014.set_voltage_offset(chan=2, offset=+0.5)
-    dpo2014.set_timebase(0.001)
+    rth1004.set_channel(chan=1, enabled=True)
+    rth1004.set_channel(chan=2, enabled=True)
+    rth1004.set_voltage_scale(chan=1, scale=1)
+    rth1004.set_voltage_scale(chan=2, scale=0.2)
+    rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    rth1004.set_voltage_offset(chan=2, offset=+0.5)
+    rth1004.set_timebase(0.001)
 
-    dpo2014.set_acquisition(32)
+    rth1004.set_acquisition(32)
 
-    print(dpo2014.check_triggered())
+    print(rth1004.check_triggered())
 
-    dpo2014.set_trigger_type("EDGE")
+    rth1004.set_trigger_type("EDGE")
 
-    print(dpo2014.check_triggered())
+    print(rth1004.check_triggered())
 
     time.sleep(1)
 
-    print(f"Measurement {dpo2014.measure_voltage(chan=1)}")
+    print(f"Measurement {rth1004.measure_voltage(chan=1)}")
 
-    dpo2014.set_trigger_level(level=0.1, chan=1)
+    rth1004.set_trigger_level(level=0.1, chan=1)
 
-    dpo2014.set_timebase(20e-9)
+    rth1004.set_timebase(20e-9)
 
-    dpo2014.set_cursor_xy_source(chan=1, cursor=1)
-    dpo2014.set_cursor_position(cursor="X1", pos=0)
+    rth1004.set_cursor_xy_source(chan=1, cursor=1)
+    rth1004.set_cursor_position(cursor="X1", pos=0)
 
-    ref_x = dpo2014.read_cursor("X1")
+    ref_x = rth1004.read_cursor("X1")
     time.sleep(0.1)
-    ref = dpo2014.read_cursor("Y1")
+    ref = rth1004.read_cursor("Y1")
     print(ref)
 
-    dpo2014.set_timebase_pos(0.001)
+    rth1004.set_timebase_pos(0.001)
     time.sleep(0.1)
 
-    dpo2014.set_cursor_position(cursor="X1", pos=0.001)
+    rth1004.set_cursor_position(cursor="X1", pos=0.001)
     time.sleep(0.1)
 
-    dpo2014.adjust_cursor(target=ref)
+    rth1004.adjust_cursor(target=ref)
 
-    offset_x = dpo2014.read_cursor("X1")
+    offset_x = rth1004.read_cursor("X1")
 
     print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
-    y1 = dpo2014.read_cursor_avg()
+    y1 = rth1004.read_cursor_avg()
 
     print(y1)
 
     input("Set voltage source to 1V")
-    y2 = dpo2014.read_cursor_avg()
+    y2 = rth1004.read_cursor_avg()
     print(y2)
     print(f"Y Delta {y2-y1}")
