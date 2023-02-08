@@ -247,9 +247,9 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             imedance (str): _description_
         """
 
-        imp = "FIFTY" if impedance == "50" else "MEG"
+        # Not supported for this scope
 
-        self.write(f"CH{chan}:IMP {imp}")
+        pass
 
     def set_channel_invert(self, chan: int, inverted: bool) -> None:
         """
@@ -259,9 +259,9 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             inverted (bool): _description_
         """
 
-        state = "ON" if inverted else "OFF"
+        state = "INVERTED" if inverted else "NORMAL"
 
-        self.write(f"CH{chan}:INV {state}")
+        self.write(f"CHAN{chan}:POL {state}")
 
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
@@ -280,7 +280,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
         else:
             state = "ON" if enabled else "OFF"
-            self.write(f"SEL:CH{chan} {state}")
+            self.write(f"CHAN{chan}:STATE {state}")
 
         self.write("*OPC")
 
@@ -293,7 +293,13 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             coupling (str): _description_
         """
 
-        self.write(f"CH{chan}:COUP {coupling}")
+        # DCL or ACL. No GND
+
+        if coupling.upper() != "GND":
+            if not coupling.endswith("L"):
+                coupling += "L"
+
+            self.write(f"CHAN{chan}:COUP {coupling}")
 
     def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
@@ -304,8 +310,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             scale (float): _description_
         """
 
-        self.write(f"CH{chan}:PRO:GAIN 1")
-        self.write(f"CH{chan}:VOL {scale}")
+        self.write(f"CHAN{chan}:PROBE V1TO1")
+        self.write(f"CHAN{chan}:SCALE {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
@@ -317,28 +323,30 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             offset (float): _description_
         """
 
-        self.write(f"CH{chan}:OFFS {offset}")
+        self.write(f"CHAN{chan}:OFFS {offset}")
 
     def set_voltage_position(self, chan: int, position: float) -> None:
         """
-        set_voltage_position _summary_
+        set_voltage_position
+        set the position, in divisions
 
         Args:
             chan (int): _description_
             position (float): _description_
         """
 
-        self.write(f"CH{chan}:POS {position}")
+        self.write(f"CHAN{chan}:POS {position}")
 
     def set_timebase(self, timebase: float) -> None:
         """
-        set_timebase _summary_
+        set_timebase
+
 
         Args:
             timebase (float): _description_
         """
 
-        self.write(f"HOR:SCAL {timebase}")
+        self.write(f"TIM:SCALE {timebase}")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
@@ -348,7 +356,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             pos (float): _description_
         """
 
-        self.write(f"HOR:DEL:TIM {pos}")
+        self.write(f"TIM:HOR:POS {pos}")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
