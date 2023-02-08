@@ -366,8 +366,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             num_samples (int): _description_
         """
 
-        self.write("ACQ:MODE AVE")
-        self.write(f"ACQ:NUMAV {num_samples}")
+        self.write("ACQ:MODE AVER")
+        self.write(f"ACQ:AVER:COUNT {num_samples}")
 
     def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
