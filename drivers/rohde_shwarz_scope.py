@@ -377,8 +377,9 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             mode (str): _description_
         """
 
-        # TODO implement edge triggering
-        self.write("TRIG:SWE AUTO")
+        self.write("TRIG:TYPE EDGE")
+        trig_mode = "AUTO" if auto_trig else "NORMAL"
+        self.write(f"TRIG:MODE {trig_mode}")
 
     def set_trigger_level(self, level: float, chan: int) -> None:
         """
@@ -390,8 +391,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             chan (int): _description_
         """
 
-        self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
-        self.write(f"TRIG:A:LEV {level}")
+        self.write(f"TRIG:SOUR C{chan}")
+        self.write(f"TRIG:LEV{chan}:VAL {level}")
 
     def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
