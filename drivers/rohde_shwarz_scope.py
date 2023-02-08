@@ -104,9 +104,24 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         )
 
     def write(self, command: str) -> None:
+        """
+        write _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return super().write(command)
 
     def read(self) -> str:
+        """
+        read _summary_
+
+        Returns:
+            str: _description_
+        """
         return super().read()
 
     def query(self, command: str) -> str:
@@ -167,7 +182,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
         return response.split(",")
 
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int | str) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
@@ -178,16 +193,47 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         """
 
         if type(bw_limit) is bool:
-            state = "TWE" if bw_limit else "FULL"
-        elif bw_limit == 150:
-            state = "ONEFIFTY"
-        elif bw_limit == 20:
-            state = "TWENTY"
+            state = "B20" if bw_limit else "FULL"
+        elif type(bw_limit) is int:
+            # Assuming MHz
+            state = f"B{bw_limit}"
         else:
-            state = "FULL"
+            # str, last character should be k for kHz
+            assert str(bw_limit)[-1] in {"k", "M"}, " Bandwidth kHz must end with k"
+            # if the third character is H, then it is hundreds of kHz
+
+            if str(bw_limit)[-1] == "M":
+                state = f"B{str(bw_limit)[:-1]}"
+            elif bw_limit == "500k":
+                state = "B5HK"
+            elif bw_limit == "400k":
+                state = "B4HK"
+            elif bw_limit == "200k":
+                state = "B2HK"
+            elif bw_limit == "100k":
+                state = "B1HK"
+            elif bw_limit == "50k":
+                state = "B50K"
+            elif bw_limit == "40k":
+                state = "B40K"
+            elif bw_limit == "20k":
+                state = "B20K"
+            elif bw_limit == "10k":
+                state = "B10K"
+            elif bw_limit == "5k":
+                state = "B5K"
+            elif bw_limit == "4k":
+                state = "B4K"
+            elif bw_limit == "2k":
+                state = "B2K"
+            elif bw_limit == "1K":
+                state = "B1K"
+            else:
+                print(f"Invalid bandwidth {bw_limit}")
+                state = "FULL"
 
         # Some use BAN and some BAND, so use the full command
-        self.write(f"CH{chan}:BANDWIDTH {state}")
+        self.write(f"CHAN{chan}:BANDWIDTH {state}")
         self.write("*OPC")
 
     def set_channel_impedance(self, chan: int, impedance: str) -> None:
