@@ -408,57 +408,22 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
         # Only using measurement 1
 
-        self.write("MEASU:MEAS1:TYPE MEAN")
+        self.write(f"MEAS1:SOURCE C{chan}")
+        self.write("MEAS1:TYPE MEAN")
 
-        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
-        self.write("MEASU:MEAS1:STATE ON")
+        self.write("MEAS1:ENABLE ON")
 
         if not self.simulating:
             time.sleep(delay)
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
-
-    def get_waveform(self, chan: int, delay: float) -> None:
-        """
-        measure_voltage _summary_
-
-        Args:
-            chan (int): _description_
-            delay (float): _description_
-        """
-
-        try:
-            self.write(f"DATA:SOURCE CH{chan}")
-            self.write("DATA:WIDTH 1")
-            self.write("DATA:ENC RPB")
-            self.write("DATA:START 1")
-            self.write("DATA:STOP 1000")
-
-            ymult = float(self.query("WFMINPRE:YMULT?"))
-            yzero = float(self.query("WFMINPRE:YZERO?"))
-            yoff = float(self.query("WFMINPRE:YOFF?"))
-            xincr = float(self.query("WFMINPRE:XINCR?"))
-            xdelay = float(self.query("HORizontal:POSition?"))
-            self.write("CURVE?")
-            data = self.instr.read_raw()
-            headerlen = 2 + int(data[1])
-            header = data[:headerlen]
-            ADC_wave = data[headerlen:-1]
-            ADC_wave = np.array(unpack("%sB" % len(ADC_wave), ADC_wave))
-            Volts = (ADC_wave - yoff) * ymult + yzero
-            Time = np.arange(0, (xincr * len(Volts)), xincr) - (
-                (xincr * len(Volts)) / 2 - xdelay
-            )
-            return Time, Volts
-        except IndexError:
-            return 0, 0
+        return self.read_query("MEAS1:RESULT:ACTUAL?")
 
     def measure_clear(self) -> None:
         """
         measure_clear _summary_
         """
 
-        self.write("MEASU:MEAS1:STATE OFF")
+        self.write("MEAS1:ENABLE OFF")
 
     def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
         """
@@ -473,34 +438,42 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        # Tek cannot reste the statistics, so a hack is to change timebase
-
         self.measure_clear()
 
-        self.write("MEASU:MEAS:TYPE RISE")
-        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
-        self.write("MEASU:MEAS1:STATE ON")
-
-        print(self.read_query("MEASU:MEAS1:COUNT?"))
+        self.write("MEAS:TYPE RTIM")
+        self.write(f"MEAS1:SOURCE C{chan}")
+        self.write("MEAS1:ENABLE ON")
 
         if not self.simulating:
             time.sleep(2)  # allow time to measure
 
-        # Tek will automatically average successive readings
+        # TODO check if RTH will automatically average successive readings
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
+        total = 0
+        for _ in range(num_readings):
+            total += self.read_query("MEAS1:RESULT:ACTUAL?")
+            time.sleep(0.1)
+
+        return total / num_readings
 
     def read_cursor(self, cursor: str) -> float:
         """
-
-        read_cursor _summary_
-
+        read_cursor
         Enable cursor and read
+
+        Args:
+            cursor (str): X1, X2, Y1, Y2
+
+        Returns:
+            float: _description_
         """
 
-        self.write("MARK:MODE WAV")
-        self.write(f"MARK:{cursor}:DISP ON")
-        return self.read_query(f"MARK:{cursor}P?")
+        # TODO check this
+
+        self.write("CURSOR:FUNC MEAS")
+        self.write("CURS:MEAS:TYPE MEAN")
+        self.write("CURS:STATE ON")
+        return self.read_query("CURS:MEAS1:RESULT:ACTUAL?")
 
     def read_cursor_avg(self) -> float:
         """
@@ -511,13 +484,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        # TODO what functions do Tek support?
-        self.write("MARK:MODE WAV")
-
-        y1 = self.read_query("MARK:Y1P?")
-        y2 = self.read_query("MARK:Y1P?")
-
-        return (y1 + y2) / 2
+        # TODO does this work?
+        return self.read_cursor("Y1")
 
     def read_cursor_ydelta(self) -> float:
         """
@@ -527,7 +495,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        return self.read_query("MARK:YDEL?")
+        # TODO does the mode need to be set?
+        return self.read_query("CURS:DELTA?")
 
     def set_cursor_xy_source(self, chan: int, cursor: int) -> None:
         """
@@ -538,7 +507,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             chan (int): _description_
         """
 
-        self.write("CURS:FUNC WAV")
+        # TODO figure this out
+        self.write("CURS:FUNC TRACK")
         self.write("CURS:MOD:TRACK")
         self.write(f"CURS:X{cursor}Y{cursor} CHAN{chan}")
 
@@ -551,7 +521,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             pos (float): _description_
         """
 
-        self.write(f"MARK:{cursor}P {pos}")
+        pass  # not supported
 
     def adjust_cursor(self, target: float) -> None:
         """
@@ -589,7 +559,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Turn the markers on
         """
 
-        self.write("CURS:FUNC WAV")
+        self.write("CURS:STATE ON")
         self.write("*OPC")
 
     def check_triggered(self, sweep_time: float = 0.1) -> bool:
@@ -604,6 +574,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             bool: _description_
         """
 
+        # TODO is there a command?
         response = self.query("TRIG:STATE?").strip()
 
         return response in ["AUTO", "TRIG"]
