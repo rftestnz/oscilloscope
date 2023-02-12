@@ -1205,19 +1205,11 @@ def select_visa_address() -> str:
             idn = scpi.get_id()[0]
             visa_instruments.append((addr, idn))
 
+    radio_buttons = [[sg.Radio(addr,1, background_color="blue",default=bool(addr[0].startswith("USB")))]for addr in visa_instruments]
+
     layout = [
         [sg.Text("Select item", background_color="blue")],
-        [
-            [
-                sg.Radio(
-                    addr,
-                    group_id="ADDR",
-                    background_color="blue",
-                    default=bool(addr[0].startswith("USB")),
-                )
-                for addr in visa_instruments
-            ]
-        ],
+        [radio_buttons],
         [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
     ]
 
