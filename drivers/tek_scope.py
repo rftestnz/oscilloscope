@@ -437,10 +437,14 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
     def read_cursor(self, cursor: str) -> float:
         """
-
-        read_cursor _summary_
-
+        read_cursor
         Enable cursor and read
+
+        Args:
+            cursor (str): X1, X2, Y1, Y2
+
+        Returns:
+            float: _description_
         """
 
         self.write("MARK:MODE WAV")

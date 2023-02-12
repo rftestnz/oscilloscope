@@ -1,15 +1,16 @@
 """
-# Driver for Keysight DSOX oscilloscopes
+# Driver for Tek DPO2000
 
 
 # DK Jan 23
 """
 
-from enum import Enum
 import pyvisa
 import time
 from random import random
 from typing import List
+import numpy as np
+from struct import unpack
 
 try:
     from drivers.base_scope_driver import ScopeDriver, Scope_Simulator
@@ -19,21 +20,7 @@ except ModuleNotFoundError:
 VERSION = "A.00.00"
 
 
-class DSOX_FAMILY(Enum):
-    """
-    DSOX_FAMILY
-    Enum to cope with minor differences in commands
-
-    Args:
-        Enum (_type_): _description_
-    """
-
-    DSOX1000 = 1
-    DSOX2000 = 2
-    DSOX3000 = 3
-
-
-class Keysight_Oscilloscope(ScopeDriver):
+class RohdeSchwarz_Oscilloscope(ScopeDriver):
     """
      _summary_
 
@@ -42,14 +29,13 @@ class Keysight_Oscilloscope(ScopeDriver):
     """
 
     connected: bool = False
-    visa_address: str = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    visa_address: str = "USB0::0x0699::0x0373::C010049::INSTR"
     model = ""
     manufacturer = ""
     serial = ""
-    family = DSOX_FAMILY.DSOX3000
-    timeout = 2000
-    num_channels = 4
-    keysight: bool = True
+    timeout = 5000
+    num_channels: int = 4
+    keysight: bool = False
 
     def __init__(self, simulate=False):
         self.simulating = simulate
@@ -61,15 +47,6 @@ class Keysight_Oscilloscope(ScopeDriver):
     def __exit__(self, exc_type, exc_val, exc_tb):
         return super().__exit__(exc_type, exc_val, exc_tb)
 
-    def close(self) -> None:
-        """
-        close _summary_
-
-        Returns:
-            _type_: _description_
-        """
-        return super().close()
-
     def open_connection(self) -> bool:
         """
         open_connection _summary_
@@ -80,8 +57,8 @@ class Keysight_Oscilloscope(ScopeDriver):
         try:
             if self.simulating:
                 self.instr = Scope_Simulator()
-                self.model = "DSO-X 3034T"
-                self.manufacturer = "Keysight"
+                self.model = "RTH1004"
+                self.manufacturer = "R&S"
                 self.serial = "666"
             else:
                 self.instr = self.rm.open_resource(
@@ -90,12 +67,29 @@ class Keysight_Oscilloscope(ScopeDriver):
                 self.instr.timeout = self.timeout
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
-                self.get_num_channels()
             self.connected = True
         except Exception:
             self.connected = False
 
         return self.connected
+
+    def initialize(self) -> None:
+        """
+        initialize _summary_
+
+        Returns:
+            _type_: _description_
+        """
+        return super().initialize()
+
+    def close(self) -> None:
+        """
+        close _summary_
+
+        Returns:
+            _type_: _description_
+        """
+        return super().close()
 
     def is_connected(self) -> bool:
         """
@@ -106,9 +100,7 @@ class Keysight_Oscilloscope(ScopeDriver):
         """
         return bool(
             self.open_connection()
-            and (
-                not self.simulating and self.model.find("DSO-X") >= 0 or self.simulating
-            )
+            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
         )
 
     def write(self, command: str) -> None:
@@ -178,17 +170,6 @@ class Keysight_Oscilloscope(ScopeDriver):
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
                 self.model = identity[1]
-                model_type = self.model.split(" ")
-                if len(model_type) > 1:
-                    family = model_type[1][0]
-                    if family == "1":
-                        self.family = DSOX_FAMILY.DSOX1000
-                    else:
-                        self.family = (
-                            DSOX_FAMILY.DSOX2000
-                            if family == "2"
-                            else DSOX_FAMILY.DSOX3000
-                        )
                 self.serial = identity[2]
 
         except pyvisa.VisaIOError:
@@ -201,61 +182,7 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         return response.split(",")
 
-    def get_num_channels(self) -> None:
-        """
-        get_num_channels
-        The number of channels can be obtained from the model number, but use a more universal method
-        of querying channels
-        """
-
-        # use model for now until figuring out timeout
-
-        valid = False
-
-        start_index = 0
-        model_index = 0
-        while model_index < len(self.model):
-            if self.model[model_index].isnumeric():
-                start_index = model_index
-                break
-            model_index += 1
-
-        if start_index:
-            model_number = self.model[start_index : start_index + 4]
-            if model_number[-1].isnumeric():
-                self.num_channels = int(model_number[-1])
-                valid = True
-
-        else:
-            model_fields = self.model.split(" ")
-            if len(model_fields) > 1:
-                try:
-                    self.num_channels = int(model_fields[1][3])
-                    valid = True
-                except (ValueError, IndexError):
-                    valid = False
-
-        if not valid:
-            tmo = self.instr.timeout  # type: ignore
-            self.instr.timeout = 500  # type: ignore
-
-            # TODO it ignores the timeout, and uses 5000 ms
-            for chan in range(4):
-                chan_num = chan + 1
-
-                try:
-                    reply = self.query(f"CHAN{chan_num}?")
-                    if not len(reply) and chan_num > 2:
-                        self.num_channels = chan
-                        break
-                except pyvisa.VisaIOError:
-                    if chan_num > 2:
-                        self.num_channels = chan
-                    break
-
-            self.timeout = tmo
-
-    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
+    def set_channel_bw_limit(self, chan: int, bw_limit: bool | int | str) -> None:
         """
         set_channel_bw_limit
         Set bandwidth limit on or off
@@ -266,25 +193,63 @@ class Keysight_Oscilloscope(ScopeDriver):
         """
 
         if type(bw_limit) is bool:
-            state = "ON" if bw_limit else "OFF"
+            state = "B20" if bw_limit else "FULL"
+        elif type(bw_limit) is int:
+            # Assuming MHz
+            state = f"B{bw_limit}"
         else:
-            state = bw_limit
+            # str, last character should be k for kHz
+            assert str(bw_limit)[-1] in {"k", "M"}, " Bandwidth kHz must end with k"
+            # if the third character is H, then it is hundreds of kHz
 
-        self.write(f"CHAN{chan}:BWL {state}")
+            if str(bw_limit)[-1] == "M":
+                state = f"B{str(bw_limit)[:-1]}"
+            elif bw_limit == "500k":
+                state = "B5HK"
+            elif bw_limit == "400k":
+                state = "B4HK"
+            elif bw_limit == "200k":
+                state = "B2HK"
+            elif bw_limit == "100k":
+                state = "B1HK"
+            elif bw_limit == "50k":
+                state = "B50K"
+            elif bw_limit == "40k":
+                state = "B40K"
+            elif bw_limit == "20k":
+                state = "B20K"
+            elif bw_limit == "10k":
+                state = "B10K"
+            elif bw_limit == "5k":
+                state = "B5K"
+            elif bw_limit == "4k":
+                state = "B4K"
+            elif bw_limit == "2k":
+                state = "B2K"
+            elif bw_limit == "1K":
+                state = "B1K"
+            else:
+                print(f"Invalid bandwidth {bw_limit}")
+                state = "FULL"
+
+        # Some use BAN and some BAND, so use the full command
+        self.write(f"CHAN{chan}:BANDWIDTH {state}")
         self.write("*OPC")
 
     def set_channel_impedance(self, chan: int, impedance: str) -> None:
         """
-        set_channel_impedance _summary_
+        set_channel_impedance
+
+        Although not all models can set impedance, command is available for compatibility
 
         Args:
             chan (int): _description_
             imedance (str): _description_
         """
 
-        imp = "FIFTY" if impedance == "50" else "ONEMEG"
+        # Not supported for this scope
 
-        self.write(f"CHAN{chan}:IMP {imp}")
+        pass
 
     def set_channel_invert(self, chan: int, inverted: bool) -> None:
         """
@@ -294,9 +259,9 @@ class Keysight_Oscilloscope(ScopeDriver):
             inverted (bool): _description_
         """
 
-        state = "ON" if inverted else "OFF"
+        state = "INVERTED" if inverted else "NORMAL"
 
-        self.write(f"CHAN{chan}:INV {state}")
+        self.write(f"CHAN{chan}:POL {state}")
 
     def set_channel(self, chan: int, enabled: bool, only: bool = False) -> None:
         """
@@ -306,17 +271,16 @@ class Keysight_Oscilloscope(ScopeDriver):
         Args:
             chan (int): _description_
             enabled (bool): _description_
-            only (bool): True if turn off all other channels
         """
 
         if only:
             for channel in range(1, self.num_channels + 1):
                 state = "ON" if channel == chan else "OFF"
-                self.write(f"CHAN{channel}:DISP {state}")
+                self.write(f"SEL:CH{channel} {state}")
 
         else:
             state = "ON" if enabled else "OFF"
-            self.write(f"CHAN{chan}:DISP {state}")
+            self.write(f"CHAN{chan}:STATE {state}")
 
         self.write("*OPC")
 
@@ -329,9 +293,15 @@ class Keysight_Oscilloscope(ScopeDriver):
             coupling (str): _description_
         """
 
-        self.write(f"CHAN{chan}:COUP {coupling}")
+        # DCL or ACL. No GND
 
-    def set_voltage_scale(self, chan: int, scale: float, probe: int = 1) -> None:
+        if coupling.upper() != "GND":
+            if not coupling.endswith("L"):
+                coupling += "L"
+
+            self.write(f"CHAN{chan}:COUP {coupling}")
+
+    def set_voltage_scale(self, chan: int, scale: float, probe_atten: int = 1) -> None:
         """
         set_voltage_scale _summary_
 
@@ -340,13 +310,13 @@ class Keysight_Oscilloscope(ScopeDriver):
             scale (float): _description_
         """
 
-        self.write(f"CHAN{chan}:PROB {probe}")  # Set before the scale
-        self.write(f"CHAN{chan}:SCAL {scale}")
-        self.write("*OPC")
+        self.write(f"CHAN{chan}:PROBE V1TO1")
+        self.write(f"CHAN{chan}:SCALE {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
         """
-        set_voltage_offset _summary_
+        set_voltage_offset
+        For Tek, offset is the center of the vertical acquisition window
 
         Args:
             chan (int): _description_
@@ -354,31 +324,29 @@ class Keysight_Oscilloscope(ScopeDriver):
         """
 
         self.write(f"CHAN{chan}:OFFS {offset}")
-        self.write("*OPC")
 
     def set_voltage_position(self, chan: int, position: float) -> None:
         """
-        set_voltage_offset _summary_
-        For Keysight, offset and position are the same thing
+        set_voltage_position
+        set the position, in divisions
 
         Args:
             chan (int): _description_
-            offset (float): _description_
+            position (float): _description_
         """
 
-        self.write(f"CHAN{chan}:OFFS {position}")
-        self.write("*OPC")
+        self.write(f"CHAN{chan}:POS {position}")
 
     def set_timebase(self, timebase: float) -> None:
         """
-        set_timebase _summary_
+        set_timebase
+
 
         Args:
             timebase (float): _description_
         """
 
-        self.write(f"TIM:SCAL {timebase}")
-        self.write("*OPC")
+        self.write(f"TIM:SCALE {timebase}")
 
     def set_timebase_pos(self, pos: float) -> None:
         """
@@ -388,8 +356,7 @@ class Keysight_Oscilloscope(ScopeDriver):
             pos (float): _description_
         """
 
-        self.write(f"TIM:POS {pos}")
-        self.write("*OPC")
+        self.write(f"TIM:HOR:POS {pos}")
 
     def set_acquisition(self, num_samples: int) -> None:
         """
@@ -399,11 +366,10 @@ class Keysight_Oscilloscope(ScopeDriver):
             num_samples (int): _description_
         """
 
-        self.write("ACQ:TYPE AVER")
-        self.write(f"ACQ:COUNT {num_samples}")
-        self.write("*OPC")
+        self.write("ACQ:MODE AVER")
+        self.write(f"ACQ:AVER:COUNT {num_samples}")
 
-    def set_trigger_type(self, mode: str) -> None:
+    def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
         set_trigger_mode _summary_
 
@@ -411,52 +377,53 @@ class Keysight_Oscilloscope(ScopeDriver):
             mode (str): _description_
         """
 
-        self.write(f"TRIG:MODE {mode}")
-        self.write("TRIG:SWE AUTO")
-        self.write("*OPC")
+        self.write("TRIG:TYPE EDGE")
+        trig_mode = "AUTO" if auto_trig else "NORMAL"
+        self.write(f"TRIG:MODE {trig_mode}")
 
-    def set_trigger_level(
-        self,
-        chan: int,
-        level: float,
-    ) -> None:
+    def set_trigger_level(self, level: float, chan: int) -> None:
         """
         set_trigger_level
         Set the trigger level and source
 
         Args:
             level (float): _description_
-            chan (int): 0 for ext, else channel number
+            chan (int): _description_
         """
 
-        source = f"CHAN{chan}" if chan else "EXT"
-
-        self.write(f"TRIG:EDGE:SOUR {source}")
-        self.write(f"TRIG:EDGE:LEV {level}")
-        self.write("*OPC")
+        self.write(f"TRIG:SOUR C{chan}")
+        self.write(f"TRIG:LEV{chan}:VAL {level}")
 
     def measure_voltage(self, chan: int, delay: float = 2) -> float:
         """
-        measure_voltage
-        Return the average voltage
+        measure_voltage _summary_
+
+        Args:
+            chan (int): _description_
+            delay (float, optional): Number seconds to allow measurement. Defaults to 1.
 
         Returns:
             float: _description_
         """
 
-        self.write(f"MEAS:SOURCE CHAN{chan}")
+        # Only using measurement 1
+
+        self.write(f"MEAS1:SOURCE C{chan}")
+        self.write("MEAS1:TYPE MEAN")
+
+        self.write("MEAS1:ENABLE ON")
 
         if not self.simulating:
             time.sleep(delay)
 
-        return self.read_query("MEAS:VAV?")
+        return self.read_query("MEAS1:RESULT:ACTUAL?")
 
     def measure_clear(self) -> None:
         """
-        measure_voltage_clear _summary_
+        measure_clear _summary_
         """
 
-        pass
+        self.write("MEAS1:ENABLE OFF")
 
     def measure_risetime(self, chan: int, num_readings: int = 1) -> float:
         """
@@ -470,27 +437,24 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             float: _description_
         """
-        self.write(f"MEAS:RIS CHAN{chan}")
-        self.write("*OPC")
+
+        self.measure_clear()
+
+        self.write("MEAS:TYPE RTIM")
+        self.write(f"MEAS1:SOURCE C{chan}")
+        self.write("MEAS1:ENABLE ON")
 
         if not self.simulating:
-            time.sleep(1)  # allow time to measure
+            time.sleep(2)  # allow time to measure
+
+        # TODO check if RTH will automatically average successive readings
 
         total = 0
         for _ in range(num_readings):
-            total += self.read_query(f"MEAS:RIS? CHAN{chan}")
+            total += self.read_query("MEAS1:RESULT:ACTUAL?")
             time.sleep(0.1)
 
         return total / num_readings
-
-    def cursors_on(self) -> None:
-        """
-        cursors_on
-        Turn the markers on
-        """
-
-        self.write("MARK:MODE WAV")
-        self.write("*OPC")
 
     def read_cursor(self, cursor: str) -> float:
         """
@@ -504,15 +468,12 @@ class Keysight_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        # TODO which family support this command
-        if self.family != DSOX_FAMILY.DSOX1000:
-            self.write(f"MARK:{cursor}:DISP ON")
-        self.write("*OPC")
-        pos = self.read_query(f"MARK:{cursor}P?")
-        if pos > 9e37:
-            time.sleep(0.2)
-            pos = self.read_query(f"MARK:{cursor}P?")
-        return pos
+        # TODO check this
+
+        self.write("CURSOR:FUNC MEAS")
+        self.write("CURS:MEAS:TYPE MEAN")
+        self.write("CURS:STATE ON")
+        return self.read_query("CURS:MEAS1:RESULT:ACTUAL?")
 
     def read_cursor_avg(self) -> float:
         """
@@ -523,14 +484,8 @@ class Keysight_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        self.write("MARK:MODE WAV")
-        if self.family == DSOX_FAMILY.DSOX3000:
-            self.write("MARK:Y1:DISP ON")
-            self.write("MARK:Y2:DISP ON")
-        y1 = self.read_query("MARK:Y1P?")
-        y2 = self.read_query("MARK:Y1P?")
-
-        return (y1 + y2) / 2
+        # TODO does this work?
+        return self.read_cursor("Y1")
 
     def read_cursor_ydelta(self) -> float:
         """
@@ -540,7 +495,8 @@ class Keysight_Oscilloscope(ScopeDriver):
             float: _description_
         """
 
-        return self.read_query("MARK:YDEL?")
+        # TODO does the mode need to be set?
+        return self.read_query("CURS:DELTA?")
 
     def set_cursor_xy_source(self, chan: int, cursor: int) -> None:
         """
@@ -551,9 +507,10 @@ class Keysight_Oscilloscope(ScopeDriver):
             chan (int): _description_
         """
 
-        self.write("MARK:MODE WAV")
-        self.write(f"MARK:X{cursor}Y{cursor} CHAN{chan}")
-        self.write("*OPC")
+        # TODO figure this out
+        self.write("CURS:FUNC TRACK")
+        self.write("CURS:MOD:TRACK")
+        self.write(f"CURS:X{cursor}Y{cursor} CHAN{chan}")
 
     def set_cursor_position(self, cursor: str, pos: float) -> None:
         """
@@ -564,8 +521,7 @@ class Keysight_Oscilloscope(ScopeDriver):
             pos (float): _description_
         """
 
-        self.write(f"MARK:{cursor}P {pos}")
-        self.write("*OPC")
+        pass  # not supported
 
     def adjust_cursor(self, target: float) -> None:
         """
@@ -583,112 +539,108 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         direction = +1 if current_y < target else -1
 
-        diff = abs(current_y - target)
-
-        if diff > 0.05:  # 0.1 div
+        if current_y < target:
             for _ in range(100):
                 self.set_cursor_position(
                     cursor="X1", pos=current_x + time_inc * direction
                 )
-                self.write("*OPC")
-                time.sleep(0.05)
                 current_x = self.read_query("MARK:X1P?")
                 current_y = self.read_query("MARK:Y1P?")
-
-                diff = current_y - target
-
-                # As the slope can be steep, detect when it has passed the crossing
-
-                val = direction * diff
-                if val > 0:
+                if ((current_y > target) and direction == 1) or (
+                    (current_y < target) and direction == -1
+                ):
                     break
         else:
             ...
 
+    def cursors_on(self) -> None:
+        """
+        cursors_on
+        Turn the markers on
+        """
+
+        self.write("CURS:STATE ON")
+        self.write("*OPC")
+
     def check_triggered(self, sweep_time: float = 0.1) -> bool:
         """
         check_triggered
-        Check if the scope is triggered
-        clears it first then waits for a sweep and returns the status
+        Check the state of the trigger
+
+        Args:
+            sweep_time (float, optional): _description_. Defaults to 0.1.
 
         Returns:
             bool: _description_
         """
 
-        self.write("*CLS")
+        # TODO is there a command?
+        response = self.query("TRIG:STATE?").strip()
 
-        if not self.simulating:
-            time.sleep(sweep_time)
-
-        triggered = self.query("TER?")
-
-        return triggered == "1"
+        return response in ["AUTO", "TRIG"]
 
 
 if __name__ == "__main__":
 
-    dsox3034t = Keysight_Oscilloscope(simulate=False)
-    dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
+    rth1004 = RohdeSchwarz_Oscilloscope(simulate=False)
+    rth1004.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
 
-    dsox3034t.open_connection()
+    rth1004.open_connection()
 
-    print(f"Model {dsox3034t.model}")
-    print(f"Num channels {dsox3034t.num_channels}")
+    print(f"Model {rth1004.model}")
 
-    dsox3034t.reset()
+    rth1004.reset()
 
-    dsox3034t.set_channel(chan=1, enabled=True)
-    dsox3034t.set_channel(chan=2, enabled=True)
-    dsox3034t.set_channel_bw_limit(chan=1, bw_limit=True)
-    dsox3034t.set_voltage_scale(chan=1, scale=0.5)
-    dsox3034t.set_voltage_scale(chan=2, scale=0.2)
-    dsox3034t.set_voltage_offset(chan=1, offset=0)
-    dsox3034t.set_voltage_offset(chan=2, offset=-0.5)
-    dsox3034t.set_timebase(0.001)
-    dsox3034t.set_timebase(5e-9)
-    dsox3034t.set_acquisition(64)
+    rth1004.set_channel(chan=1, enabled=True)
+    rth1004.set_channel(chan=2, enabled=True)
+    rth1004.set_voltage_scale(chan=1, scale=1)
+    rth1004.set_voltage_scale(chan=2, scale=0.2)
+    rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    rth1004.set_voltage_offset(chan=2, offset=+0.5)
+    rth1004.set_timebase(0.001)
 
-    dsox3034t.set_trigger_type("EDGE")
+    rth1004.set_acquisition(32)
+
+    print(rth1004.check_triggered())
+
+    rth1004.set_trigger_type("EDGE")
+
+    print(rth1004.check_triggered())
 
     time.sleep(1)
 
-    print(f"Measurement {dsox3034t.measure_voltage(chan=1)}")
+    print(f"Measurement {rth1004.measure_voltage(chan=1)}")
 
-    print(f"Measurement {dsox3034t.measure_risetime(chan=1, num_readings=10)}")
+    rth1004.set_trigger_level(level=0.1, chan=1)
 
-    dsox3034t.set_trigger_level(
-        chan=1,
-        level=0,
-    )
+    rth1004.set_timebase(20e-9)
 
-    dsox3034t.set_timebase(20e-9)
+    rth1004.set_cursor_xy_source(chan=1, cursor=1)
+    rth1004.set_cursor_position(cursor="X1", pos=0)
 
-    dsox3034t.set_cursor_xy_source(chan=1, cursor=1)
-    dsox3034t.set_cursor_position(cursor="X1", pos=0)
-
-    ref_x = dsox3034t.read_cursor("X1")
+    ref_x = rth1004.read_cursor("X1")
     time.sleep(0.1)
-    ref = dsox3034t.read_cursor("Y1")
+    ref = rth1004.read_cursor("Y1")
     print(ref)
 
-    dsox3034t.set_timebase_pos(0.001)
+    rth1004.set_timebase_pos(0.001)
     time.sleep(0.1)
 
-    dsox3034t.set_cursor_position(cursor="X1", pos=0.001)
+    rth1004.set_cursor_position(cursor="X1", pos=0.001)
     time.sleep(0.1)
 
-    dsox3034t.adjust_cursor(target=ref)
+    rth1004.adjust_cursor(target=ref)
 
-    offset_x = dsox3034t.read_cursor("X1")
+    offset_x = rth1004.read_cursor("X1")
 
     print(f"TB Error {ref_x-offset_x+0.001}")
 
     input("Set voltage source to 0V")
-    y1 = dsox3034t.read_cursor_avg()
+    y1 = rth1004.read_cursor_avg()
 
     print(y1)
 
     input("Set voltage source to 1V")
-    y2 = dsox3034t.read_cursor_avg()
+    y2 = rth1004.read_cursor_avg()
     print(y2)
     print(f"Y Delta {y2-y1}")
