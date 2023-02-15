@@ -408,8 +408,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     uut.set_acquisition(32)
 
-    set_impedance = False
-
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
@@ -464,7 +462,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if settings.impedance:
                 uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
-                set_impedance = True
 
             if settings.bandwidth:
                 uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
