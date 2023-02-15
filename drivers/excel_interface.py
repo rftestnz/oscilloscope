@@ -36,7 +36,7 @@ class Timebase_Settings:
     function: str
     channel: int
     timebase: float
-    impedance: str
+    impedance: str | int
 
 
 @dataclass(frozen=True)
@@ -45,7 +45,7 @@ class Trigger_Settings:
     channel: int
     scale: float
     voltage: float
-    impedance: str
+    impedance: str | int
     frequency: float
     edge: str
 

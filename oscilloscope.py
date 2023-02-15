@@ -1022,7 +1022,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             message = f"Connect fast pulse generator to channel {settings.channel}"
 
-            if settings.impedance != "50":
+            if settings.impedance != 50:
                 message += "via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
@@ -1037,7 +1037,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             uut.set_voltage_scale(chan=settings.channel, scale=0.5)
 
-            if settings.impedance == "50":
+            if settings.impedance == 50:
                 uut.set_channel_impedance(chan=settings.channel, impedance="50")
 
             uut.set_timebase(settings.timebase * 1e-9)
