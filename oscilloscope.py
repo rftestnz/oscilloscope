@@ -1020,10 +1020,13 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_tb_test_settings()
 
-            # TODO feedthru
+            message = f"Connect fast pulse generator to channel {settings.channel}"
+
+            if settings.impedance != "50":
+                message += "via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
-                f"Connect fast pulse generator to channel {settings.channel}",
+                message,
                 background_color="blue",
             )
             if response == "Cancel":
@@ -1034,7 +1037,8 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             uut.set_voltage_scale(chan=settings.channel, scale=0.5)
 
-            # TODO set impedance if 50 Ohm
+            if settings.impedance == "50":
+                uut.set_channel_impedance(chan=settings.channel, impedance="50")
 
             uut.set_timebase(settings.timebase * 1e-9)
             uut.set_trigger_level(chan=settings.channel, level=0)
@@ -1205,7 +1209,17 @@ def select_visa_address() -> str:
             idn = scpi.get_id()[0]
             visa_instruments.append((addr, idn))
 
-    radio_buttons = [[sg.Radio(addr,1, background_color="blue",default=bool(addr[0].startswith("USB")))]for addr in visa_instruments]
+    radio_buttons = [
+        [
+            sg.Radio(
+                addr,
+                1,
+                background_color="blue",
+                default=bool(addr[0].startswith("USB")),
+            )
+        ]
+        for addr in visa_instruments
+    ]
 
     layout = [
         [sg.Text("Select item", background_color="blue")],
