@@ -1288,7 +1288,8 @@ DCV, DCV-BAL, POS, BAL
 Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
 
 TIME, RISE
-Function, Channel (blank for time), Timebase (ns)
+Function, Channel (blank for time), Timebase (ns), Impedance
+Impedance use 50 if available, else blank
 
 TRIG
 Function, Channel [1-4,EXT], Scale (1x probe), Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
