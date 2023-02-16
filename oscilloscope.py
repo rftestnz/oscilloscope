@@ -1160,31 +1160,34 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         uut.open_connection()
         return True
 
-    with SCPI_ID(address=address) as scpi_uut:
+    # TODO when using the SCPI)ID class, it affects all subsequent uses
+    with Keysight_Oscilloscope(simulate=False) as scpi_uut:
+        scpi_uut.visa_address = address
+        scpi_uut.open_connection()
         manufacturer = scpi_uut.get_manufacturer()
+        num_channels = scpi_uut.get_number_channels()
 
-        if manufacturer == "":
-            sg.popup_error(
-                "Unable to contact UUT. Is address correct?", background_color="blue"
-            )
-            return False
-        elif manufacturer == "KEYSIGHT":
-            uut = Keysight_Oscilloscope(simulate=simulating)
-            uut.open_connection()
-        elif manufacturer == "TEKTRONIX":
-            uut = Tektronix_Oscilloscope(simulate=simulating)
-            uut.open_connection()
-        else:
-            sg.popup_error(
-                f"No driver for {manufacturer}. Using Tektronix driver",
-                background_color="blue",
-            )
-            uut = Tektronix_Oscilloscope(simulate=simulating)
-            uut.open_connection()
+    if manufacturer == "":
+        sg.popup_error(
+            "Unable to contact UUT. Is address correct?", background_color="blue"
+        )
+        return False
+    elif manufacturer == "KEYSIGHT":
+        uut = Keysight_Oscilloscope(simulate=False)
 
-        uut.num_channels = scpi_uut.get_number_channels()
+    elif manufacturer == "TEKTRONIX":
+        uut = Tektronix_Oscilloscope(simulate=False)
 
-        return True
+    else:
+        sg.popup_error(
+            f"No driver for {manufacturer}. Using Tektronix driver",
+            background_color="blue",
+        )
+        uut = Tektronix_Oscilloscope(simulate=False)
+
+    uut.num_channels = num_channels
+
+    return True
 
 
 def select_visa_address() -> str:
