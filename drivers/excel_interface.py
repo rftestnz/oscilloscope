@@ -37,6 +37,7 @@ class Timebase_Settings:
     channel: int
     timebase: float
     impedance: str | int
+    bandwidth: int
 
 
 @dataclass(frozen=True)
@@ -344,9 +345,15 @@ class ExcelInterface:
         tb = self.ws.cell(column=col, row=row).value
         col += 1
         impedance = self.ws.cell(column=col, row=row).value
+        col += 1
+        bandwidth = self.ws.cell(column=col, row=row).value
 
         return Timebase_Settings(
-            function=func, channel=channel, timebase=tb, impedance=impedance
+            function=func,
+            channel=channel,
+            timebase=tb,
+            impedance=impedance,
+            bandwidth=bandwidth,
         )
 
     def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
