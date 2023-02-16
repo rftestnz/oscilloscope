@@ -572,6 +572,29 @@ class ExcelInterface:
         if save:
             self.save_sheet()
 
+    def write_data(self, data: float | int | str, named_range: str) -> bool:
+        """
+        write_data
+
+        Write generic data to the named range
+
+        If named range doesn't exist, nothing is written
+
+        Args:
+            data (float | int | str): _description_
+            named_range (str): _description_
+
+        Returns:
+            bool: data written
+        """
+
+        if nr := self.get_named_cell(named_range):
+            self.ws.cell(column=nr.col, row=nr.row).value = data
+            self.save_sheet()
+            return True
+
+        return False
+
 
 if __name__ == "__main__":
 

@@ -24,7 +24,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.00.00"
+VERSION = "A.00.01"
 
 
 calibrator = Fluke5700A()
@@ -230,6 +230,14 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
 
     with ExcelInterface(filename=filename) as excel:
         excel.backup()
+
+        # first update the model and serial
+
+        uut.open_connection()
+
+        # If the named range doesn't exist, nothing is written
+        excel.write_data(data=uut.model, named_range="Model")
+        excel.write_data(data=uut.serial, named_range="Serial")
 
         test_names = set()
 
