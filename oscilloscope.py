@@ -1619,6 +1619,8 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
             mxg.visa_address = mxg_address
+
+            load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
 
             connections_check_form()
