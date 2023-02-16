@@ -1051,6 +1051,11 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             if settings.impedance == 50:
                 uut.set_channel_impedance(chan=settings.channel, impedance="50")
 
+            if settings.bandwidth:
+                uut.set_channel_bw_limit(
+                    chan=settings.channel, bw_limit=settings.bandwidth
+                )
+
             uut.set_timebase(settings.timebase * 1e-9)
             uut.set_trigger_level(chan=settings.channel, level=0)
 
@@ -1300,7 +1305,7 @@ DCV, DCV-BAL, POS, BAL
 Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
 
 TIME, RISE
-Function, Channel (blank for time), Timebase (ns), Impedance
+Function, Channel (blank for time), Timebase (ns), Impedance, Bandwidth (MHz)
 Impedance use 50 if available, else blank
 
 TRIG
