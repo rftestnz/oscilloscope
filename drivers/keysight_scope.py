@@ -90,9 +90,8 @@ class Keysight_Oscilloscope(ScopeDriver):
                     self.visa_address, write_termination="\n"
                 )
                 self.instr.timeout = self.timeout
-                # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
-                self.get_num_channels()
+
             self.connected = True
         except Exception:
             self.connected = False
@@ -109,7 +108,9 @@ class Keysight_Oscilloscope(ScopeDriver):
         return bool(
             self.open_connection()
             and (
-                not self.simulating and self.model.find("DSO-X") >= 0 or self.simulating
+                not self.simulating
+                and self.manufacturer == "KEYSIGHT"
+                or self.simulating
             )
         )
 
@@ -224,7 +225,11 @@ class Keysight_Oscilloscope(ScopeDriver):
             response = self.instr.query("*IDN?")  # type: ignore
             identity = response.split(",")
             if len(identity) >= 3:
-                self.manufacturer = identity[0]
+                manufacturer = identity[0].upper()
+                if manufacturer.startswith("KEY") or manufacturer.startswith("AGI"):
+                    self.manufacturer = "KEYSIGHT"
+                else:
+                    self.manufacturer = manufacturer
                 self.model = identity[1]
                 model_type = self.model.split(" ")
                 if len(model_type) > 1:
