@@ -422,7 +422,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         if not self.simulating:
             time.sleep(delay)
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
+        return self.read_query("MEASU:MEAS1:VAL?")
 
     def get_waveform(self, chan: int, delay: float) -> None:
         """
@@ -487,14 +487,14 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        print(self.read_query("MEASU:MEAS1:COUNT?"))
+        # print(self.read_query("MEASU:MEAS1:COUNT?"))
 
         if not self.simulating:
             time.sleep(2)  # allow time to measure
 
         # Tek will automatically average successive readings
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
+        return self.read_query("MEASU:MEAS1:VAL?")
 
     def read_cursor(self, cursor: str) -> float:
         """
