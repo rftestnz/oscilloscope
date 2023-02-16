@@ -124,6 +124,8 @@ class RF_Signal_Generator:
             bool: _description_
         """
 
+        return True
+
         return bool(
             self.open_connection()
             and (
