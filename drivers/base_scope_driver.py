@@ -103,8 +103,6 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         """
         close _summary_
         """
-        self.instr.close()  # type: ignore
-        self.connected = False
 
     @abc.abstractmethod
     def is_connected(self) -> bool:
@@ -126,16 +124,6 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         Args:
             command (str): _description_
         """
-
-        attempts = 0
-
-        while attempts < 3:
-            try:
-                self.instr.write(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
 
     @abc.abstractmethod
     def read(self) -> str:
@@ -173,21 +161,6 @@ class ScopeDriver(metaclass=abc.ABCMeta):
             str: _description_
         """
 
-        assert command.find("?") > 0
-
-        attempts = 0
-        ret = ""
-
-        while attempts < 3:
-            try:
-                ret = self.instr.query(command)  # type: ignore
-                break
-            except pyvisa.VisaIOError:
-                time.sleep(1)
-                attempts += 1
-
-        return ret
-
     @abc.abstractmethod
     def read_query(self, command: str) -> float:
         """
@@ -200,17 +173,6 @@ class ScopeDriver(metaclass=abc.ABCMeta):
         Returns:
             float: _description_
         """
-
-        assert command.find("?") > 0
-
-        reply = self.query(command)
-
-        try:
-            val = float(reply)
-        except ValueError:
-            val = 0.0
-
-        return val
 
     @abc.abstractmethod
     def get_id(self) -> List:
