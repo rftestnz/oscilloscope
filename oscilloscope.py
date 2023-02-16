@@ -3,7 +3,7 @@ Test DSOX Oscilloscopes
 # DK Jan 23
 """
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import PySimpleGUI as sg
 
 from drivers.fluke_5700a import Fluke5700A
@@ -1088,7 +1088,7 @@ def round_range(val: float) -> float:
     return first_digit * math.pow(10, decade)
 
 
-def individual_tests(filename: str) -> List:
+def individual_tests(filename: str) -> Tuple:
     """
     individual_tests
     show form for selecting individual tests
@@ -1140,11 +1140,19 @@ def individual_tests(filename: str) -> List:
             test_steps.extend(iter(rows))
         print(test_steps)
 
+        do_parallel = False
+        if "DCV" in checked_list:
+            do_parallel = True
+        if "DCV-BAL" in checked_list:
+            do_parallel = True
+        if "CURS" in checked_list:
+            do_parallel = True
+
     window.close()
 
     excel.close()
 
-    return sorted(test_steps)
+    return (sorted(test_steps), do_parallel)
 
 
 def load_uut_driver(address: str, simulating: bool = False) -> bool:
