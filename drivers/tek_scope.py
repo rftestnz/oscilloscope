@@ -98,10 +98,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         Returns:
             bool: _description_
         """
-        return bool(
-            self.open_connection()
-            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
-        )
+        return bool(self.open_connection() or self.simulating)
 
     def write(self, command: str) -> None:
         """
