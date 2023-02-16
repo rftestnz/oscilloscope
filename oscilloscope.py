@@ -325,7 +325,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     response = sg.popup_ok_cancel(
         "Remove inputs from all channels",
         background_color="blue",
-        icon=get_path("ui\\scope.ico"),
+        icon=get_path("ui\\scope.ico"),  # type: ignore
     )
 
     if response == "Cancel":
@@ -373,7 +373,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
-    # sourcery skip: extract-method
+    # sourcery skip: extract-method, low-code-quality
     """
     test_dcv
     Perform the basic DC V tests
@@ -413,7 +413,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         response = sg.popup_ok_cancel(
             "Connect calibrator output to all channels in parallel",
             background_color="blue",
-            icon=get_path("ui\\scope.ico"),
+            icon=get_path("ui\\scope.ico"),  # type: ignore
         )
 
         if response == "Cancel":
@@ -469,7 +469,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     response = sg.popup_ok_cancel(
                         f"Connect calibrator output to channel {channel}",
                         background_color="blue",
-                        icon=get_path("ui\\scope.ico"),
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
                     )
                     if response == "Cancel":
                         return False
@@ -691,7 +691,7 @@ def test_position(
                 response = sg.popup_ok_cancel(
                     f"Connect calibrator output to channel {settings.channel}",
                     background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                    icon=get_path("ui\\scope.ico"),  # type: ignore
                 )
                 if response == "Cancel":
                     return False
@@ -746,6 +746,7 @@ DELAY_PERIOD = 0.001  # 1 ms
 
 
 def test_timebase(filename: str, row: int) -> bool:
+    # sourcery skip: low-code-quality
     """
     test_timebase
     Test the timebase. Simple single row test
@@ -773,7 +774,7 @@ def test_timebase(filename: str, row: int) -> bool:
     response = sg.popup_ok_cancel(
         "Connect 33250A output to Ch1",
         background_color="blue",
-        icon=get_path("ui\\scope.ico"),
+        icon=get_path("ui\\scope.ico"),  # type: ignore
     )
 
     if response == "Cancel":
@@ -906,6 +907,7 @@ def test_timebase(filename: str, row: int) -> bool:
 
 
 def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
+    # sourcery skip: low-code-quality
     """
     test_trigger_sensitivity
 
@@ -1077,7 +1079,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
                 message += "via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
-                message, background_color="blue", icon=get_path("ui\\scope.ico")
+                message, background_color="blue", icon=get_path("ui\\scope.ico")  # type: ignore
             )
             if response == "Cancel":
                 return False
@@ -1182,6 +1184,8 @@ def individual_tests(filename: str) -> Tuple:
     event, values = window.read()  # type: ignore
 
     test_steps = []
+
+    do_parallel = False
 
     if event not in [sg.WIN_CLOSED, "Cancel"]:
         # Now work out which are checked
