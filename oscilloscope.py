@@ -323,7 +323,9 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     current_test_text.update("Testing: DCV Balance")
 
     response = sg.popup_ok_cancel(
-        "Remove inputs from all channels", background_color="blue"
+        "Remove inputs from all channels",
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),  # type: ignore
     )
 
     if response == "Cancel":
@@ -341,6 +343,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -370,7 +373,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
-    # sourcery skip: extract-method
+    # sourcery skip: extract-method, low-code-quality
     """
     test_dcv
     Perform the basic DC V tests
@@ -392,7 +395,11 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
-        sg.popup_error("Cannot find calibrator", background_color="blue")
+        sg.popup_error(
+            "Cannot find calibrator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
         return False
 
     uut.open_connection()
@@ -406,6 +413,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         response = sg.popup_ok_cancel(
             "Connect calibrator output to all channels in parallel",
             background_color="blue",
+            icon=get_path("ui\\scope.ico"),  # type: ignore
         )
 
         if response == "Cancel":
@@ -423,6 +431,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
         for row in test_rows:
@@ -460,6 +469,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     response = sg.popup_ok_cancel(
                         f"Connect calibrator output to channel {channel}",
                         background_color="blue",
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
                     )
                     if response == "Cancel":
                         return False
@@ -597,6 +607,7 @@ def test_cursor(filename: str, test_rows: List) -> bool:
                 sg.popup_error(
                     f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
                 )
                 return False
             excel.row = row
@@ -648,7 +659,11 @@ def test_position(
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
-        sg.popup_error("Cannot find calibrator", background_color="blue")
+        sg.popup_error(
+            "Cannot find calibrator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
         return False
 
     uut.reset()
@@ -663,6 +678,7 @@ def test_position(
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -675,6 +691,7 @@ def test_position(
                 response = sg.popup_ok_cancel(
                     f"Connect calibrator output to channel {settings.channel}",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),  # type: ignore
                 )
                 if response == "Cancel":
                     return False
@@ -702,7 +719,9 @@ def test_position(
             # reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
 
             response = sg.popup_yes_no(
-                "Trace within 0.2 div of center?", background_color="blue"
+                "Trace within 0.2 div of center?",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
 
             result = "Pass" if response == "Yes" else "Fail"
@@ -727,6 +746,7 @@ DELAY_PERIOD = 0.001  # 1 ms
 
 
 def test_timebase(filename: str, row: int) -> bool:
+    # sourcery skip: low-code-quality
     """
     test_timebase
     Test the timebase. Simple single row test
@@ -744,11 +764,17 @@ def test_timebase(filename: str, row: int) -> bool:
     # require RF gen
 
     if not connections["33250A"]:
-        sg.popup_error("Cannot find 33250A Generator", background_color="blue")
+        sg.popup_error(
+            "Cannot find 33250A Generator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
         return False
 
     response = sg.popup_ok_cancel(
-        "Connect 33250A output to Ch1", background_color="blue"
+        "Connect 33250A output to Ch1",
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),  # type: ignore
     )
 
     if response == "Cancel":
@@ -760,6 +786,7 @@ def test_timebase(filename: str, row: int) -> bool:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -799,6 +826,7 @@ def test_timebase(filename: str, row: int) -> bool:
                 sg.popup(
                     "Adjust Horz position so waveform is on center graticule",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
                 )
 
             uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
@@ -809,6 +837,7 @@ def test_timebase(filename: str, row: int) -> bool:
                     result = sg.popup_get_text(
                         "Enter difference in div of waveform crossing from center?",
                         background_color="blue",
+                        icon=get_path("ui\\scope.ico"),
                     )
                     try:
                         val = float(result)  # type: ignore
@@ -834,6 +863,7 @@ def test_timebase(filename: str, row: int) -> bool:
                 code = sg.popup_get_text(
                     "Enter date code from serial label (0 if no code)",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
                 )
 
                 age = 10
@@ -877,6 +907,7 @@ def test_timebase(filename: str, row: int) -> bool:
 
 
 def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
+    # sourcery skip: low-code-quality
     """
     test_trigger_sensitivity
 
@@ -894,7 +925,11 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     global uut
     global current_test_text
 
-    sg.popup("Not yet debugged, test manually")
+    sg.popup(
+        "Not yet debugged, test manually",
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),
+    )
 
     return True
 
@@ -905,7 +940,11 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     # require RF gen
 
     if not connections["RFGEN"]:
-        sg.popup_error("Cannot find RF Signal Generator", background_color="blue")
+        sg.popup_error(
+            "Cannot find RF Signal Generator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
         return False
 
     uut.reset()
@@ -924,6 +963,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -953,6 +993,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
                 response = sg.popup_ok_cancel(
                     f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
                 )
                 if response == "Cancel":
                     return False
@@ -1023,6 +1064,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             sg.popup_error(
                 f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -1037,8 +1079,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
                 message += "via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
-                message,
-                background_color="blue",
+                message, background_color="blue", icon=get_path("ui\\scope.ico")  # type: ignore
             )
             if response == "Cancel":
                 return False
@@ -1050,6 +1091,11 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             if settings.impedance == 50:
                 uut.set_channel_impedance(chan=settings.channel, impedance="50")
+
+            if settings.bandwidth:
+                uut.set_channel_bw_limit(
+                    chan=settings.channel, bw_limit=settings.bandwidth
+                )
 
             uut.set_timebase(settings.timebase * 1e-9)
             uut.set_trigger_level(chan=settings.channel, level=0)
@@ -1139,6 +1185,8 @@ def individual_tests(filename: str) -> Tuple:
 
     test_steps = []
 
+    do_parallel = False
+
     if event not in [sg.WIN_CLOSED, "Cancel"]:
         # Now work out which are checked
         # There must be a pythonic way to get the list of values in one line, but couldn't work it out using lambdas and filters
@@ -1191,7 +1239,9 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
     if manufacturer == "":
         sg.popup_error(
-            "Unable to contact UUT. Is address correct?", background_color="blue"
+            "Unable to contact UUT. Is address correct?",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
         )
         return False
     elif manufacturer == "KEYSIGHT":
@@ -1204,6 +1254,7 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         sg.popup_error(
             f"No driver for {manufacturer}. Using Tektronix driver",
             background_color="blue",
+            icon=get_path("ui\\scope.ico"),
         )
         uut = Tektronix_Oscilloscope(simulate=False)
 
@@ -1300,7 +1351,7 @@ DCV, DCV-BAL, POS, BAL
 Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
 
 TIME, RISE
-Function, Channel (blank for time), Timebase (ns), Impedance
+Function, Channel (blank for time), Timebase (ns), Impedance, Bandwidth (MHz)
 Impedance use 50 if available, else blank
 
 TRIG
@@ -1344,6 +1395,7 @@ def results_sheet_check(filename: str) -> None:
             sg.popup_error(
                 "No cell named StartCell. Name the first cell with function data StartCell",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
 
         valid_tests = excel.get_test_types()
@@ -1351,6 +1403,7 @@ def results_sheet_check(filename: str) -> None:
         sg.popup(
             f"The following tests are found: {pformat( list(valid_tests))}",
             background_color="blue",
+            icon=get_path("ui\\scope.ico"),
         )
 
         invalid_tests = excel.get_invalid_tests()
@@ -1359,6 +1412,7 @@ def results_sheet_check(filename: str) -> None:
             sg.popup(
                 f"The following rows will not be tested: {pformat(invalid_tests)}",
                 background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
 
 
@@ -1567,12 +1621,14 @@ if __name__ == "__main__":
                         sg.popup_error(
                             "No Named range for StartCell in results",
                             background_color="blue",
+                            icon=get_path("ui\\scope.ico"),
                         )
                         valid = False
             except BadZipFile:
                 sg.popup_error(
                     "Result sheet appears corrupted. Check backups folder for most recent, or generate new from template",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
                 )
                 valid = False
 
@@ -1605,6 +1661,7 @@ if __name__ == "__main__":
                             "Will you connect all channels in parallel for DCV tests?",
                             title="Parallel Channels",
                             background_color="blue",
+                            icon=get_path("ui\\scope.ico"),
                         )
                     run_tests(
                         filename=values["-FILE-"],
@@ -1615,7 +1672,11 @@ if __name__ == "__main__":
                     test_progress.update(visible=False)
                     window["-PROG_TEXT-"].update(visible=False)
                     current_test_text.update("")
-                    sg.popup("Finished", background_color="blue")
+                    sg.popup(
+                        "Finished",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),
+                    )
 
             window["-VIEW-"].update(disabled=False)
 
