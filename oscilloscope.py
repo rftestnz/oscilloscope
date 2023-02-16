@@ -1578,16 +1578,19 @@ if __name__ == "__main__":
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
 
-                test_rows = individual_tests(filename=values["-FILE-"])
+                test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
                     test_progress.update(0, max=len(test_rows))
                     test_progress.update(visible=True)
                     window["-PROG_TEXT-"].update(visible=True)
-                    parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel for DCV tests?",
-                        title="Parallel Channels",
-                        background_color="blue",
-                    )
+                    parallel = "NO"
+
+                    if do_parallel:
+                        parallel = sg.popup_yes_no(
+                            "Will you connect all channels in parallel for DCV tests?",
+                            title="Parallel Channels",
+                            background_color="blue",
+                        )
                     run_tests(
                         filename=values["-FILE-"],
                         test_rows=test_rows,
