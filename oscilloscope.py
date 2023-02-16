@@ -1161,22 +1161,22 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         return True
 
     with SCPI_ID(address=address) as scpi_uut:
-        manfacturer = scpi_uut.get_manufacturer()
+        manufacturer = scpi_uut.get_manufacturer()
 
-        if manfacturer == "":
+        if manufacturer == "":
             sg.popup_error(
                 "Unable to contact UUT. Is address correct?", background_color="blue"
             )
             return False
-        elif manfacturer == "KEYSIGHT":
+        elif manufacturer == "KEYSIGHT":
             uut = Keysight_Oscilloscope(simulate=simulating)
             uut.open_connection()
-        elif manfacturer == "TEKTRONIX":
+        elif manufacturer == "TEKTRONIX":
             uut = Tektronix_Oscilloscope(simulate=simulating)
             uut.open_connection()
         else:
             sg.popup_error(
-                f"No driver for {manfacturer}. Using Tektronix driver",
+                f"No driver for {manufacturer}. Using Tektronix driver",
                 background_color="blue",
             )
             uut = Tektronix_Oscilloscope(simulate=simulating)
@@ -1560,11 +1560,8 @@ if __name__ == "__main__":
             else:
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
-            calibrator.open_connection()
             ks33250.visa_address = ks33250_address
-            ks33250.open_connection()
             mxg.visa_address = mxg_address
-            mxg.open_connection()
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
@@ -1599,13 +1596,9 @@ if __name__ == "__main__":
             else:
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
-            calibrator.open_connection()
             ks33250.visa_address = ks33250_address
-            ks33250.open_connection()
             mxg.visa_address = mxg_address
-            mxg.open_connection()
             uut.visa_address = values["-UUT_ADDRESS-"]
-            uut.open_connection()
 
             connections_check_form()
             continue
