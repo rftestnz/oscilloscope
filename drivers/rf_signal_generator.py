@@ -124,14 +124,7 @@ class RF_Signal_Generator:
             bool: _description_
         """
 
-        return bool(
-            self.open_connection()
-            and (
-                not self.simulating
-                and self.model in {"E4438C", "E8257D", "N5183A"}
-                or self.simulating
-            )
-        )
+        return bool(self.open_connection() or self.simulating)
 
     def write(self, command: str) -> None:
         """

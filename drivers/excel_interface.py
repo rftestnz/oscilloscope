@@ -36,6 +36,7 @@ class Timebase_Settings:
     function: str
     channel: int
     timebase: float
+    impedance: str | int
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,7 @@ class Trigger_Settings:
     channel: int
     scale: float
     voltage: float
-    impedance: str
+    impedance: str | int
     frequency: float
     edge: str
 
@@ -341,8 +342,12 @@ class ExcelInterface:
         channel = self.ws.cell(column=col, row=row).value
         col += 1
         tb = self.ws.cell(column=col, row=row).value
+        col += 1
+        impedance = self.ws.cell(column=col, row=row).value
 
-        return Timebase_Settings(function=func, channel=channel, timebase=tb)
+        return Timebase_Settings(
+            function=func, channel=channel, timebase=tb, impedance=impedance
+        )
 
     def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
         """

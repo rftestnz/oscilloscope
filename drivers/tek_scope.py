@@ -100,14 +100,55 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
         return bool(
             self.open_connection()
-            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
+            and (
+                not self.simulating
+                and self.manufacturer.upper() == "TEKTRONIX"
+                or self.simulating
+            )
         )
 
     def write(self, command: str) -> None:
-        return super().write(command)
+        """
+        write _summary_
+
+        Args:
+            command (str): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
 
     def read(self) -> str:
-        return super().read()
+        """
+        read _summary_
+
+        Returns:
+            str: _description_
+        """
+
+        attempts = 0
+
+        ret: str = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def query(self, command: str) -> str:
         """
@@ -119,7 +160,21 @@ class Tektronix_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().query(command)
+
+        assert command.find("?") > 0
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def read_query(self, command: str) -> float:
         """
@@ -131,7 +186,17 @@ class Tektronix_Oscilloscope(ScopeDriver):
         Returns:
             float: _description_
         """
-        return super().read_query(command)
+
+        assert command.find("?") > 0
+
+        reply = self.query(command)
+
+        try:
+            val = float(reply)
+        except ValueError:
+            val = 0.0
+
+        return val
 
     def reset(self) -> None:
         """
@@ -361,7 +426,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         if not self.simulating:
             time.sleep(delay)
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
+        return self.read_query("MEASU:MEAS1:VAL?")
 
     def get_waveform(self, chan: int, delay: float) -> None:
         """
@@ -422,18 +487,18 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.measure_clear()
 
-        self.write("MEASU:MEAS:TYPE RISE")
+        self.write("MEASU:MEAS1:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        print(self.read_query("MEASU:MEAS1:COUNT?"))
+        # print(self.read_query("MEASU:MEAS1:COUNT?"))
 
         if not self.simulating:
             time.sleep(2)  # allow time to measure
 
         # Tek will automatically average successive readings
 
-        return self.read_query("MEASU:MEAS1:MEAN?")
+        return self.read_query("MEASU:MEAS1:VAL?")
 
     def read_cursor(self, cursor: str) -> float:
         """
@@ -561,7 +626,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
 if __name__ == "__main__":
 
     dpo2014 = Tektronix_Oscilloscope(simulate=False)
-    dpo2014.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
+    dpo2014.visa_address = "GPIB0::3::INSTR"
 
     dpo2014.open_connection()
 

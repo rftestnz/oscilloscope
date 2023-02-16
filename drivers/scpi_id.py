@@ -1,3 +1,4 @@
+# sourcery skip: do-not-use-staticmethod
 """
 Basic driver to get ID of equipment
 DK Feb 23

@@ -56,10 +56,11 @@ class Keysight_Oscilloscope(ScopeDriver):
         self.rm = pyvisa.ResourceManager()
 
     def __enter__(self):
-        return super().__enter__()
+        self.open_connection()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return super().__exit__(exc_type, exc_val, exc_tb)
+        self.close()
 
     def close(self) -> None:
         """
@@ -68,7 +69,8 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        return super().close()
+        self.instr.close()  # type: ignore
+        self.connected = False
 
     def open_connection(self) -> bool:
         """
@@ -88,9 +90,8 @@ class Keysight_Oscilloscope(ScopeDriver):
                     self.visa_address, write_termination="\n"
                 )
                 self.instr.timeout = self.timeout
-                # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
-                self.get_num_channels()
+
             self.connected = True
         except Exception:
             self.connected = False
@@ -107,7 +108,9 @@ class Keysight_Oscilloscope(ScopeDriver):
         return bool(
             self.open_connection()
             and (
-                not self.simulating and self.model.find("DSO-X") >= 0 or self.simulating
+                not self.simulating
+                and self.manufacturer == "KEYSIGHT"
+                or self.simulating
             )
         )
 
@@ -121,7 +124,16 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        return super().write(command)
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
 
     def read(self) -> str:
         """
@@ -130,7 +142,20 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().read()
+
+        attempts = 0
+
+        ret: str = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def query(self, command: str) -> str:
         """
@@ -142,7 +167,21 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().query(command)
+
+        assert command.find("?") > 0
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def read_query(self, command: str) -> float:
         """
@@ -154,7 +193,17 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             float: _description_
         """
-        return super().read_query(command)
+
+        assert command.find("?") > 0
+
+        reply = self.query(command)
+
+        try:
+            val = float(reply)
+        except ValueError:
+            val = 0.0
+
+        return val
 
     def reset(self) -> None:
         """
@@ -176,7 +225,11 @@ class Keysight_Oscilloscope(ScopeDriver):
             response = self.instr.query("*IDN?")  # type: ignore
             identity = response.split(",")
             if len(identity) >= 3:
-                self.manufacturer = identity[0]
+                manufacturer = identity[0].upper()
+                if manufacturer.startswith("KEY") or manufacturer.startswith("AGI"):
+                    self.manufacturer = "KEYSIGHT"
+                else:
+                    self.manufacturer = manufacturer
                 self.model = identity[1]
                 model_type = self.model.split(" ")
                 if len(model_type) > 1:
@@ -201,7 +254,56 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         return response.split(",")
 
-    def get_num_channels(self) -> None:
+    def get_manufacturer(self) -> str:
+        """
+        get_manufacturer
+        request the manufacturer
+        keysight and agilent are returned as keysight
+
+        Returns:
+            str: _description_
+        """
+
+        self.get_id()
+
+        manufacturer = self.manufacturer.upper()
+        if "KEYSIGHT" in manufacturer or "AGILENT" in manufacturer:
+            manufacturer = "KEYSIGHT"
+
+        return manufacturer
+
+    def get_number_channels(self) -> int:
+        """
+        get_number_channels
+        Assume all models have the same format of some letters, then 4 digit model number where the last
+        digit is the number of channels
+
+        Returns:
+            int: _description_
+        """
+
+        num_channels = 0
+
+        start_index = 0
+        model_index = 0
+
+        while model_index < len(self.model):
+            if self.model[model_index].isnumeric():
+                start_index = model_index
+                break
+            model_index += 1
+
+        if start_index:
+            try:
+                model_number = self.model[start_index : start_index + 4]
+                if model_number[-1].isnumeric():
+                    num_channels = int(model_number[-1])
+            except IndexError:
+                num_channels = 0
+
+        return num_channels
+
+    def get_num_channels_old(self) -> None:
         """
         get_num_channels
         The number of channels can be obtained from the model number, but use a more universal method

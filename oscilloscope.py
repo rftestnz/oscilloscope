@@ -3,7 +3,7 @@ Test DSOX Oscilloscopes
 # DK Jan 23
 """
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import PySimpleGUI as sg
 
 from drivers.fluke_5700a import Fluke5700A
@@ -387,6 +387,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         sg.popup_error("Cannot find calibrator", background_color="blue")
         return False
 
+    uut.open_connection()
     uut.reset()
 
     uut.set_timebase(1e-3)
@@ -407,8 +408,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
     uut.set_acquisition(32)
-
-    set_impedance = False
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -464,7 +463,6 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if settings.impedance:
                 uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
-                set_impedance = True
 
             if settings.bandwidth:
                 uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
@@ -888,6 +886,10 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     global uut
     global current_test_text
 
+    sg.popup("Not yet debugged, test manually")
+
+    return True
+
     current_test_text.update("Testing: Trigger sensitivity")
 
     connections = test_connections()
@@ -1004,6 +1006,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
     # only pulse gen required
 
+    uut.open_connection()
     uut.reset()
 
     with ExcelInterface(filename=filename) as excel:
@@ -1020,10 +1023,13 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_tb_test_settings()
 
-            # TODO feedthru
+            message = f"Connect fast pulse generator to channel {settings.channel}"
+
+            if settings.impedance != 50:
+                message += "via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
-                f"Connect fast pulse generator to channel {settings.channel}",
+                message,
                 background_color="blue",
             )
             if response == "Cancel":
@@ -1034,7 +1040,8 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             uut.set_voltage_scale(chan=settings.channel, scale=0.5)
 
-            # TODO set impedance if 50 Ohm
+            if settings.impedance == 50:
+                uut.set_channel_impedance(chan=settings.channel, impedance="50")
 
             uut.set_timebase(settings.timebase * 1e-9)
             uut.set_trigger_level(chan=settings.channel, level=0)
@@ -1087,7 +1094,7 @@ def round_range(val: float) -> float:
     return first_digit * math.pow(10, decade)
 
 
-def individual_tests(filename: str) -> List:
+def individual_tests(filename: str) -> Tuple:
     """
     individual_tests
     show form for selecting individual tests
@@ -1139,11 +1146,19 @@ def individual_tests(filename: str) -> List:
             test_steps.extend(iter(rows))
         print(test_steps)
 
+        do_parallel = False
+        if "DCV" in checked_list:
+            do_parallel = True
+        if "DCV-BAL" in checked_list:
+            do_parallel = True
+        if "CURS" in checked_list:
+            do_parallel = True
+
     window.close()
 
     excel.close()
 
-    return sorted(test_steps)
+    return (sorted(test_steps), do_parallel)
 
 
 def load_uut_driver(address: str, simulating: bool = False) -> bool:
@@ -1159,31 +1174,34 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
         uut.open_connection()
         return True
 
-    with SCPI_ID(address=address) as scpi_uut:
-        manfacturer = scpi_uut.get_manufacturer()
+    # TODO when using the SCPI)ID class, it affects all subsequent uses
+    with Keysight_Oscilloscope(simulate=False) as scpi_uut:
+        scpi_uut.visa_address = address
+        scpi_uut.open_connection()
+        manufacturer = scpi_uut.get_manufacturer()
+        num_channels = scpi_uut.get_number_channels()
 
-        if manfacturer == "":
-            sg.popup_error(
-                "Unable to contact UUT. Is address correct?", background_color="blue"
-            )
-            return False
-        elif manfacturer == "KEYSIGHT":
-            uut = Keysight_Oscilloscope(simulate=simulating)
-            uut.open_connection()
-        elif manfacturer == "TEKTRONIX":
-            uut = Tektronix_Oscilloscope(simulate=simulating)
-            uut.open_connection()
-        else:
-            sg.popup_error(
-                f"No driver for {manfacturer}. Using Tektronix driver",
-                background_color="blue",
-            )
-            uut = Tektronix_Oscilloscope(simulate=simulating)
-            uut.open_connection()
+    if manufacturer == "":
+        sg.popup_error(
+            "Unable to contact UUT. Is address correct?", background_color="blue"
+        )
+        return False
+    elif manufacturer == "KEYSIGHT":
+        uut = Keysight_Oscilloscope(simulate=False)
 
-        uut.num_channels = scpi_uut.get_number_channels()
+    elif manufacturer == "TEKTRONIX":
+        uut = Tektronix_Oscilloscope(simulate=False)
 
-        return True
+    else:
+        sg.popup_error(
+            f"No driver for {manufacturer}. Using Tektronix driver",
+            background_color="blue",
+        )
+        uut = Tektronix_Oscilloscope(simulate=False)
+
+    uut.num_channels = num_channels
+
+    return True
 
 
 def select_visa_address() -> str:
@@ -1205,7 +1223,17 @@ def select_visa_address() -> str:
             idn = scpi.get_id()[0]
             visa_instruments.append((addr, idn))
 
-    radio_buttons = [[sg.Radio(addr,1, background_color="blue",default=bool(addr[0].startswith("USB")))]for addr in visa_instruments]
+    radio_buttons = [
+        [
+            sg.Radio(
+                addr,
+                1,
+                background_color="blue",
+                default=bool(addr[0].startswith("USB")),
+            )
+        ]
+        for addr in visa_instruments
+    ]
 
     layout = [
         [sg.Text("Select item", background_color="blue")],
@@ -1264,7 +1292,8 @@ DCV, DCV-BAL, POS, BAL
 Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
 
 TIME, RISE
-Function, Channel (blank for time), Timebase (ns)
+Function, Channel (blank for time), Timebase (ns), Impedance
+Impedance use 50 if available, else blank
 
 TRIG
 Function, Channel [1-4,EXT], Scale (1x probe), Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
@@ -1549,26 +1578,26 @@ if __name__ == "__main__":
             else:
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
-            calibrator.open_connection()
             ks33250.visa_address = ks33250_address
-            ks33250.open_connection()
             mxg.visa_address = mxg_address
-            mxg.open_connection()
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
 
-                test_rows = individual_tests(filename=values["-FILE-"])
+                test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
                     test_progress.update(0, max=len(test_rows))
                     test_progress.update(visible=True)
                     window["-PROG_TEXT-"].update(visible=True)
-                    parallel = sg.popup_yes_no(
-                        "Will you connect all channels in parallel for DCV tests?",
-                        title="Parallel Channels",
-                        background_color="blue",
-                    )
+                    parallel = "NO"
+
+                    if do_parallel:
+                        parallel = sg.popup_yes_no(
+                            "Will you connect all channels in parallel for DCV tests?",
+                            title="Parallel Channels",
+                            background_color="blue",
+                        )
                     run_tests(
                         filename=values["-FILE-"],
                         test_rows=test_rows,
@@ -1588,13 +1617,11 @@ if __name__ == "__main__":
             else:
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
-            calibrator.open_connection()
             ks33250.visa_address = ks33250_address
-            ks33250.open_connection()
             mxg.visa_address = mxg_address
-            mxg.open_connection()
+
+            load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
-            uut.open_connection()
 
             connections_check_form()
             continue
