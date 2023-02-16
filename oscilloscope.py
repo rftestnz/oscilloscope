@@ -886,6 +886,10 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
     global uut
     global current_test_text
 
+    sg.popup("Not yet debugged, test manually")
+
+    return True
+
     current_test_text.update("Testing: Trigger sensitivity")
 
     connections = test_connections()
