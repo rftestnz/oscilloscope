@@ -387,6 +387,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         sg.popup_error("Cannot find calibrator", background_color="blue")
         return False
 
+    uut.open_connection()
     uut.reset()
 
     uut.set_timebase(1e-3)
@@ -1001,6 +1002,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
     # only pulse gen required
 
+    uut.open_connection()
     uut.reset()
 
     with ExcelInterface(filename=filename) as excel:
