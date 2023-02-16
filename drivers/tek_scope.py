@@ -98,7 +98,14 @@ class Tektronix_Oscilloscope(ScopeDriver):
         Returns:
             bool: _description_
         """
-        return bool(self.open_connection() or self.simulating)
+        return bool(
+            self.open_connection()
+            and (
+                not self.simulating
+                and self.manufacturer.upper() == "TEKTRONIX"
+                or self.simulating
+            )
+        )
 
     def write(self, command: str) -> None:
         """
