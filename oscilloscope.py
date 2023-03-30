@@ -157,7 +157,7 @@ def connections_check_form(check_3458: bool) -> None:
 
         if event == "Try Again":
             window["-CHECK_MSG-"].update(visible=True)
-            connected = test_connections()
+            connected = test_connections(check_3458)
             window["-CHECK_MSG-"].update(visible=False)
 
             set_led(
@@ -184,7 +184,7 @@ def connections_check_form(check_3458: bool) -> None:
     window.close()
 
 
-def test_connections() -> Dict:
+def test_connections(check_3458: bool) -> Dict:
     """
     Make sure all of the instruments are connected
     """
@@ -198,12 +198,14 @@ def test_connections() -> Dict:
     ks33250_conn = ks33250.is_connected()
     rfgen_conn = mxg.is_connected()
     uut_conn = uut.is_connected()
+    ks3458_conn = ks3458.is_connected() if check_3458 else False
 
     return {
         "FLUKE_5700A": fluke_5700a_conn,
         "33250A": ks33250_conn,
         "RFGEN": rfgen_conn,
         "DSO": uut_conn,
+        "3458": ks3458_conn,
     }
 
 
