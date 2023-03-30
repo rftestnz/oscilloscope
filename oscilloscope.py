@@ -1341,11 +1341,13 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
     global uut
 
     if simulating:
-        uut = Keysight_Oscilloscope(simulate=simulating)
+        uut = Tektronix_Oscilloscope(simulate=simulating)
+        uut.model = "MSO5104B"
         uut.open_connection()
         return True
 
-    # TODO when using the SCPI)ID class, it affects all subsequent uses
+    # TODO when using the SCPI ID class, it affects all subsequent uses
+
     with Keysight_Oscilloscope(simulate=False) as scpi_uut:
         scpi_uut.visa_address = address
         scpi_uut.open_connection()
