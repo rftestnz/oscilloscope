@@ -420,12 +420,50 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     uut.open_connection()
     uut.reset()
 
+    last_channel = -1
+
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
     uut.set_acquisition(32)
 
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_volt_settings()
+
+            channel = int(settings.channel)
+
+            if channel > uut.num_channels:
+                continue
+
+            if channel != last_channel:
+                if last_channel > 0:
+                    # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
+                    uut.set_voltage_scale(chan=last_channel, scale=1)
+                    uut.set_voltage_offset(chan=last_channel, offset=0)
+                    uut.set_channel(chan=last_channel, enabled=False)
+                    uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
+                    uut.set_channel(chan=channel, enabled=True)
+                    uut.set_channel_impedance(
+                        chan=last_channel, impedance="1M"
+                    )  # always
+                last_channel = channel
+
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+            uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+            uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
