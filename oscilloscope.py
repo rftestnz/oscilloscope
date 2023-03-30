@@ -417,6 +417,16 @@ def test_impedance(filename: str, test_rows: List) -> bool:
         )
         return False
 
+    uut.open_connection()
+    uut.reset()
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    uut.set_acquisition(32)
+
+
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
     # sourcery skip: extract-method, low-code-quality
