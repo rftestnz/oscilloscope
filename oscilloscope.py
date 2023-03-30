@@ -93,7 +93,7 @@ def set_led(window: sg.Window, key: str, color: str) -> None:
     graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)  # type: ignore
 
 
-def connections_check_form() -> None:
+def connections_check_form(check_3458: bool) -> None:
     """
     connections_check_form _summary_
     """
@@ -103,6 +103,12 @@ def connections_check_form() -> None:
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
         [sg.Text("RF Generator", size=(20, 1)), led_indicator("-RFGEN_CONN-")],
+        [
+            sg.Text(
+                "3458A", size=(20, 1), text_color="white" if check_3458 else "grey"
+            ),
+            led_indicator("-3458-"),
+        ],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
