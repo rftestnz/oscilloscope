@@ -1517,6 +1517,22 @@ if __name__ == "__main__":
             ),
         ],
         [
+            sg.Text("3458A", size=(15, 1)),
+            sg.Combo(
+                gpib_ifc_list,
+                size=(10, 1),
+                key="GPIB_IFC_3458",
+                default_value=sg.user_settings_get_entry("-3458_GPIB_IFC-"),
+            ),
+            sg.Combo(
+                gpib_addresses,
+                default_value=sg.user_settings_get_entry("-3458_GPIB_ADDR-"),
+                size=(6, 1),
+                key="GPIB_ADDR_3458",
+            ),
+            sg.Text("(Only for impedance measurements)"),
+        ],
+        [
             sg.Text("UUT", size=(15, 1)),
             sg.Input(
                 default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
