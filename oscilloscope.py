@@ -24,7 +24,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.00.01"
+VERSION = "A.01.00"
 
 
 calibrator = Fluke5700A()
@@ -1424,7 +1424,7 @@ if __name__ == "__main__":
 
     layout = [
         [sg.Text("DSOX Oscilloscope Test")],
-        [sg.Text(f"DK Feb 23 VERSION {VERSION}")],
+        [sg.Text(f"DK Apr 23 VERSION {VERSION}")],
         [sg.Text()],
         [
             sg.Text("Create Excel sheet from template first", text_color="red"),
