@@ -1418,6 +1418,30 @@ def results_sheet_check(filename: str) -> None:
             )
 
 
+def check_impedance(filename: str) -> bool:
+    """
+    check_impedance
+    Check the results sheet to see if there are any impedance tests.
+    If not, no requirement to check 3458A
+
+    Returns:
+        bool: _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        nr = excel.get_named_cell("StartCell")
+        if not nr:
+            sg.popup_error(
+                "No cell named StartCell. Name the first cell with function data StartCell",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+
+        valid_tests = excel.get_test_types()
+
+    return "IMP" in valid_tests
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
