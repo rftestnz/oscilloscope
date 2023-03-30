@@ -269,7 +269,13 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
 
         if self.model.startswith("MSO5"):
-            imp = "50" if impedance == 50 else "1000000"
+            if type(impedance) is str and impedance.find("k") > 0:
+                imp = int(impedance.strip()[:-1]) * 1000
+            elif type(impedance) is str and impedance.find("M") > 0:
+                imp = int(impedance.strip()[:-1]) * 1000000
+            else:
+                imp = impedance
+
             self.write(f"CH{chan}:TER {imp}")
         else:
             imp = "FIFTY" if impedance == "50" else "MEG"
