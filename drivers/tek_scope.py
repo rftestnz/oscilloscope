@@ -57,7 +57,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         try:
             if self.simulating:
                 self.instr = Scope_Simulator()
-                self.model = "DPO3034"
+                self.model = "MSO5104B"
                 self.manufacturer = "Tektronix"
                 self.serial = "666"
             else:
@@ -242,7 +242,9 @@ class Tektronix_Oscilloscope(ScopeDriver):
             bw_limit (bool): _description_
         """
 
-        if type(bw_limit) is bool:
+        if self.model.startswith("MSO5"):
+            state = str(bw_limit) if bw_limit else "FULL"
+        elif type(bw_limit) is bool:
             state = "TWE" if bw_limit else "FULL"
         elif bw_limit == 150:
             state = "ONEFIFTY"
@@ -266,9 +268,18 @@ class Tektronix_Oscilloscope(ScopeDriver):
             imedance (str): _description_
         """
 
-        imp = "FIFTY" if impedance == "50" else "MEG"
+        if self.model.startswith("MSO5"):
+            if type(impedance) is str and impedance.find("k") > 0:
+                imp = int(impedance.strip()[:-1]) * 1000
+            elif type(impedance) is str and impedance.find("M") > 0:
+                imp = int(impedance.strip()[:-1]) * 1000000
+            else:
+                imp = impedance
 
-        self.write(f"CH{chan}:IMP {imp}")
+            self.write(f"CH{chan}:TER {imp}")
+        else:
+            imp = "FIFTY" if impedance == "50" else "MEG"
+            self.write(f"CH{chan}:IMP {imp}")
 
     def set_channel_invert(self, chan: int, inverted: bool) -> None:
         """

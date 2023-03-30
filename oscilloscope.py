@@ -14,6 +14,7 @@ from drivers.tek_scope import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
+from drivers.Ks3458A import Ks3458A, Ks3458A_Function
 import os
 import sys
 import time
@@ -24,13 +25,14 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.00.01"
+VERSION = "A.01.00"
 
 
 calibrator = Fluke5700A()
 ks33250 = Ks33250A()
 uut = Keysight_Oscilloscope()
 mxg = RF_Signal_Generator()
+ks3458 = Ks3458A()
 simulating: bool = False
 
 cursor_results: List = []
@@ -91,7 +93,7 @@ def set_led(window: sg.Window, key: str, color: str) -> None:
     graph.draw_circle((0, 0), 12, fill_color=color, line_color=color)  # type: ignore
 
 
-def connections_check_form() -> None:
+def connections_check_form(check_3458: bool) -> None:
     """
     connections_check_form _summary_
     """
@@ -101,6 +103,12 @@ def connections_check_form() -> None:
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
         [sg.Text("RF Generator", size=(20, 1)), led_indicator("-RFGEN_CONN-")],
+        [
+            sg.Text(
+                "3458A", size=(20, 1), text_color="white" if check_3458 else "grey"
+            ),
+            led_indicator("-3458-"),
+        ],
         [sg.Text("UUT", size=(20, 1)), led_indicator("-UUT-")],
         [sg.Text()],
         [sg.Ok(size=(14, 1)), sg.Button("Try Again", size=(14, 1))],
@@ -113,7 +121,7 @@ def connections_check_form() -> None:
         icon=get_path("ui\\scope.ico"),
     )
 
-    connected = test_connections()
+    connected = test_connections(check_3458)
     window["-CHECK_MSG-"].update(visible=False)
 
     set_led(
@@ -136,6 +144,10 @@ def connections_check_form() -> None:
         "-UUT-",
         color="green" if connected["DSO"] else "red",
     )
+    if check_3458:
+        set_led(window, "-3458-", color="green" if connected["3458"] else "red")
+    else:
+        set_led(window, "-3458-", color="grey")
 
     while True:
         event, values = window.read()  # type: ignore
@@ -145,7 +157,7 @@ def connections_check_form() -> None:
 
         if event == "Try Again":
             window["-CHECK_MSG-"].update(visible=True)
-            connected = test_connections()
+            connected = test_connections(check_3458)
             window["-CHECK_MSG-"].update(visible=False)
 
             set_led(
@@ -172,7 +184,7 @@ def connections_check_form() -> None:
     window.close()
 
 
-def test_connections() -> Dict:
+def test_connections(check_3458: bool) -> Dict:
     """
     Make sure all of the instruments are connected
     """
@@ -186,12 +198,14 @@ def test_connections() -> Dict:
     ks33250_conn = ks33250.is_connected()
     rfgen_conn = mxg.is_connected()
     uut_conn = uut.is_connected()
+    ks3458_conn = ks3458.is_connected() if check_3458 else False
 
     return {
         "FLUKE_5700A": fluke_5700a_conn,
         "33250A": ks33250_conn,
         "RFGEN": rfgen_conn,
         "DSO": uut_conn,
+        "3458": ks3458_conn,
     }
 
 
@@ -242,7 +256,7 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
         test_names = set()
 
         for row in test_rows:
-            settings = excel.get_test_settings(row=row)
+            settings = excel.get_volt_settings(row=row)
             test_names.add(settings.function)
 
         # Get all the tests. If there are cursor tests, then automatically select them if dcv selected as they cannot be done in isolation
@@ -304,6 +318,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 ):
                     break
 
+            elif test_name == "IMP":
+                if not test_impedance(filename=filename, test_rows=testing_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
@@ -350,7 +368,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if settings.function == "BAL":
                 uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
@@ -368,6 +386,103 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
                 update_test_progress()
 
     uut.reset()
+
+    return True
+
+
+def test_impedance(filename: str, test_rows: List) -> bool:
+    """
+    test_impedance
+    Test the input impedance of the channels
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    global uut
+    global current_test_text
+    global ks3458
+
+    current_test_text.update("Testing: Input Impedance")
+
+    connections = test_connections(check_3458=True)  # Always required
+
+    if not connections["3458"]:
+        sg.popup_error(
+            "Cannot find 3458A", background_color="blue", icon=get_path("ui\\scope.ico")
+        )
+        return False
+
+    uut.open_connection()
+    uut.reset()
+
+    last_channel = -1
+
+    # Turn off all channels but 1
+    for chan in range(uut.num_channels):
+        uut.set_channel(chan=chan + 1, enabled=chan == 0)
+
+    uut.set_acquisition(32)
+
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_volt_settings()
+
+            channel = int(settings.channel)
+            units = excel.get_units()
+
+            if channel > uut.num_channels:
+                continue
+
+            if channel != last_channel:
+                if last_channel > 0:
+                    # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
+                    uut.set_voltage_scale(chan=last_channel, scale=1)
+                    uut.set_voltage_offset(chan=last_channel, offset=0)
+                    uut.set_channel(chan=last_channel, enabled=False)
+                    uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
+                    uut.set_channel(chan=channel, enabled=True)
+                    uut.set_channel_impedance(
+                        chan=last_channel, impedance="1M"
+                    )  # always
+                last_channel = channel
+
+            uut.set_voltage_scale(chan=channel, scale=settings.scale)
+            uut.set_voltage_offset(chan=channel, offset=settings.offset)
+            uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+            uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+
+            time.sleep(0.5)
+
+            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]  # type: ignore
+            if units.lower().startswith("k"):
+                reading /= 1000
+            if units.upper().startswith("M"):
+                reading /= 1_000_000
+
+            excel.write_result(reading, col=results_col)
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+
+        uut.reset()
+        uut.close()
 
     return True
 
@@ -390,7 +505,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     last_channel = -1
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require calibrator
 
@@ -437,7 +552,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             units = excel.get_units()
 
@@ -612,7 +727,7 @@ def test_cursor(filename: str, test_rows: List) -> bool:
                 return False
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if len(cursor_results):
                 for res in cursor_results:
@@ -654,7 +769,7 @@ def test_position(
 
     current_test_text.update("Testing: DC Position")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require calibrator
 
@@ -685,7 +800,7 @@ def test_position(
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if settings.channel != last_channel and not parallel_channels:
                 response = sg.popup_ok_cancel(
@@ -759,7 +874,7 @@ def test_timebase(filename: str, row: int) -> bool:
 
     current_test_text.update("Testing: Timebase")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require RF gen
 
@@ -935,7 +1050,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
 
     current_test_text.update("Testing: Trigger sensitivity")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require RF gen
 
@@ -1226,11 +1341,13 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
     global uut
 
     if simulating:
-        uut = Keysight_Oscilloscope(simulate=simulating)
+        uut = Tektronix_Oscilloscope(simulate=simulating)
+        uut.model = "MSO5104B"
         uut.open_connection()
         return True
 
-    # TODO when using the SCPI)ID class, it affects all subsequent uses
+    # TODO when using the SCPI ID class, it affects all subsequent uses
+
     with Keysight_Oscilloscope(simulate=False) as scpi_uut:
         scpi_uut.visa_address = address
         scpi_uut.open_connection()
@@ -1416,6 +1533,30 @@ def results_sheet_check(filename: str) -> None:
             )
 
 
+def check_impedance(filename: str) -> bool:
+    """
+    check_impedance
+    Check the results sheet to see if there are any impedance tests.
+    If not, no requirement to check 3458A
+
+    Returns:
+        bool: _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        nr = excel.get_named_cell("StartCell")
+        if not nr:
+            sg.popup_error(
+                "No cell named StartCell. Name the first cell with function data StartCell",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+
+        valid_tests = excel.get_test_types()
+
+    return "IMP" in valid_tests
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -1424,7 +1565,7 @@ if __name__ == "__main__":
 
     layout = [
         [sg.Text("DSOX Oscilloscope Test")],
-        [sg.Text(f"DK Feb 23 VERSION {VERSION}")],
+        [sg.Text(f"DK Apr 23 VERSION {VERSION}")],
         [sg.Text()],
         [
             sg.Text("Create Excel sheet from template first", text_color="red"),
@@ -1517,6 +1658,22 @@ if __name__ == "__main__":
             ),
         ],
         [
+            sg.Text("3458A", size=(15, 1)),
+            sg.Combo(
+                gpib_ifc_list,
+                size=(10, 1),
+                key="GPIB_IFC_3458",
+                default_value=sg.user_settings_get_entry("-3458_GPIB_IFC-"),
+            ),
+            sg.Combo(
+                gpib_addresses,
+                default_value=sg.user_settings_get_entry("-3458_GPIB_ADDR-"),
+                size=(6, 1),
+                key="GPIB_ADDR_3458",
+            ),
+            sg.Text("(Only for impedance measurements)"),
+        ],
+        [
             sg.Text("UUT", size=(15, 1)),
             sg.Input(
                 default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
@@ -1577,6 +1734,8 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
         sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
         sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
+        sg.user_settings_set_entry("-3458_GPIB_IFC-", values["GPIB_IFC_3458"])
+        sg.user_settings_set_entry("-3458_GPIB_ADDR-", values["GPIB_ADDR_3458"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
         sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
@@ -1599,6 +1758,9 @@ if __name__ == "__main__":
 
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
+
+        ks3458.simulating = simulating
+        ks3458_address = f"{values['GPIB_IFC_3458']}::{values['GPIB_ADDR_3458']}::INSTR"
 
         if event in [
             "-INDIVIDUAL-",
@@ -1644,6 +1806,7 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
             mxg.visa_address = mxg_address
+            ks3458.visa_address = ks3458_address
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
@@ -1688,11 +1851,19 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
             mxg.visa_address = mxg_address
+            ks3458.visa_address = ks3458_address
+
+            # Check if the 3458A is needed
+
+            impedance_tests = check_impedance(values["-FILE-"])
+
+            window["GPIB_IFC_3458"].update(disabled=not impedance_tests)
+            window["GPIB_ADDR_3458"].update(disabled=not impedance_tests)
 
             load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
 
-            connections_check_form()
+            connections_check_form(impedance_tests)
             continue
 
         if event == "-VIEW-":
