@@ -1619,6 +1619,8 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
         sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
         sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
+        sg.user_settings_set_entry("-3458_GPIB_IFC-", values["GPIB_IFC_3458"])
+        sg.user_settings_set_entry("-3458_GPIB_ADDR-", values["GPIB_ADDR_3458"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
         sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
 
