@@ -144,6 +144,10 @@ def connections_check_form(check_3458: bool) -> None:
         "-UUT-",
         color="green" if connected["DSO"] else "red",
     )
+    if check_3458:
+        set_led(window, "-3458-", color="green" if connected["3458"] else "red")
+    else:
+        set_led(window, "-3458-", color="grey")
 
     while True:
         event, values = window.read()  # type: ignore
