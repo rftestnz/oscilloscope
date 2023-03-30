@@ -121,7 +121,7 @@ def connections_check_form(check_3458: bool) -> None:
         icon=get_path("ui\\scope.ico"),
     )
 
-    connected = test_connections()
+    connected = test_connections(check_3458)
     window["-CHECK_MSG-"].update(visible=False)
 
     set_led(
@@ -402,7 +402,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     last_channel = -1
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require calibrator
 
@@ -666,7 +666,7 @@ def test_position(
 
     current_test_text.update("Testing: DC Position")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require calibrator
 
@@ -771,7 +771,7 @@ def test_timebase(filename: str, row: int) -> bool:
 
     current_test_text.update("Testing: Timebase")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require RF gen
 
@@ -947,7 +947,7 @@ def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
 
     current_test_text.update("Testing: Trigger sensitivity")
 
-    connections = test_connections()
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
     # require RF gen
 
