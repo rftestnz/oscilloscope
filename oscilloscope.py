@@ -443,6 +443,7 @@ def test_impedance(filename: str, test_rows: List) -> bool:
             settings = excel.get_volt_settings()
 
             channel = int(settings.channel)
+            units = excel.get_units()
 
             if channel > uut.num_channels:
                 continue
@@ -467,7 +468,11 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             time.sleep(0.5)
 
-            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]
+            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]  # type: ignore
+            if units.lower().startswith("k"):
+                reading /= 1000
+            if units.upper().startswith("M"):
+                reading /= 1_000_000
 
             excel.write_result(reading, col=results_col)
 
