@@ -14,7 +14,7 @@ from drivers.tek_scope import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
-from drivers.Ks3458A import Ks3458A
+from drivers.Ks3458A import Ks3458A, Ks3458A_Function
 import os
 import sys
 import time
@@ -464,6 +464,22 @@ def test_impedance(filename: str, test_rows: List) -> bool:
             uut.set_voltage_offset(chan=channel, offset=settings.offset)
             uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
             uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+
+            time.sleep(0.5)
+
+            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]
+
+            excel.write_result(reading, col=results_col)
+
+        # Turn off all channels but 1
+        for chan in range(uut.num_channels):
+            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+
+        uut.reset()
+        uut.close()
+
+    return True
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
