@@ -318,6 +318,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 ):
                     break
 
+            elif test_name == "IMP":
+                if not test_impedance(filename=filename, test_rows=testing_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
@@ -384,6 +388,26 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     uut.reset()
 
     return True
+
+
+def test_impedance(filename: str, test_rows: List) -> bool:
+    """
+    test_impedance
+    Test the input impedance of the channels
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    global uut
+    global current_test_text
+    global ks3458
+
+    current_test_text.update("Testing: Input Impedance")
 
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
