@@ -14,6 +14,7 @@ from drivers.tek_scope import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
+from drivers.Ks3458A import Ks3458A
 import os
 import sys
 import time
@@ -31,6 +32,7 @@ calibrator = Fluke5700A()
 ks33250 = Ks33250A()
 uut = Keysight_Oscilloscope()
 mxg = RF_Signal_Generator()
+ks3458 = Ks3458A()
 simulating: bool = False
 
 cursor_results: List = []
