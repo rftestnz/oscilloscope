@@ -409,6 +409,14 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
     current_test_text.update("Testing: Input Impedance")
 
+    connections = test_connections(check_3458=True)  # Always required
+
+    if not connections["3458"]:
+        sg.popup_error(
+            "Cannot find 3458A", background_color="blue", icon=get_path("ui\\scope.ico")
+        )
+        return False
+
 
 def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
     # sourcery skip: extract-method, low-code-quality
