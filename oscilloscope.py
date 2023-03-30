@@ -242,7 +242,7 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
         test_names = set()
 
         for row in test_rows:
-            settings = excel.get_test_settings(row=row)
+            settings = excel.get_volt_settings(row=row)
             test_names.add(settings.function)
 
         # Get all the tests. If there are cursor tests, then automatically select them if dcv selected as they cannot be done in isolation
@@ -350,7 +350,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if settings.function == "BAL":
                 uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
@@ -437,7 +437,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             units = excel.get_units()
 
@@ -612,7 +612,7 @@ def test_cursor(filename: str, test_rows: List) -> bool:
                 return False
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if len(cursor_results):
                 for res in cursor_results:
@@ -685,7 +685,7 @@ def test_position(
         for row in test_rows:
             excel.row = row
 
-            settings = excel.get_test_settings()
+            settings = excel.get_volt_settings()
 
             if settings.channel != last_channel and not parallel_channels:
                 response = sg.popup_ok_cancel(

@@ -313,7 +313,7 @@ class ExcelInterface:
             # match against the filter
             # Use a filter, but . is anything not *
             test_filter = test_filter.replace("*", ".")
-            setting = self.get_test_settings()
+            setting = self.get_volt_settings()
             if re.search(test_filter, setting.function):  # type: ignore
                 test_rows.append(self.row)
 
@@ -398,9 +398,9 @@ class ExcelInterface:
             edge=edge_select,
         )
 
-    def get_test_settings(self, row: int = -1) -> DCV_Settings:
+    def get_volt_settings(self, row: int = -1) -> DCV_Settings:
         """
-        get_test_settings
+        get_volt_settings
         Read the current row as a test setting
 
         Args:
@@ -461,7 +461,7 @@ class ExcelInterface:
         tests = []
 
         while True:
-            setting = self.get_test_settings()
+            setting = self.get_volt_settings()
             test_filter = test_filter.replace("*", ".")
 
             if re.search(test_filter, setting.function):  # type: ignore
@@ -617,7 +617,7 @@ if __name__ == "__main__":
 
         excel.initialize()
 
-        pprint(excel.get_test_settings())
+        pprint(excel.get_volt_settings())
 
         pprint(excel.get_all_test_settings())
 
