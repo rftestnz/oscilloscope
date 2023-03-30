@@ -1644,6 +1644,9 @@ if __name__ == "__main__":
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
 
+        ks3458.simulating = simulating
+        ks3458_address = f"{values['GPIB_IFC_3458']}::{values['GPIB_ADDR_3458']}::INSTR"
+
         if event in [
             "-INDIVIDUAL-",
         ]:
@@ -1688,6 +1691,7 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
             mxg.visa_address = mxg_address
+            ks3458.visa_address = ks3458_address
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
@@ -1732,6 +1736,7 @@ if __name__ == "__main__":
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
             mxg.visa_address = mxg_address
+            ks3458.visa_address = ks3458_address
 
             load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
             uut.visa_address = values["-UUT_ADDRESS-"]
