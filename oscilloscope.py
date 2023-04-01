@@ -409,6 +409,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
     """
 
     global uut
+    global current_test_text
 
     current_test_text.update("Testing: Random noise sample acquisition")
 
@@ -437,6 +438,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             uut.set_channel_impedance(
                 chan=settings.channel, impedance=settings.impedance
             )
+            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)
 
             rnd = uut.measure_rms_noise(chan=settings.channel)
 
