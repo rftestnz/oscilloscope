@@ -326,6 +326,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_random_noise(filename=filename, test_rows=test_rows):
                     break
 
+            elif test_name == "DELTAT":
+                if not test_delta_time(filename=filename, test_rows=test_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
@@ -389,6 +393,31 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
                 excel.write_result(reading, col=results_col)
                 update_test_progress()
 
+    uut.reset()
+
+    return True
+
+
+def test_delta_time(filename: str, test_rows: List) -> bool:
+    """
+    test_delta_time
+    Test delta time function
+    for Tek scope
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    global uut
+    global current_test_text
+
+    current_test_text.update("Testing: Delta Time")
+
+    uut.open_connection()
     uut.reset()
 
     return True
