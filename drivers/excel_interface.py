@@ -51,6 +51,18 @@ class Trigger_Settings:
     edge: str
 
 
+@dataclass(frozen=True)
+class Sampling_Settings:
+    function: str
+    channel: int
+    coupling: str
+    scale: float
+    voltage: float
+    timebase: float
+    sample_rate: float
+    frequency: float
+
+
 @dataclass
 class Cell:
     col: int
@@ -82,6 +94,7 @@ class ExcelInterface:
         "TRIG",
         "IMP",
         "NOISE",
+        "DELTAT",
     ]  # In order of test sequence preference - need list instead of set
 
     def __init__(self, filename, sheetindex=0) -> None:
@@ -203,6 +216,49 @@ class ExcelInterface:
             time.sleep(1)
             self.__saved = False
 
+    def parse_value(self, val: str | float | int) -> str | float | int:
+        """
+        parse_value
+        Some values have units appended, so convert to unit value
+
+        Args:
+            val (str): _description_
+
+        Returns:
+            float: _description_
+        """
+
+        if type(val) is not str:
+            return val
+
+        val = val.strip()
+        if val[-1].isalpha():
+            try:
+                num = float(val[:-1])
+            except ValueError:
+                return val
+
+            multiplier = val[-1]
+
+            if multiplier == "G":
+                num *= 1000000000
+            elif multiplier == "M":
+                num -= 1000000
+            elif multiplier == "k":
+                num *= 1000
+            elif multiplier == "m":
+                num /= 1000
+            elif multiplier == "u":
+                num /= 1000000
+            elif multiplier == "n":
+                num /= 1000000000
+            elif multiplier == "p":
+                num /= 1e12
+
+            return num
+
+        return val
+
     def get_column_row_number(self, coord: str) -> Tuple[int, int]:
         """
         get_column_number
@@ -247,7 +303,7 @@ class ExcelInterface:
 
             cd = self.get_column_row_number(coord)
 
-            return Cell(col=cd[0], row=cd[1], value=self.ws[coord].value)
+            return Cell(col=cd[0], row=cd[1], value=self.ws[coord].value)  # type: ignore
         except KeyError:
             return None  # type: ignore
 
@@ -340,7 +396,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -352,10 +408,10 @@ class ExcelInterface:
 
         return Timebase_Settings(
             function=func,
-            channel=channel,
-            timebase=tb,
-            impedance=impedance,
-            bandwidth=bandwidth,
+            channel=channel,  # type: ignore
+            timebase=tb,  # type: ignore
+            impedance=impedance,  # type: ignore
+            bandwidth=bandwidth,  # type: ignore
         )
 
     def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
@@ -374,7 +430,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -388,15 +444,15 @@ class ExcelInterface:
         col += 1
         edge = self.ws.cell(column=col, row=row).value
 
-        edge_select = "F" if edge and edge.lower() == "f" else "R"
+        edge_select = "F" if edge and edge.lower() == "f" else "R"  # type: ignore
 
         return Trigger_Settings(
             function=func,
-            channel=channel,
-            scale=scale,
-            voltage=voltage,
-            impedance=impedance,
-            frequency=frequency,
+            channel=channel,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            impedance=impedance,  # type: ignore
+            frequency=frequency,  # type: ignore
             edge=edge_select,
         )
 
@@ -412,13 +468,11 @@ class ExcelInterface:
             NamedTuple: _description_
         """
 
-        # TODO namedtupe for the actual instance
-
         if row == -1:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         chan = self.ws.cell(column=col, row=row).value
         col += 1
@@ -439,14 +493,56 @@ class ExcelInterface:
 
         return DCV_Settings(
             function=func,
-            channel=chan,
-            coupling=coupling,
-            scale=scale,
-            voltage=voltage,
-            offset=offset,
-            bandwidth=bandwidth,
-            impedance=impedance,
+            channel=chan,  # type: ignore
+            coupling=coupling,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            offset=offset,  # type: ignore
+            bandwidth=bandwidth,  # type: ignore
+            impedance=impedance,  # type: ignore
             invert=inverted,
+        )
+
+    def get_sample_rate_settings(self, row: int = -1) -> Sampling_Settings:
+        """
+        get_sample_rate_settings _summary_
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            Sampling_Settings: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        col = self.__data_col
+        func = str(self.ws.cell(column=col, row=row).value)
+        col += 1
+        chan = self.ws.cell(column=col, row=row).value
+        col += 1
+        coupling = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        timebase = self.ws.cell(column=col, row=row).value
+        col += 1
+        sample_rate = self.parse_value(self.ws.cell(column=col, row=row).value)  # type: ignore
+        col += 1
+        frequency = self.parse_value(self.ws.cell(column=col, row=row).value)  # type: ignore
+
+        return Sampling_Settings(
+            function=func,
+            channel=chan,  # type: ignore
+            coupling=coupling,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            timebase=timebase,
+            sample_rate=sample_rate,
+            frequency=frequency,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
@@ -529,7 +625,7 @@ class ExcelInterface:
             str: _description_
         """
 
-        return self.ws.cell(column=self.__units_col, row=self.row).value
+        return self.ws.cell(column=self.__units_col, row=self.row).value  # type: ignore
 
     def find_results_col(self, row: int = -1) -> int:
         """

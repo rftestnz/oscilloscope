@@ -326,6 +326,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_random_noise(filename=filename, test_rows=test_rows):
                     break
 
+            elif test_name == "DELTAT":
+                if not test_delta_time(filename=filename, test_rows=test_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
@@ -394,6 +398,111 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     return True
 
 
+def test_delta_time(filename: str, test_rows: List) -> bool:
+    """
+    test_delta_time
+    Test delta time function
+    for Tek scope
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    global uut
+    global current_test_text
+
+    current_test_text.update("Testing: Delta Time")
+
+    connections = test_connections(check_3458=False)  # Always required
+
+    if not connections["RFGEN"]:
+        sg.popup_error(
+            "Cannot find RF Generator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
+        return False
+
+    if not connections["33250A"]:
+        sg.popup_error(
+            "Cannot find 33250A",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
+        return False
+
+    uut.open_connection()
+    uut.reset()
+
+    # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
+    # are required, put into driver
+
+    uut.set_acquisition(16)
+
+    last_channel = -1
+
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        for row in test_rows:
+            excel.row = row
+
+            units = excel.get_units()
+
+            settings = excel.get_sample_rate_settings()
+
+            if settings.channel != last_channel:
+                sg.popup(
+                    f"Connect RF Sig gen to Channel {settings.channel}",
+                    background_color="blue",
+                )
+                last_channel = settings.channel
+
+            uut.set_channel(chan=settings.channel, enabled=True, only=True)
+            uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+            uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
+            uut.set_channel_impedance(chan=settings.channel, impedance="50")
+            uut.set_timebase(settings.timebase)
+
+            uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
+            # uut.write("HORIZONTAL:MODE:RECORDLENGTH ")
+
+            mxg.set_frequency(settings.frequency)
+            mxg.set_level(settings.voltage, units="VPP")
+            mxg.set_output_state(True)
+
+            uut.write("MEASU:MEAS1:BURST")
+
+            uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
+            uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
+            uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
+
+            time.sleep(10)
+
+            result = uut.query("MEASU:MEAS1:VAL?")
+
+            if units[0] == "p":
+                result *= 1_000_000_000_000
+            elif units[0] == "n":
+                result *= 1_000_000_000
+
+            excel.write_result(result=result, col=results_col)
+
+            mxg.set_output_state(False)
+
+    return True
+
+
 def test_random_noise(filename: str, test_rows: List) -> bool:
     """
     test_random_noise
@@ -409,6 +518,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
     """
 
     global uut
+    global current_test_text
 
     current_test_text.update("Testing: Random noise sample acquisition")
 
@@ -437,6 +547,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             uut.set_channel_impedance(
                 chan=settings.channel, impedance=settings.impedance
             )
+            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)
 
             rnd = uut.measure_rms_noise(chan=settings.channel)
 
