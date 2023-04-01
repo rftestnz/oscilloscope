@@ -390,6 +390,23 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
     return True
 
 
+def test_random_noise(filename: str, test_rows: List) -> bool:
+    """
+    test_random_noise
+    Test sampling random noise
+    Tek scopes
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    return True
+
+
 def test_impedance(filename: str, test_rows: List) -> bool:
     """
     test_impedance
