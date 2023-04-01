@@ -215,6 +215,49 @@ class ExcelInterface:
             time.sleep(1)
             self.__saved = False
 
+    def parse_value(self, val: str | float | int) -> str | float | int:
+        """
+        parse_value
+        Some values have units appended, so convert to unit value
+
+        Args:
+            val (str): _description_
+
+        Returns:
+            float: _description_
+        """
+
+        if type(val) is not str:
+            return val
+
+        val = val.strip()
+        if val[-1].isalpha():
+            try:
+                num = float(val[:-1])
+            except ValueError:
+                return val
+
+            multiplier = val[-1]
+
+            if multiplier == "G":
+                num *= 1000000000
+            elif multiplier == "M":
+                num -= 1000000
+            elif multiplier == "k":
+                num *= 1000
+            elif multiplier == "m":
+                num /= 1000
+            elif multiplier == "u":
+                num /= 1000000
+            elif multiplier == "n":
+                num /= 1000000000
+            elif multiplier == "p":
+                num /= 1e12
+
+            return num
+
+        return val
+
     def get_column_row_number(self, coord: str) -> Tuple[int, int]:
         """
         get_column_number
