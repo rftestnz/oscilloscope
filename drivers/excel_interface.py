@@ -467,8 +467,6 @@ class ExcelInterface:
             NamedTuple: _description_
         """
 
-        # TODO namedtupe for the actual instance
-
         if row == -1:
             row = self.row
 
@@ -502,6 +500,48 @@ class ExcelInterface:
             bandwidth=bandwidth,  # type: ignore
             impedance=impedance,  # type: ignore
             invert=inverted,
+        )
+
+    def get_sample_rate_settings(self, row: int = -1) -> Sampling_Settings:
+        """
+        get_sample_rate_settings _summary_
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            Sampling_Settings: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        col = self.__data_col
+        func = str(self.ws.cell(column=col, row=row).value)
+        col += 1
+        chan = self.ws.cell(column=col, row=row).value
+        col += 1
+        coupling = self.ws.cell(column=col, row=row).value
+        col += 1
+        scale = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        timebase = self.ws.cell(column=col, row=row).value
+        col += 1
+        sample_rate = self.parse_value(self.ws.cell(column=col, row=row).value)  # type: ignore
+        col += 1
+        frequency = self.parse_value(self.ws.cell(column=col, row=row).value)  # type: ignore
+
+        return Sampling_Settings(
+            function=func,
+            channel=chan,  # type: ignore
+            coupling=coupling,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            timebase=timebase,
+            sample_rate=sample_rate,
+            frequency=frequency,
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
