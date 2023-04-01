@@ -55,6 +55,7 @@ class Trigger_Settings:
 class Sampling_Settings:
     function: str
     channel: int
+    coupling: str
     scale: float
     voltage: float
     timebase: float
