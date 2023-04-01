@@ -450,7 +450,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
 
         self.measure_clear()
-        self.write("MEASU:MEAS1:TYPE RMSNOISE")
+        self.write("MEASU:MEAS1:TYPE RMS")
 
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
