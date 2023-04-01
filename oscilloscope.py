@@ -417,8 +417,73 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
 
     current_test_text.update("Testing: Delta Time")
 
+    connections = test_connections(check_3458=False)  # Always required
+
+    if not connections["RFGEN"]:
+        sg.popup_error(
+            "Cannot find RF Generator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
+        return False
+
+    if not connections["33250A"]:
+        sg.popup_error(
+            "Cannot find 33250A",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
+        return False
+
     uut.open_connection()
     uut.reset()
+
+    # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
+    # are required, put into driver
+
+    uut.set_acquisition(16)
+
+    last_channel = -1
+
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_sample_rate_settings()
+
+            # TODO check frequency for sig gen
+
+            if settings.channel != last_channel:
+                sg.popup(
+                    f"Connect RF Sig gen to Channel {settings.channel}",
+                    background_color="blue",
+                )
+                last_channel = settings.channel
+
+            uut.set_channel(chan=settings.channel, enabled=True, only=True)
+            uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+            uut.set_channel_impedance(chan=settings.channel, impedance="50")
+            uut.set_timebase(settings.timebase)
+
+            uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
+
+            if settings.frequency > 1000000:
+                mxg.set_frequency(settings.frequency)
+                mxg.set_level(settings.voltage, units="VPP")
+                mxg.set_output_state(True)
+            else:
+                ks33250.set_sin(
+                    frequency=settings.frequency, amplitude=settings.voltage / 2.82
+                )
+                ks33250.enable_output(True)
 
     return True
 
