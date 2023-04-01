@@ -322,6 +322,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_impedance(filename=filename, test_rows=testing_rows):
                     break
 
+            elif test_name == "NOISE":
+                if not test_random_noise(filename=filename, test_rows=test_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
