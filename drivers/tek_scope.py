@@ -439,6 +439,27 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return self.read_query("MEASU:MEAS1:VAL?")
 
+    def measure_rms_noise(self, chan: int, delay: float = 2) -> float:
+        """
+        measure_rms_noise
+        Measure the RMS noise for sample acquisition
+
+        Args:
+            chan (int): _description_
+            delay (float, optional): _description_. Defaults to 2.
+        """
+
+        self.measure_clear()
+        self.write("MEASU:MEAS1:TYPE RMSNOISE")
+
+        self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
+        self.write("MEASU:MEAS1:STATE ON")
+
+        if not self.simulating:
+            time.sleep(delay)
+
+        return self.read_query("MEASU:MEAS1:VAL?")
+
     def get_waveform(self, chan: int, delay: float) -> None:
         """
         measure_voltage _summary_
