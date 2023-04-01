@@ -457,6 +457,8 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
         for row in test_rows:
             excel.row = row
 
+            units = excel.get_units()
+
             settings = excel.get_sample_rate_settings()
 
             # TODO check frequency for sig gen
@@ -474,6 +476,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             uut.set_timebase(settings.timebase)
 
             uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
+            # uut.write("HORIZONTAL:MODE:RECORDLENGTH ")
 
             if settings.frequency > 1000000:
                 mxg.set_frequency(settings.frequency)
@@ -484,6 +487,26 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
                     frequency=settings.frequency, amplitude=settings.voltage / 2.82
                 )
                 ks33250.enable_output(True)
+
+            uut.write("MEASU:MEAS1:BURST")
+
+            uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
+            uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
+            uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
+
+            time.sleep(10)
+
+            result = uut.query("MEASU:MEAS1:VAL?")
+
+            if units[0] == "p":
+                result *= 1_000_000_000_000
+            elif units[0] == "n":
+                result *= 1_000_000_000
+
+            excel.write_result(result=result, col=results_col)
+
+            mxg.set_output_state(False)
+            ks33250.enable_output(False)
 
     return True
 
