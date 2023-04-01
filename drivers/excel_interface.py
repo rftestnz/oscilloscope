@@ -248,7 +248,7 @@ class ExcelInterface:
 
             cd = self.get_column_row_number(coord)
 
-            return Cell(col=cd[0], row=cd[1], value=self.ws[coord].value)
+            return Cell(col=cd[0], row=cd[1], value=self.ws[coord].value)  # type: ignore
         except KeyError:
             return None  # type: ignore
 
@@ -341,7 +341,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -353,10 +353,10 @@ class ExcelInterface:
 
         return Timebase_Settings(
             function=func,
-            channel=channel,
-            timebase=tb,
-            impedance=impedance,
-            bandwidth=bandwidth,
+            channel=channel,  # type: ignore
+            timebase=tb,  # type: ignore
+            impedance=impedance,  # type: ignore
+            bandwidth=bandwidth,  # type: ignore
         )
 
     def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
@@ -375,7 +375,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -389,15 +389,15 @@ class ExcelInterface:
         col += 1
         edge = self.ws.cell(column=col, row=row).value
 
-        edge_select = "F" if edge and edge.lower() == "f" else "R"
+        edge_select = "F" if edge and edge.lower() == "f" else "R"  # type: ignore
 
         return Trigger_Settings(
             function=func,
-            channel=channel,
-            scale=scale,
-            voltage=voltage,
-            impedance=impedance,
-            frequency=frequency,
+            channel=channel,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            impedance=impedance,  # type: ignore
+            frequency=frequency,  # type: ignore
             edge=edge_select,
         )
 
@@ -419,7 +419,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = self.ws.cell(column=col, row=row).value
+        func = str(self.ws.cell(column=col, row=row).value)
         col += 1
         chan = self.ws.cell(column=col, row=row).value
         col += 1
@@ -440,13 +440,13 @@ class ExcelInterface:
 
         return DCV_Settings(
             function=func,
-            channel=chan,
-            coupling=coupling,
-            scale=scale,
-            voltage=voltage,
-            offset=offset,
-            bandwidth=bandwidth,
-            impedance=impedance,
+            channel=chan,  # type: ignore
+            coupling=coupling,  # type: ignore
+            scale=scale,  # type: ignore
+            voltage=voltage,  # type: ignore
+            offset=offset,  # type: ignore
+            bandwidth=bandwidth,  # type: ignore
+            impedance=impedance,  # type: ignore
             invert=inverted,
         )
 
@@ -530,7 +530,7 @@ class ExcelInterface:
             str: _description_
         """
 
-        return self.ws.cell(column=self.__units_col, row=self.row).value
+        return self.ws.cell(column=self.__units_col, row=self.row).value  # type: ignore
 
     def find_results_col(self, row: int = -1) -> int:
         """
