@@ -51,6 +51,17 @@ class Trigger_Settings:
     edge: str
 
 
+@dataclass(frozen=True)
+class Sampling_Settings:
+    function: str
+    channel: int
+    scale: float
+    voltage: float
+    timebase: float
+    sample_rate: float
+    frequency: float
+
+
 @dataclass
 class Cell:
     col: int
