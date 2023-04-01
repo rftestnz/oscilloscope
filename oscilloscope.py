@@ -470,6 +470,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)
             uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+            uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
             uut.set_channel_impedance(chan=settings.channel, impedance="50")
             uut.set_timebase(settings.timebase)
 
