@@ -322,6 +322,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_impedance(filename=filename, test_rows=testing_rows):
                     break
 
+            elif test_name == "NOISE":
+                if not test_random_noise(filename=filename, test_rows=test_rows):
+                    break
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
@@ -386,6 +390,64 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
                 update_test_progress()
 
     uut.reset()
+
+    return True
+
+
+def test_random_noise(filename: str, test_rows: List) -> bool:
+    """
+    test_random_noise
+    Test sampling random noise
+    Tek scopes
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+
+    global uut
+
+    current_test_text.update("Testing: Random noise sample acquisition")
+
+    # No equipment required
+    uut.open_connection()
+    uut.reset()
+
+    uut.set_acquisition(16)
+
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_volt_settings()
+            # Only need the channel
+
+            uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
+            uut.set_channel_impedance(
+                chan=settings.channel, impedance=settings.impedance
+            )
+
+            rnd = uut.measure_rms_noise(chan=settings.channel)
+
+            uut.measure_clear()
+            avg = uut.measure_voltage(chan=settings.channel)
+
+            result = rnd - avg
+
+            excel.write_result(result=result, col=results_col, save=False)
+
+        excel.save_sheet()
 
     return True
 
