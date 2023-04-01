@@ -461,8 +461,6 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_sample_rate_settings()
 
-            # TODO check frequency for sig gen
-
             if settings.channel != last_channel:
                 sg.popup(
                     f"Connect RF Sig gen to Channel {settings.channel}",
@@ -478,15 +476,9 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
             # uut.write("HORIZONTAL:MODE:RECORDLENGTH ")
 
-            if settings.frequency > 1000000:
-                mxg.set_frequency(settings.frequency)
-                mxg.set_level(settings.voltage, units="VPP")
-                mxg.set_output_state(True)
-            else:
-                ks33250.set_sin(
-                    frequency=settings.frequency, amplitude=settings.voltage / 2.82
-                )
-                ks33250.enable_output(True)
+            mxg.set_frequency(settings.frequency)
+            mxg.set_level(settings.voltage, units="VPP")
+            mxg.set_output_state(True)
 
             uut.write("MEASU:MEAS1:BURST")
 
@@ -506,7 +498,6 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             excel.write_result(result=result, col=results_col)
 
             mxg.set_output_state(False)
-            ks33250.enable_output(False)
 
     return True
 
