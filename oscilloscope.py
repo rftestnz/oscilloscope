@@ -625,6 +625,9 @@ def test_impedance(filename: str, test_rows: List) -> bool:
                 continue
 
             if channel != last_channel:
+                sg.popup(
+                    f"Connect 3458A Input to UUT Ch {channel}", background_color="blue"
+                )
                 if last_channel > 0:
                     # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
                     uut.set_voltage_scale(chan=last_channel, scale=1)
