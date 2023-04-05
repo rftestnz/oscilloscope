@@ -1375,7 +1375,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             for chan in range(uut.num_channels):
                 uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
 
-            uut.set_voltage_scale(chan=settings.channel, scale=0.5)
+            uut.set_voltage_scale(chan=settings.channel, scale=0.2)
 
             if settings.impedance == 50:
                 uut.set_channel_impedance(chan=settings.channel, impedance="50")
@@ -1455,7 +1455,7 @@ def individual_tests(filename: str) -> Tuple:
             )
         ],
         [
-            [sg.Checkbox(name, key=name, background_color="blue", default=True)]
+            [sg.Checkbox(name, key=name, background_color="blue", default=False)]
             for name in test_names
         ],
         [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
