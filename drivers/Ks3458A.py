@@ -1,10 +1,13 @@
 """
     _summary_
 
+Raises:
+    ex: _description_
+
 Returns:
     _type_: _description_
 """
-
+import contextlib
 import pyvisa
 from enum import Enum
 import numpy as np
@@ -24,16 +27,19 @@ class Ks3458A_Simulator:
     For query, return a default reply
     """
 
-    def write(self, command: str) -> None:
+    timeout = 1000
+
+    def write(command: str) -> None:  # type: ignore
         """
         write _summary_
 
         Args:
             command (str): _description_
         """
+        # sourcery skip: instance-method-first-arg-name
         print(f"3458A: {command}")
 
-    def query(self, command: str) -> str:
+    def query(command: str) -> str:  # type: ignore
         """
         query _summary_
 
@@ -43,6 +49,7 @@ class Ks3458A_Simulator:
         Returns:
             str: _description_
         """
+        # sourcery skip: instance-method-first-arg-name
         command = command.upper()
         print(f"3458A: {command}")
         if "SYST:ERR?" in command:
@@ -50,16 +57,17 @@ class Ks3458A_Simulator:
         result = 0.95 + random.random() / 10
         return str(result)
 
-    def read(self) -> str:
+    def read() -> str:
+
         """
-        read
-        Do dummy reading
+        read _summary_
 
         Returns:
             str: _description_
         """
 
-        return str(0.5 + random.random())
+        result = 0.95 + random.random() / 10
+        return str(result)
 
 
 class Ks3458A_Function(Enum):
@@ -146,31 +154,67 @@ class Ks3458A_ACV_CONFIG(Enum):
     BEST = 1
 
 
+class Ks3458A_ACV_SYNC(Enum):
+    """
+    Ks3458A_ACV_SYNC _summary_
+
+    Args:
+        Enum (_type_): _description_
+    """
+
+    ANA = 0
+    SYNC = 1
+    RANDOM = 2
+
+
 class Ks3458A:
     """
      _summary_
+
+    Raises:
+        ex: _description_
 
     Returns:
         _type_: _description_
     """
 
-    visa_address = "GPIB0::23::INSTR"
-    connected = False
-    model = ""
+    visa_address: str = "GPIB0::23::INSTR"
+    connected: bool = False
+    model: str = ""
     current_mode = None
-    timeout = 15000
-    simulating = False
-    option001 = False
+    timeout: int = 15000
+    simulating: bool = False
+    option001: bool = False
 
     def __init__(self, simulate=False) -> None:
+        """
+        __init__ _summary_
+
+        Args:
+            simulate (bool, optional): _description_. Defaults to False.
+        """
         self.simulating = simulate
         self.rm = pyvisa.ResourceManager()
         self.open_connection()
 
     def __enter__(self):
+        """
+        __enter__ _summary_
+
+        Returns:
+            _type_: _description_
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """
+        __exit__ _summary_
+
+        Args:
+            exc_type (_type_): _description_
+            exc_val (_type_): _description_
+            exc_tb (_type_): _description_
+        """
         self.close()
 
     def open_connection(self) -> bool:
@@ -182,12 +226,12 @@ class Ks3458A:
         """
         try:
             if self.simulating:
-                self.instr = Ks3458A_Simulator()
+                self.instr = Ks3458A_Simulator
                 self.model = "3458A"
 
             else:
                 self.instr = self.rm.open_resource(
-                    self.visa_address, write_termination="\n"
+                    self.visa_address, read_termination="\n", write_termination="\n"
                 )
                 self.instr.timeout = self.timeout
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
@@ -206,6 +250,9 @@ class Ks3458A:
         self.connected = False
 
     def __wait_until_ready(self) -> None:
+        """
+        __wait_until_ready _summary_
+        """
         # Wait until the unit is ready
 
         # doesn't support the OPC
@@ -219,6 +266,7 @@ class Ks3458A:
         Returns:
             bool: _description_
         """
+
         return bool(
             self.open_connection()
             and (
@@ -231,7 +279,7 @@ class Ks3458A:
         get_id _summary_
 
         Returns:
-            List: _description_
+            str: _description_
         """
         try:
             self.instr.timeout = 2000  # type: ignore
@@ -248,6 +296,7 @@ class Ks3458A:
         """
         reset _summary_
         """
+
         self.__wait_until_ready()
         self.instr.write("RESET")  # type: ignore
 
@@ -296,8 +345,7 @@ class Ks3458A:
 
     def configure_dc_nplc(self, nplc: int) -> None:
         """
-        configure_dc_nplc
-        Set the number power line cycles to integrate signal over
+        configure_dc_nplc _summary_
 
         Args:
             nplc (int): _description_
@@ -317,15 +365,19 @@ class Ks3458A:
             self.instr.write("RES 0.002")  # type: ignore
 
     def measure(
-        self, function: Ks3458A_Function, number_readings: int = 1
-    ) -> Dict[float, float]:
-        # sourcery skip: extract-method
+        self,
+        function: Ks3458A_Function = Ks3458A_Function.DCV,
+        number_readings: int = 1,
+    ) -> Dict[str, float]:
         """
         measure _summary_
 
         Args:
-            function (Ks3458A_Function): _description_
+            function (_type_, optional): _description_. Defaults to Ks3458A_Function.DCV.
             number_readings (int, optional): _description_. Defaults to 1.
+
+        Raises:
+            ex: _description_
 
         Returns:
             Dict[float, float]: _description_
@@ -333,8 +385,13 @@ class Ks3458A:
         if function != self.current_mode:
             self.set_function(function)
 
-        self.instr.write(f"NRDGS {number_readings}")  # type: ignore
+        self.instr.write(f"NRDGS {number_readings+1}")  # type: ignore
         self.instr.write("TARM SGL")  # type: ignore
+
+        try:
+            self.instr.read()  # type: ignore     # Do a dummy reading first
+        except pyvisa.VisaIOError:
+            ...
 
         readings = []
 
@@ -342,7 +399,9 @@ class Ks3458A:
             for _ in range(number_readings):
 
                 reply = self.instr.read().strip()  # type: ignore
-                readings.append(float(reply))
+                with contextlib.suppress(ValueError):
+                    # TODO force a re-read on exception
+                    readings.append(float(reply))
 
             if self.simulating:
                 # Create an array
@@ -362,8 +421,15 @@ class Ks3458A:
             return result  # type: ignore
         except pyvisa.VisaIOError as ex:
             print("Error reading")
-            # self.check_error()
-            return {"Average": 0.0, "StdDev": 0.0}  # type: ignore
+            raise ex
+
+    def continuous_measure(self) -> None:
+        """
+        After the single readings, set back to continous measure
+        """
+
+        self.instr.write("NRDGS 1")  # type: ignore
+        self.instr.write("TARM AUTO")  # type: ignore
 
     def measure_sampling(
         self, sample_period: float, number_samples: int, resolution: float = 4.5
@@ -453,13 +519,27 @@ class Ks3458A:
 
         return readings
 
+    def set_acv_sync_mode(self, mode: Ks3458A_ACV_SYNC) -> None:
+        """
+        set_acv_sync_mode _summary_
+
+        Args:
+            mode (Ks3458A_ACV_SYNC): _description_
+        """
+        if mode == Ks3458A_ACV_SYNC.ANA:
+            cmd = "ANA"
+        elif mode == Ks3458A_ACV_SYNC.SYNC:
+            cmd = "SYNC"
+        else:
+            cmd = "RNDM"
+
+        self.instr.write(f"SETACV {cmd}")  # type: ignore
+
 
 if __name__ == "__main__":
     # Simple testing of the class
 
-    simulating = True
-
-    ks3458 = Ks3458A(simulate=simulating)
+    ks3458 = Ks3458A(simulate=False)
     ks3458.visa_address = "GPIB0::23::INSTR"
     ks3458.open_connection()
 
@@ -471,16 +551,17 @@ if __name__ == "__main__":
 
     pprint(ks3458.measure(Ks3458A_Function.DCV, 10))
 
-    if not simulating:
-        start = datetime.now()
-        samples = ks3458.measure_sampling(10e-6, number_samples=5000, resolution=5.5)
-        end = datetime.now()
+    ks3458.continuous_measure()
 
-        print(f"Time for sampling {(end - start).microseconds/1000000}")
+    start = datetime.now()
+    samples = ks3458.measure_sampling(10e-6, number_samples=5000, resolution=5.5)
+    end = datetime.now()
 
-        with open("samples.csv", "w") as outfile:
-            for rdg in samples:
-                outfile.write(f"{rdg}\n")
+    print(f"Time for sampling {(end - start).microseconds/1000000}")
+
+    with open("samples.csv", "w") as outfile:
+        for rdg in samples:
+            outfile.write(f"{rdg}\n")
 
     ks3458.reset()
 
