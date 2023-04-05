@@ -602,7 +602,7 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-    uut.set_acquisition(32)
+    uut.set_acquisition(1)
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
