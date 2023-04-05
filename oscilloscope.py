@@ -1375,7 +1375,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             for chan in range(uut.num_channels):
                 uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
 
-            uut.set_voltage_scale(chan=settings.channel, scale=0.5)
+            uut.set_voltage_scale(chan=settings.channel, scale=0.2)
 
             if settings.impedance == 50:
                 uut.set_channel_impedance(chan=settings.channel, impedance="50")
