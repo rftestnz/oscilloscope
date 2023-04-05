@@ -655,6 +655,8 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             excel.write_result(reading, col=results_col)
 
+            update_test_progress()
+
         # Turn off all channels but 1
         for chan in range(uut.num_channels):
             uut.set_channel(chan=chan + 1, enabled=chan == 0)
