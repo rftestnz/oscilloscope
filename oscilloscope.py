@@ -545,14 +545,14 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
             uut.set_channel_impedance(
-                chan=settings.channel, impedance=settings.impedance
+                chan=settings.channel, impedance=settings.impedance  # type: ignore
             )
-            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)
+            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
 
-            rnd = uut.measure_rms_noise(chan=settings.channel)
+            rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
 
             uut.measure_clear()
-            avg = uut.measure_voltage(chan=settings.channel)
+            avg = uut.measure_voltage(chan=settings.channel)  # type: ignore
 
             result = rnd - avg
 
