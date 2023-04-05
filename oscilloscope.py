@@ -593,6 +593,9 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     uut.open_connection()
     uut.reset()
 
+    ks3458.open_connection()
+    ks3458.reset()
+
     last_channel = -1
 
     # Turn off all channels but 1
