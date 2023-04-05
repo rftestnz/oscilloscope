@@ -1455,7 +1455,7 @@ def individual_tests(filename: str) -> Tuple:
             )
         ],
         [
-            [sg.Checkbox(name, key=name, background_color="blue", default=True)]
+            [sg.Checkbox(name, key=name, background_color="blue", default=False)]
             for name in test_names
         ],
         [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
