@@ -545,14 +545,14 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
             uut.set_channel_impedance(
-                chan=settings.channel, impedance=settings.impedance
+                chan=settings.channel, impedance=settings.impedance  # type: ignore
             )
-            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)
+            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
 
-            rnd = uut.measure_rms_noise(chan=settings.channel)
+            rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
 
             uut.measure_clear()
-            avg = uut.measure_voltage(chan=settings.channel)
+            avg = uut.measure_voltage(chan=settings.channel)  # type: ignore
 
             result = rnd - avg
 
@@ -593,13 +593,16 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     uut.open_connection()
     uut.reset()
 
+    ks3458.open_connection()
+    ks3458.reset()
+
     last_channel = -1
 
     # Turn off all channels but 1
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-    uut.set_acquisition(32)
+    uut.set_acquisition(1)
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -622,6 +625,9 @@ def test_impedance(filename: str, test_rows: List) -> bool:
                 continue
 
             if channel != last_channel:
+                sg.popup(
+                    f"Connect 3458A Input to UUT Ch {channel}", background_color="blue"
+                )
                 if last_channel > 0:
                     # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
                     uut.set_voltage_scale(chan=last_channel, scale=1)
@@ -648,6 +654,8 @@ def test_impedance(filename: str, test_rows: List) -> bool:
                 reading /= 1_000_000
 
             excel.write_result(reading, col=results_col)
+
+            update_test_progress()
 
         # Turn off all channels but 1
         for chan in range(uut.num_channels):
