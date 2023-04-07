@@ -377,6 +377,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
             excel.row = row
 
             settings = excel.get_volt_settings()
+            units = excel.get_units()
 
             if settings.function == "BAL":
                 uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
@@ -386,9 +387,10 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
                     chan=int(settings.channel), coupling=settings.coupling
                 )
 
-                reading = (
-                    uut.measure_voltage(chan=int(settings.channel), delay=2) * 1000
-                )  # mV
+                reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
+
+                if units == "mV":
+                    reading *= 1000
 
                 excel.write_result(reading, col=results_col)
                 update_test_progress()
