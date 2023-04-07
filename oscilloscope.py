@@ -1,5 +1,5 @@
 """
-Test DSOX Oscilloscopes
+Test Oscilloscopes
 # DK Jan 23
 """
 
@@ -115,7 +115,7 @@ def connections_check_form(check_3458: bool) -> None:
     ]
 
     window = sg.Window(
-        "DSOX Oscilloscope Test",
+        "Oscilloscope Test",
         layout,
         finalize=True,
         icon=get_path("ui\\scope.ico"),
@@ -1745,7 +1745,7 @@ if __name__ == "__main__":
     gpib_addresses = list(range(1, 32))
 
     layout = [
-        [sg.Text("DSOX Oscilloscope Test")],
+        [sg.Text("Oscilloscope Test")],
         [sg.Text(f"DK Apr 23 VERSION {VERSION}")],
         [sg.Text()],
         [
@@ -1791,6 +1791,7 @@ if __name__ == "__main__":
                 size=(10, 1),
                 default_value=sg.user_settings_get_entry("-CALIBRATOR-"),
                 key="-CALIBRATOR-",
+                enable_events=True,
             ),
         ],
         [
@@ -1803,7 +1804,9 @@ if __name__ == "__main__":
             ),
             sg.Combo(
                 gpib_addresses,
-                default_value="6",
+                default_value="4"
+                if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
+                else "6",
                 size=(6, 1),
                 key="GPIB_ADDR_FLUKE_5700A",
             ),
@@ -2060,3 +2063,8 @@ if __name__ == "__main__":
 
         if event == "-RESULTS_CHECK-":
             results_sheet_check(filename=values["-FILE-"])
+
+        if event == "-CALIBRATOR-":
+            window["GPIB_ADDR_FLUKE_5700A"].update(
+                value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
+            )
