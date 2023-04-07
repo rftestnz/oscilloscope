@@ -1444,7 +1444,7 @@ def round_range(val: float) -> float:
     return first_digit * math.pow(10, decade)
 
 
-def individual_tests(filename: str) -> Tuple:
+def individual_tests(filename: str) -> Tuple:  # sourcery skip: extract-method
     """
     individual_tests
     show form for selecting individual tests
