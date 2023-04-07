@@ -727,7 +727,7 @@ if __name__ == "__main__":
 
         print("Filtered:")
 
-        pprint(excel.get_all_test_settings("CURS"))
+        pprint(excel.get_all_test_settings("DC*"))
 
         print(f"Available: {excel.check_excel_available()}")
 
