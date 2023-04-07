@@ -371,8 +371,11 @@ class ExcelInterface:
             # match against the filter
             # Use a filter, but . is anything not *
             test_filter = test_filter.replace("*", ".")
+            if test_filter.find(".") == -1:
+                # Not using wildcard, make exact match on whole word
+                test_filter = f"^{test_filter}$"
             setting = self.get_volt_settings()
-            if re.search(test_filter, setting.function):  # type: ignore
+            if re.match(test_filter, setting.function):  # type: ignore
                 test_rows.append(self.row)
 
             if not self.get_next_row():
@@ -561,8 +564,11 @@ class ExcelInterface:
         while True:
             setting = self.get_volt_settings()
             test_filter = test_filter.replace("*", ".")
+            if test_filter.find(".") == -1:
+                # Use exact match on whole word
+                test_filter = f"^{test_filter}$"
 
-            if re.search(test_filter, setting.function):  # type: ignore
+            if re.match(test_filter, setting.function):  # type: ignore
                 tests.append(setting)
 
             if not self.get_next_row():
