@@ -1791,6 +1791,7 @@ if __name__ == "__main__":
                 size=(10, 1),
                 default_value=sg.user_settings_get_entry("-CALIBRATOR-"),
                 key="-CALIBRATOR-",
+                enable_events=True,
             ),
         ],
         [
