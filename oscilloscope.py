@@ -377,6 +377,7 @@ def test_dc_balance(filename: str, test_rows: List) -> bool:
             excel.row = row
 
             settings = excel.get_volt_settings()
+            units = excel.get_units()
 
             if settings.function == "BAL":
                 uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
