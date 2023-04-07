@@ -1,5 +1,5 @@
 """
-Test DSOX Oscilloscopes
+Test Oscilloscopes
 # DK Jan 23
 """
 
@@ -115,7 +115,7 @@ def connections_check_form(check_3458: bool) -> None:
     ]
 
     window = sg.Window(
-        "DSOX Oscilloscope Test",
+        "Oscilloscope Test",
         layout,
         finalize=True,
         icon=get_path("ui\\scope.ico"),
@@ -1745,7 +1745,7 @@ if __name__ == "__main__":
     gpib_addresses = list(range(1, 32))
 
     layout = [
-        [sg.Text("DSOX Oscilloscope Test")],
+        [sg.Text("Oscilloscope Test")],
         [sg.Text(f"DK Apr 23 VERSION {VERSION}")],
         [sg.Text()],
         [
