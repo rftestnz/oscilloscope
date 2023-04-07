@@ -2063,3 +2063,8 @@ if __name__ == "__main__":
 
         if event == "-RESULTS_CHECK-":
             results_sheet_check(filename=values["-FILE-"])
+
+        if event == "-CALIBRATOR-":
+            window["GPIB_ADDR_FLUKE_5700A"].update(
+                value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
+            )
