@@ -1615,7 +1615,9 @@ def select_visa_address() -> str:
     if event in ["Cancel", sg.WIN_CLOSED]:
         return ""
 
-    return next((addr for index, addr in enumerate(addresses) if values[index]), "")
+    return next(
+        (addr for index, addr in enumerate(visa_instruments) if values[index]), ""
+    )
 
 
 def template_help() -> None:
