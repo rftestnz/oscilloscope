@@ -1578,9 +1578,10 @@ def select_visa_address() -> str:
     visa_instruments = []
 
     for addr in addresses:
-        with SCPI_ID(address=addr) as scpi:
-            idn = scpi.get_id()[0]
-            visa_instruments.append((addr, idn))
+        if addr.startswith("USB"):
+            with SCPI_ID(address=addr) as scpi:
+                idn = scpi.get_id()[0]
+                visa_instruments.append(addr)
 
     radio_buttons = [
         [
