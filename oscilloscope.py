@@ -1578,9 +1578,10 @@ def select_visa_address() -> str:
     visa_instruments = []
 
     for addr in addresses:
-        with SCPI_ID(address=addr) as scpi:
-            idn = scpi.get_id()[0]
-            visa_instruments.append((addr, idn))
+        if addr.startswith("USB"):
+            with SCPI_ID(address=addr) as scpi:
+                idn = scpi.get_id()[0]
+                visa_instruments.append(addr)
 
     radio_buttons = [
         [
@@ -1614,7 +1615,9 @@ def select_visa_address() -> str:
     if event in ["Cancel", sg.WIN_CLOSED]:
         return ""
 
-    return next((addr for index, addr in enumerate(addresses) if values[index]), "")
+    return next(
+        (addr for index, addr in enumerate(visa_instruments) if values[index]), ""
+    )
 
 
 def template_help() -> None:
