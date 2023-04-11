@@ -633,6 +633,40 @@ class ExcelInterface:
 
         return self.ws.cell(column=self.__units_col, row=self.row).value  # type: ignore
 
+    def find_units_col(self, row: int = -1) -> int:
+        """
+        find_results_col
+        Read the row one above current row and look for the column which has results or measured in it
+
+        Args:
+            row (int, optional): _description_. Defaults to -1.
+
+        Returns:
+            int: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        row_count = 0
+
+        while True:
+            # some have comment rows, so keep going backwards until found
+            row -= 1
+            row_count += 1
+
+            if row_count >= 5 or row < 10:  # All sheets have header rows
+                return 0
+
+            for col in range(1, 10):
+                heading = str(self.ws.cell(column=col, row=row).value).lower()
+
+                if "unit" in heading:
+                    self.__units_col = col
+                    return
+
+            # not found
+
     def find_results_col(self, row: int = -1) -> int:
         """
         find_results_col
