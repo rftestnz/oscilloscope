@@ -466,10 +466,17 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             settings = excel.get_sample_rate_settings()
 
             if settings.channel != last_channel:
-                sg.popup(
-                    f"Connect RF Sig gen to Channel {settings.channel}",
+                response = sg.popup_ok_cancel(
+                    f"Connect E8257D to Channel {settings.channel}",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),  # type: ignore
                 )
+
+                if response == "Cancel":
+                    return False
+
+                last_generator = "MXG"
+
                 last_channel = settings.channel
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)
