@@ -446,6 +446,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     uut.set_acquisition(16)
 
     last_channel = -1
+    last_generator = 0
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
