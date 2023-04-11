@@ -458,6 +458,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             )
             return False
         excel.find_units_col(test_rows[0])
+
         for row in test_rows:
             excel.row = row
 
@@ -483,16 +484,14 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
             uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
             uut.set_channel_impedance(chan=settings.channel, impedance="50")
-            uut.set_timebase(settings.timebase)
 
             uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
-            # uut.write("HORIZONTAL:MODE:RECORDLENGTH ")
 
-            mxg.set_frequency(settings.frequency)
-            mxg.set_level(settings.voltage, units="VPP")
-            mxg.set_output_state(True)
+            # Have to adjust the record length to get the right timebase setting
 
-            uut.write("MEASU:MEAS1:BURST")
+            uut.write("HOR:MODE MANUAL")
+            recordlength = 10 * settings.sample_rate * settings.timebase
+            uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
 
             uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
             uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
