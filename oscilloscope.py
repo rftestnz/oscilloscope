@@ -484,6 +484,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
             uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
             uut.set_channel_impedance(chan=settings.channel, impedance="50")
+            uut.set_trigger_level(chan=settings.channel, level=0)
 
             uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
 
