@@ -242,7 +242,7 @@ class ExcelInterface:
             if multiplier == "G":
                 num *= 1000000000
             elif multiplier == "M":
-                num -= 1000000
+                num *= 1000000
             elif multiplier == "k":
                 num *= 1000
             elif multiplier == "m":
