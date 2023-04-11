@@ -493,9 +493,20 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             recordlength = 10 * settings.sample_rate * settings.timebase
             uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
 
+
+            uut.write("MEASU:MEAS1:TYPE DELAY")
+            uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
+            uut.write(f"MEASU:MEAS1:SOURCE2 CH{settings.channel}")
+            uut.write("MEASU:MEAS1:DELAY:EDGE1 RISE")
+            uut.write("MEASU:MEAS1:DELAY:EDGE2 FALL")
+
             uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
             uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
             uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
+
+            uut.write("MEASU:MEAS1:STATE ON")
+
+            uut.write("MEASU:MEAS1:DISPLAYSTAT:ENABLE ON")
 
             time.sleep(10)
 
