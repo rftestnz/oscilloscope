@@ -456,6 +456,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
                 icon=get_path("ui\\scope.ico"),
             )
             return False
+        excel.find_units_col(test_rows[0])
         for row in test_rows:
             excel.row = row
 
@@ -615,6 +616,7 @@ def test_impedance(filename: str, test_rows: List) -> bool:
                 icon=get_path("ui\\scope.ico"),
             )
             return False
+        excel.find_units_col(test_rows[0])
         for row in test_rows:
             excel.row = row
 
@@ -732,6 +734,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 icon=get_path("ui\\scope.ico"),
             )
             return False
+        excel.find_units_col(test_rows[0])
         for row in test_rows:
             excel.row = row
 
@@ -899,15 +902,16 @@ def test_cursor(filename: str, test_rows: List) -> bool:
     # no equipment as using buffered results
 
     with ExcelInterface(filename) as excel:
+        excel.find_units_col(test_rows[0])
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
         for row in test_rows:
-            results_col = excel.find_results_col(test_rows[0])
-            if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
-                )
-                return False
             excel.row = row
 
             settings = excel.get_volt_settings()
