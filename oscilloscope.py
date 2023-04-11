@@ -551,8 +551,12 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             except ValueError:
                 pass
 
+            update_test_progress()
 
             mxg.set_output_state(False)
+            ks33250.enable_output(False)
+
+        excel.save_sheet()
 
     return True
 
