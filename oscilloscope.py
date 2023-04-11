@@ -549,6 +549,8 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
                     result *= 1_000_000_000_000
                 elif units[0] == "n":
                     result *= 1_000_000_000
+                elif units[0] == "u":
+                    result *= 1_000_000
 
                 excel.write_result(result=result, col=results_col, save=True)
             except ValueError:
