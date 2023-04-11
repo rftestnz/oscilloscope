@@ -540,6 +540,9 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
                 icon=get_path("ui\\scope.ico"),
             )
             return False
+
+        excel.find_units_col(test_rows[0])
+
         response = sg.popup_ok_cancel(
             "Remove inputs from all channels",
             background_color="blue",
@@ -551,6 +554,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
         for row in test_rows:
             excel.row = row
+
+            units = excel.get_units()
 
             settings = excel.get_volt_settings()
             # Only need the channel
@@ -567,6 +572,9 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             avg = uut.measure_voltage(chan=settings.channel)  # type: ignore
 
             result = rnd - avg
+
+            if units.startswith("m"):
+                result *= 1000
 
             excel.write_result(result=result, col=results_col, save=False)
 
