@@ -443,7 +443,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
     # are required, put into driver
 
-    uut.set_acquisition(16)
+    uut.set_acquisition(1)
 
     last_channel = -1
     last_generator = 0
