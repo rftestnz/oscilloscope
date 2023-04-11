@@ -540,6 +540,15 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
                 icon=get_path("ui\\scope.ico"),
             )
             return False
+        response = sg.popup_ok_cancel(
+            "Remove inputs from all channels",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),  # type: ignore
+        )
+
+        if response == "Cancel":
+            return False
+
         for row in test_rows:
             excel.row = row
 
