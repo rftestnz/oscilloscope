@@ -523,6 +523,8 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
                 )
                 ks33250.enable_output(True)
 
+            time.sleep(0.25)
+
             uut.write("MEASU:MEAS1:TYPE DELAY")
             uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
             uut.write(f"MEASU:MEAS1:SOURCE2 CH{settings.channel}")
