@@ -448,6 +448,8 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     last_channel = -1
     last_generator = 0
 
+    ks33250.set_output_z("50")
+
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
