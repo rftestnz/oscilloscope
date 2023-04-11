@@ -539,14 +539,18 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
 
             time.sleep(10)
 
-            result = uut.query("MEASU:MEAS1:VAL?")
+            try:
+                result = float(uut.query("MEASU:MEAS1:STDDEV?").strip())  # remove LF
 
-            if units[0] == "p":
-                result *= 1_000_000_000_000
-            elif units[0] == "n":
-                result *= 1_000_000_000
+                if units[0] == "p":
+                    result *= 1_000_000_000_000
+                elif units[0] == "n":
+                    result *= 1_000_000_000
 
-            excel.write_result(result=result, col=results_col)
+                excel.write_result(result=result, col=results_col, save=True)
+            except ValueError:
+                pass
+
 
             mxg.set_output_state(False)
 
