@@ -570,6 +570,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
             excel.write_result(result=result, col=results_col, save=False)
 
+            update_test_progress()
+
         excel.save_sheet()
 
     return True
