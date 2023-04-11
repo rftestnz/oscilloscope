@@ -493,6 +493,35 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             recordlength = 10 * settings.sample_rate * settings.timebase
             uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
 
+            if settings.frequency > 250000:
+                if last_generator != "MXG":
+                    response = sg.popup_ok_cancel(
+                        f"Connect E8257D output to channel {settings.channel}",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
+                    )
+                    if response == "Cancel":
+                        return False
+
+                mxg.set_frequency(settings.frequency)
+                mxg.set_level(settings.voltage / 2.82, units="V")
+                mxg.set_output_state(True)
+
+                last_generator = "MXG"
+            else:
+                if last_generator != "33250A":
+                    response = sg.popup_ok_cancel(
+                        f"Connect 33250A output to channel {settings.channel}",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
+                    )
+                    if response == "Cancel":
+                        return False
+                    last_generator = "33250A"
+                ks33250.set_sin(
+                    frequency=settings.frequency, amplitude=settings.voltage / 2.82
+                )
+                ks33250.enable_output(True)
 
             uut.write("MEASU:MEAS1:TYPE DELAY")
             uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
