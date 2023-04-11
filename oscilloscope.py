@@ -443,9 +443,12 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
     # are required, put into driver
 
-    uut.set_acquisition(16)
+    uut.set_acquisition(1)
 
     last_channel = -1
+    last_generator = 0
+
+    ks33250.set_output_z("50")
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -457,6 +460,7 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             )
             return False
         excel.find_units_col(test_rows[0])
+
         for row in test_rows:
             excel.row = row
 
@@ -465,43 +469,101 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
             settings = excel.get_sample_rate_settings()
 
             if settings.channel != last_channel:
-                sg.popup(
-                    f"Connect RF Sig gen to Channel {settings.channel}",
+                response = sg.popup_ok_cancel(
+                    f"Connect E8257D to Channel {settings.channel}",
                     background_color="blue",
+                    icon=get_path("ui\\scope.ico"),  # type: ignore
                 )
+
+                if response == "Cancel":
+                    return False
+
+                last_generator = "MXG"
+
                 last_channel = settings.channel
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)
             uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
             uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
             uut.set_channel_impedance(chan=settings.channel, impedance="50")
-            uut.set_timebase(settings.timebase)
+            uut.set_trigger_level(chan=settings.channel, level=0)
 
             uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
-            # uut.write("HORIZONTAL:MODE:RECORDLENGTH ")
 
-            mxg.set_frequency(settings.frequency)
-            mxg.set_level(settings.voltage, units="VPP")
-            mxg.set_output_state(True)
+            # Have to adjust the record length to get the right timebase setting
 
-            uut.write("MEASU:MEAS1:BURST")
+            uut.write("HOR:MODE MANUAL")
+            recordlength = 10 * settings.sample_rate * settings.timebase
+            uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
+
+            if settings.frequency > 250000:
+                if last_generator != "MXG":
+                    response = sg.popup_ok_cancel(
+                        f"Connect E8257D output to channel {settings.channel}",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
+                    )
+                    if response == "Cancel":
+                        return False
+
+                mxg.set_frequency(settings.frequency)
+                mxg.set_level(settings.voltage / 2.82, units="V")
+                mxg.set_output_state(True)
+
+                last_generator = "MXG"
+            else:
+                if last_generator != "33250A":
+                    response = sg.popup_ok_cancel(
+                        f"Connect 33250A output to channel {settings.channel}",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),  # type: ignore
+                    )
+                    if response == "Cancel":
+                        return False
+                    last_generator = "33250A"
+                ks33250.set_sin(
+                    frequency=settings.frequency, amplitude=settings.voltage / 2.82
+                )
+                ks33250.enable_output(True)
+
+            time.sleep(0.25)
+
+            uut.write("MEASU:MEAS1:TYPE DELAY")
+            uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
+            uut.write(f"MEASU:MEAS1:SOURCE2 CH{settings.channel}")
+            uut.write("MEASU:MEAS1:DELAY:EDGE1 RISE")
+            uut.write("MEASU:MEAS1:DELAY:EDGE2 FALL")
 
             uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
             uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
             uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
 
+            uut.write("MEASU:MEAS1:STATE ON")
+
+            uut.write("MEASU:MEAS1:DISPLAYSTAT:ENABLE ON")
+
             time.sleep(10)
 
-            result = uut.query("MEASU:MEAS1:VAL?")
+            try:
+                result = float(uut.query("MEASU:MEAS1:STDDEV?").strip())  # remove LF
 
-            if units[0] == "p":
-                result *= 1_000_000_000_000
-            elif units[0] == "n":
-                result *= 1_000_000_000
+                if units[0] == "p":
+                    result *= 1_000_000_000_000
+                elif units[0] == "n":
+                    result *= 1_000_000_000
+                elif units[0] == "u":
+                    result *= 1_000_000
 
-            excel.write_result(result=result, col=results_col)
+                excel.write_result(result=result, col=results_col, save=True)
+            except ValueError:
+                pass
+
+            update_test_progress()
 
             mxg.set_output_state(False)
+            ks33250.enable_output(False)
+
+        excel.save_sheet()
 
     return True
 

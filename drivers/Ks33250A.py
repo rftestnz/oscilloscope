@@ -242,6 +242,15 @@ class Ks33250A:
         self.write("VOLT:UNIT VRMS")
         self.write(f"FUNC SIN;FREQ {frequency}; VOLTAGE {amplitude} VRMS")
 
+    def set_output_z(self, z: str) -> None:
+        """
+        Set the output impedance to 50 or MAX
+        """
+
+        assert z in {"50", "MAX"}
+
+        self.write(f"OUTPUT:LOAD {z}")
+
     def set_pulse(
         self, period: float, pulse_width: float, amplitude: float, offset: float = 0
     ) -> None:
@@ -275,7 +284,6 @@ class Ks33250A:
 
 
 if __name__ == "__main__":
-
     with Ks33250A(simulate=False) as ks33250:
         ks33250.visa_address = "GPIB0::9::INSTR"
         ks33250.open_connection()
