@@ -346,6 +346,8 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_delta_time(filename=filename, test_rows=test_rows):
                     break
 
+    local_all()
+
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:
     """
