@@ -267,6 +267,16 @@ class Fluke5700A:
         self.write("*RST;*CLS;*WAI")
         time.sleep(1)
 
+    def go_to_local(self)->None:
+        """
+        go_to_local
+        Set back to local operation
+        """
+
+        if not self.simulating:
+            self.instr.control_ren(6) # type: ignore
+
+
     def settle(self) -> None:
         """
         Wait until the output is settled

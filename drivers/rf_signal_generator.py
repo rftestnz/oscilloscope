@@ -116,6 +116,15 @@ class RF_Signal_Generator:
         self.instr.close()
         self.connected = False
 
+    def go_to_local(self) -> None:
+        """
+        go_to_local
+        Set back to local operation
+        """
+
+        if not self.simulating:
+            self.instr.control_ren(6)  # type: ignore
+
     def is_connected(self) -> bool:
         """
         is_connected _summary_
