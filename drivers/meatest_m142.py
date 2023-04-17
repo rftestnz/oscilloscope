@@ -118,6 +118,15 @@ class M142:
         self.instr.close()  # type: ignore
         self.connected = False
 
+    def go_to_local(self) -> None:
+        """
+        go_to_local
+        Set back to local operation
+        """
+
+        if not self.simulating:
+            self.instr.control_ren(6)  # type: ignore    def go_to_local(self)->None:
+
     def is_connected(self) -> bool:
         """
         is_connected _summary_

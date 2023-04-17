@@ -25,7 +25,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.00"
+VERSION = "A.01.01"
 
 
 calibrator = Fluke5700A()
@@ -222,6 +222,22 @@ def update_test_progress() -> None:
     test_progress.update(test_number)
 
 
+def local_all() -> None:
+    """
+    local_all
+    Set all instruments back to local
+    """
+
+    global calibrator
+    global ks33250
+    global mxg
+
+    calibrator.go_to_local()
+    ks33250.go_to_local()
+    mxg.go_to_local()
+    ks3458.go_to_local()
+
+
 def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
     """
     run_tests
@@ -329,6 +345,8 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
             elif test_name == "DELTAT":
                 if not test_delta_time(filename=filename, test_rows=test_rows):
                     break
+
+    local_all()
 
 
 def test_dc_balance(filename: str, test_rows: List) -> bool:

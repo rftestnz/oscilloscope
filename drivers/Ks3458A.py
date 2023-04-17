@@ -249,6 +249,15 @@ class Ks3458A:
         self.rm.close
         self.connected = False
 
+    def go_to_local(self) -> None:
+        """
+        go_to_local
+        Set back to local operation
+        """
+
+        if not self.simulating:
+            self.instr.control_ren(6)  # type: ignore
+
     def __wait_until_ready(self) -> None:
         """
         __wait_until_ready _summary_
