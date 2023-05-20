@@ -726,6 +726,26 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         return triggered == "1"
 
+    def set_digital_channel_on(self, chan: int, all_channels: bool = False) -> None:
+        """
+        set_digital_channel_on
+        Turn the digital channel on.
+        No need for off command currently, just do a reset
+
+        Args:
+            chan (int): _description_
+        """
+
+        if all_channels:
+            for channel in range(16):
+                self.write(f"DIG{channel}:DISP ON")
+        else:
+            self.write(f"DIG{chan}:DISP ON")
+
+    def set_digital_threshold(self, chan: int, threshold: float) -> None:
+        """
+        set_digital_threshold
+        Set the digital threshold
 
 if __name__ == "__main__":
 
