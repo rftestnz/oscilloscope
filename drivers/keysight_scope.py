@@ -726,9 +726,51 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         return triggered == "1"
 
+    def set_digital_channel_on(self, chan: int, all_channels: bool = False) -> None:
+        """
+        set_digital_channel_on
+        Turn the digital channel on.
+        No need for off command currently, just do a reset
+
+        Args:
+            chan (int): _description_
+        """
+
+        if all_channels:
+            for channel in range(16):
+                self.write(f"DIG{channel}:DISP ON")
+        else:
+            self.write(f"DIG{chan}:DISP ON")
+
+    def set_digital_threshold(self, chan: int, threshold: float) -> None:
+        """
+        set_digital_threshold
+        Set the digital threshold
+
+        Args:
+            chan (int): _description_
+            threshold (float): _description_
+        """
+
+        self.write(f"DIG{chan}:THR {threshold}")
+
+    def measure_digital_channels(self, pod: int) -> bool:
+        """
+        measure_digital_channels
+        Read digital channels for specified pod, and return true is all high, false if all low
+
+        Args:
+            pod (int): _description_
+
+        Returns:
+            bool: _description_
+        """
+
+        # MSOX has POD, but both have SBUS
+        self.query(f"DIG SBUS{pod}?")
+
 
 if __name__ == "__main__":
-
     dsox3034t = Keysight_Oscilloscope(simulate=False)
     dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 

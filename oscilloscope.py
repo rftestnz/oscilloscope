@@ -25,7 +25,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.01"
+VERSION = "A.01.02"
 
 
 calibrator = Fluke5700A()
@@ -661,6 +661,80 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             update_test_progress()
 
         excel.save_sheet()
+
+    return True
+
+
+def test_threshold(filename: str, test_rows: List) -> bool:
+    """
+    test_threshold
+    Test digital threshold
+
+    Args:
+        filename (str): _description_
+        test_rows (List): _description_
+
+    Returns:
+        bool: _description_
+    """
+    global uut
+    global current_test_text
+    global calibrator
+
+    current_test_text.update("Testing: Digital Threshold")
+
+    connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+
+    # require calibrator
+
+    if not connections["FLUKE_5700A"]:
+        sg.popup_error(
+            "Cannot find calibrator",
+            background_color="blue",
+            icon=get_path("ui\\scope.ico"),
+        )
+        return False
+
+    uut.open_connection()
+    uut.reset()
+
+    uut.set_timebase(1e-3)
+
+    uut.set_digital_channel_on(chan=0, all_channels=True)
+
+    with ExcelInterface(filename) as excel:
+        results_col = excel.find_results_col(test_rows[0])
+        if results_col == 0:
+            sg.popup_error(
+                f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        excel.find_units_col(test_rows[0])
+        for row in test_rows:
+            excel.row = row
+
+            settings = excel.get_threshold_settings()
+
+            # Tests are performed in blocks of 8 channels
+
+            # Get the starting threshold, and direction
+
+            voltage = settings.voltage
+            delta = -0.01 if settings.polarity == "NEG" else 0.01
+
+            for _ in range(50):
+                reading = uut.measure_digital_channels(pod=settings.pod)
+                if (
+                    settings.polarity == "POS"
+                    and reading == 1
+                    or settings.polarity != "POS"
+                    and reading == 0
+                ):
+                    excel.write_result(voltage)
+                    break
+                voltage += delta
 
     return True
 
