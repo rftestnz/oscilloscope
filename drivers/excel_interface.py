@@ -14,7 +14,7 @@ from datetime import datetime
 from pprint import pprint
 from dataclasses import dataclass
 
-VERSION = "A.00.01"
+VERSION = "A.00.02"
 
 
 @dataclass(frozen=True)
@@ -60,6 +60,14 @@ class Sampling_Settings:
     timebase: float
     sample_rate: float
     frequency: float
+
+
+@dataclass(frozen=True)
+class Threshold_Settings:
+    function: str
+    channel_start: int
+    voltage: float
+    polarity: str
 
 
 @dataclass
