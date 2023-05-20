@@ -754,6 +754,21 @@ class Keysight_Oscilloscope(ScopeDriver):
 
         self.write(f"DIG{chan}:THR {threshold}")
 
+    def measure_digital_channels(self, pod: int) -> bool:
+        """
+        measure_digital_channels
+        Read digital channels for specified pod, and return true is all high, false if all low
+
+        Args:
+            pod (int): _description_
+
+        Returns:
+            bool: _description_
+        """
+
+        # MSOX has POD, but both have SBUS
+        self.query(f"DIG SBUS{pod}?")
+
 
 if __name__ == "__main__":
     dsox3034t = Keysight_Oscilloscope(simulate=False)
