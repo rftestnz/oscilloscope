@@ -102,6 +102,7 @@ class ExcelInterface:
         "IMP",
         "NOISE",
         "DELTAT",
+        "THR",
     ]  # In order of test sequence preference - need list instead of set
 
     def __init__(self, filename, sheetindex=0) -> None:
@@ -553,6 +554,30 @@ class ExcelInterface:
             timebase=timebase,
             sample_rate=sample_rate,
             frequency=frequency,
+        )
+
+    def get_threshold_settings(self, row: int = -1) -> Threshold_Settings:
+        """
+        get_threshold_settings _summary_
+
+        Returns:
+            Threshold_Settings: _description_
+        """
+
+        if row == -1:
+            row = self.row
+
+        col = self.__data_col
+        func = str(self.ws.cell(column=col, row=row).value)
+        col += 1
+        chan = self.ws.cell(column=col, row=row).value
+        col += 1
+        voltage = self.ws.cell(column=col, row=row).value
+        col += 1
+        polarity = self.ws.cell(column=col, row=row).value
+
+        return Threshold_Settings(
+            function=func, channel_start=chan, voltage=voltage, polarity=polarity
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
