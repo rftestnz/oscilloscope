@@ -747,8 +747,15 @@ class Keysight_Oscilloscope(ScopeDriver):
         set_digital_threshold
         Set the digital threshold
 
-if __name__ == "__main__":
+        Args:
+            chan (int): _description_
+            threshold (float): _description_
+        """
 
+        self.write(f"DIG{chan}:THR {threshold}")
+
+
+if __name__ == "__main__":
     dsox3034t = Keysight_Oscilloscope(simulate=False)
     dsox3034t.visa_address = "USB0::0x2A8D::0x1797::CN59296333::INSTR"
 
