@@ -65,7 +65,7 @@ class Sampling_Settings:
 @dataclass(frozen=True)
 class Threshold_Settings:
     function: str
-    channel_start: int
+    pod: int
     voltage: float
     polarity: str
 
@@ -574,10 +574,10 @@ class ExcelInterface:
         col += 1
         voltage = self.ws.cell(column=col, row=row).value
         col += 1
-        polarity = self.ws.cell(column=col, row=row).value
+        pod = self.ws.cell(column=col, row=row).value
 
         return Threshold_Settings(
-            function=func, channel_start=chan, voltage=voltage, polarity=polarity  # type: ignore
+            function=func, channel_start=chan, voltage=voltage, pod=pod  # type: ignore
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
