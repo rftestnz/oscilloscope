@@ -551,9 +551,9 @@ class ExcelInterface:
             coupling=coupling,  # type: ignore
             scale=scale,  # type: ignore
             voltage=voltage,  # type: ignore
-            timebase=timebase,
-            sample_rate=sample_rate,
-            frequency=frequency,
+            timebase=timebase,  # type: ignore
+            sample_rate=sample_rate,  # type: ignore
+            frequency=frequency,  # type: ignore
         )
 
     def get_threshold_settings(self, row: int = -1) -> Threshold_Settings:
@@ -577,7 +577,7 @@ class ExcelInterface:
         polarity = self.ws.cell(column=col, row=row).value
 
         return Threshold_Settings(
-            function=func, channel_start=chan, voltage=voltage, polarity=polarity
+            function=func, channel_start=chan, voltage=voltage, polarity=polarity  # type: ignore
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
@@ -695,7 +695,7 @@ class ExcelInterface:
 
                 if "unit" in heading:
                     self.__units_col = col
-                    return
+                    return col
 
             # not found
 
