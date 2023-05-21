@@ -2128,9 +2128,9 @@ if __name__ == "__main__":
         ks3458.simulating = simulating
         ks3458_address = f"{values['GPIB_IFC_3458']}::{values['GPIB_ADDR_3458']}::INSTR"
 
-        if event in [
-            "-INDIVIDUAL-",
-        ]:
+        if event in ["-INDIVIDUAL-", "-TEST_CONNECTIONS-"]:
+            # make sure the file is valid, we have to read it to check impedance tests
+
             # Common check to make sure everything is in order
 
             valid = True
@@ -2142,6 +2142,17 @@ if __name__ == "__main__":
             if not values["-FILE-"]:
                 window["-FILE-"].update(background_color="Red")
                 valid = False
+
+            if not os.path.isfile(values["-FILE-"]):
+                sg.popup_error(
+                    "Filenname does not exist",
+                    background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
+                )
+                window["-FILE-"].update(
+                    background_color="Red",
+                )
+                continue
 
             try:
                 with ExcelInterface(filename=values["-FILE-"]) as excel:
@@ -2163,6 +2174,9 @@ if __name__ == "__main__":
             if not valid:
                 continue
 
+        if event in [
+            "-INDIVIDUAL-",
+        ]:
             window["-VIEW-"].update(disabled=True)  # Disable while testing
 
             if values["-CALIBRATOR-"] == "M-142":
