@@ -346,6 +346,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_delta_time(filename=filename, test_rows=test_rows):
                     break
 
+            elif test_name == "THR":
+                if not test_threshold(filename=filename, test_rows=testing_rows):
+                    break
+
     local_all()
 
 
