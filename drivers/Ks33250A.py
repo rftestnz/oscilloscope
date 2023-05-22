@@ -4,6 +4,7 @@
 """
 
 import pyvisa
+from pyvisa import InvalidSession, VisaIOError
 from typing import List
 import time
 
@@ -127,8 +128,13 @@ class Ks33250A:
         Set back to local operation
         """
 
-        if not self.simulating:
-            self.instr.control_ren(6)  # type: ignore
+        try:
+            if not self.simulating:
+                self.instr.control_ren(6)  # type: ignore
+        except InvalidSession:
+            pass
+        except VisaIOError:
+            pass
 
     def is_connected(self) -> bool:
         """

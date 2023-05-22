@@ -5,10 +5,14 @@
 # DK Feb 2022
 """
 
+
+import contextlib
+
 VERSION = "A.00.03"
 
 from enum import Enum
 import pyvisa
+from pyvisa import VisaIOError, InvalidSession
 from pprint import pprint
 import time
 from typing import List
@@ -122,8 +126,15 @@ class RF_Signal_Generator:
         Set back to local operation
         """
 
-        if not self.simulating:
-            self.instr.control_ren(6)  # type: ignore
+        try:
+            if not self.simulating:
+                self.instr.control_ren(6)  # type: ignore
+        except VisaIOError:
+            pass
+        except InvalidSession:
+            pass
+        except AttributeError:
+            pass
 
     def is_connected(self) -> bool:
         """
@@ -294,7 +305,6 @@ class RF_Signal_Generator:
 
 
 if __name__ == "__main__":
-
     with RF_Signal_Generator(simulate=True) as e4438c:
         e4438c.visa_address = "GPIB0::24::INSTR"
         e4438c.open_connection()
