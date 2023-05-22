@@ -346,6 +346,10 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                 if not test_delta_time(filename=filename, test_rows=test_rows):
                     break
 
+            elif test_name == "THR":
+                if not test_threshold(filename=filename, test_rows=testing_rows):
+                    break
+
     local_all()
 
 
@@ -701,6 +705,12 @@ def test_threshold(filename: str, test_rows: List) -> bool:
     uut.set_timebase(1e-3)
 
     uut.set_digital_channel_on(chan=0, all_channels=True)
+
+    sg.popup(
+        "Connect Calibrator output to digital IO Pods",
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),
+    )
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -2128,9 +2138,9 @@ if __name__ == "__main__":
         ks3458.simulating = simulating
         ks3458_address = f"{values['GPIB_IFC_3458']}::{values['GPIB_ADDR_3458']}::INSTR"
 
-        if event in [
-            "-INDIVIDUAL-",
-        ]:
+        if event in ["-INDIVIDUAL-", "-TEST_CONNECTIONS-"]:
+            # make sure the file is valid, we have to read it to check impedance tests
+
             # Common check to make sure everything is in order
 
             valid = True
@@ -2142,6 +2152,17 @@ if __name__ == "__main__":
             if not values["-FILE-"]:
                 window["-FILE-"].update(background_color="Red")
                 valid = False
+
+            if not os.path.isfile(values["-FILE-"]):
+                sg.popup_error(
+                    "Filenname does not exist",
+                    background_color="blue",
+                    icon=get_path("ui\\scope.ico"),
+                )
+                window["-FILE-"].update(
+                    background_color="Red",
+                )
+                continue
 
             try:
                 with ExcelInterface(filename=values["-FILE-"]) as excel:
@@ -2163,6 +2184,9 @@ if __name__ == "__main__":
             if not valid:
                 continue
 
+        if event in [
+            "-INDIVIDUAL-",
+        ]:
             window["-VIEW-"].update(disabled=True)  # Disable while testing
 
             if values["-CALIBRATOR-"] == "M-142":

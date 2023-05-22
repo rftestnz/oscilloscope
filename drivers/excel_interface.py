@@ -570,14 +570,14 @@ class ExcelInterface:
         col = self.__data_col
         func = str(self.ws.cell(column=col, row=row).value)
         col += 1
-        chan = self.ws.cell(column=col, row=row).value
+        pod = self.ws.cell(column=col, row=row).value
         col += 1
         voltage = self.ws.cell(column=col, row=row).value
         col += 1
-        pod = self.ws.cell(column=col, row=row).value
+        pol = self.ws.cell(column=col, row=row).value
 
         return Threshold_Settings(
-            function=func, channel_start=chan, voltage=voltage, pod=pod  # type: ignore
+            function=func, pod=pod, voltage=voltage, polarity=pol  # type: ignore
         )
 
     def get_all_test_settings(self, test_filter: str = "*") -> List:
