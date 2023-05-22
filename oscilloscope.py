@@ -706,6 +706,12 @@ def test_threshold(filename: str, test_rows: List) -> bool:
 
     uut.set_digital_channel_on(chan=0, all_channels=True)
 
+    sg.popup(
+        "Connect Calibrator output to digital IO Pods",
+        background_color="blue",
+        icon=get_path("ui\\scope.ico"),
+    )
+
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
         if results_col == 0:
