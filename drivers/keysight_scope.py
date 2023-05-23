@@ -5,6 +5,8 @@
 # DK Jan 23
 """
 
+
+import contextlib
 from enum import Enum
 import pyvisa
 import time
@@ -69,7 +71,10 @@ class Keysight_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        self.instr.close()  # type: ignore
+
+        with contextlib.suppress(AttributeError):
+            self.instr.close()  # type: ignore
+
         self.connected = False
 
     def open_connection(self) -> bool:
@@ -243,14 +248,13 @@ class Keysight_Oscilloscope(ScopeDriver):
                             else DSOX_FAMILY.DSOX3000
                         )
                 self.serial = identity[2]
+            self.instr.timeout = self.timeout  # type: ignore
 
-        except pyvisa.VisaIOError:
+        except (pyvisa.VisaIOError, AttributeError):
             self.model = ""
             self.manufacturer = ""
             self.serial = ""
             response = ",,,"
-
-        self.instr.timeout = self.timeout  # type: ignore
 
         return response.split(",")
 
