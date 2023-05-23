@@ -2,8 +2,11 @@
 # Quick script to control 5700A
 """
 
+
+import contextlib
 from enum import Enum
 import pyvisa
+from pyvisa import InvalidSession
 import time
 from pprint import pprint
 from typing import List
@@ -267,15 +270,15 @@ class Fluke5700A:
         self.write("*RST;*CLS;*WAI")
         time.sleep(1)
 
-    def go_to_local(self)->None:
+    def go_to_local(self) -> None:
         """
         go_to_local
         Set back to local operation
         """
 
-        if not self.simulating:
-            self.instr.control_ren(6) # type: ignore
-
+        with contextlib.suppress(InvalidSession):
+            if not self.simulating:
+                self.instr.control_ren(6)  # type: ignore
 
     def settle(self) -> None:
         """

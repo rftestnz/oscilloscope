@@ -3,6 +3,8 @@
 # DK Jun 22
 """
 
+
+import contextlib
 import pyvisa
 from pyvisa import InvalidSession, VisaIOError
 from typing import List
@@ -128,13 +130,9 @@ class Ks33250A:
         Set back to local operation
         """
 
-        try:
+        with contextlib.suppress(InvalidSession, VisaIOError, AttributeError):
             if not self.simulating:
                 self.instr.control_ren(6)  # type: ignore
-        except InvalidSession:
-            pass
-        except VisaIOError:
-            pass
 
     def is_connected(self) -> bool:
         """

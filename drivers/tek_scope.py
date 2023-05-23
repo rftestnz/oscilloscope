@@ -5,6 +5,7 @@
 # DK Jan 23
 """
 
+import contextlib
 import pyvisa
 import time
 from random import random
@@ -89,7 +90,11 @@ class Tektronix_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        return super().close()
+
+        with contextlib.suppress(AttributeError):
+            self.instr.close()  # type: ignore
+
+        self.connected = False
 
     def is_connected(self) -> bool:
         """
@@ -222,13 +227,13 @@ class Tektronix_Oscilloscope(ScopeDriver):
                 self.model = identity[1]
                 self.serial = identity[2]
 
-        except pyvisa.VisaIOError:
+            self.instr.timeout = self.timeout  # type: ignore
+
+        except (pyvisa.VisaIOError, AttributeError):
             self.model = ""
             self.manufacturer = ""
             self.serial = ""
             response = ",,,"
-
-        self.instr.timeout = self.timeout  # type: ignore
 
         return response.split(",")
 
@@ -656,7 +661,6 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
 
 if __name__ == "__main__":
-
     dpo2014 = Tektronix_Oscilloscope(simulate=False)
     dpo2014.visa_address = "GPIB0::3::INSTR"
 
