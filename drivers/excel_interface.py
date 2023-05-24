@@ -98,7 +98,6 @@ class ExcelInterface:
         "CURS",
         "RISE",
         "TIME",
-        "TRIG",
         "IMP",
         "NOISE",
         "DELTAT",
