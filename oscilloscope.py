@@ -9,7 +9,7 @@ import PySimpleGUI as sg
 from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.keysight_scope import Keysight_Oscilloscope
+from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
 from drivers.tek_scope import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
@@ -1025,10 +1025,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             reading = uut.measure_voltage(chan=channel)
 
-            if uut.keysight:
+            if uut.keysight and uut.family != DSOX_FAMILY.DSO5000:
                 voltage2 = uut.read_cursor_avg()
 
-            if uut.keysight:
                 cursor_results.append(
                     {
                         "chan": channel,
@@ -1345,42 +1344,46 @@ def test_timebase(filename: str, row: int) -> bool:
                 error = ref_x - offset_x + 0.001  # type: ignore
                 print(f"TB Error {error}")
 
-                code = sg.popup_get_text(
-                    "Enter date code from serial label (0 if no code)",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
-                )
+                excel.row = row
 
-                age = 10
+                if uut.family != DSOX_FAMILY.DSO5000:
+                    code = sg.popup_get_text(
+                        "Enter date code from serial label (0 if no code)",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),
+                    )
 
-                try:
-                    val = int(code)  # type: ignore
-                    print(f"{val/100}, {datetime.now().year-2000}")
-                    if val // 100 > datetime.now().year - 2000:
-                        val = 0
-                    age = datetime.now().year - (val / 100) - 2000
-
-                except ValueError:
-                    val = 0
-
-                if not val and len(uut.serial) >= 10:
-                    code = uut.serial[2:6]
+                    age = 10
 
                     try:
-                        val = int(code)
-                        # start is from 1960
-                        age = datetime.now().year - (val - 4000) / 100 - 2000
-                    except ValueError:
-                        # Invalid. Just assume 10
-                        age = 10
+                        val = int(code)  # type: ignore
+                        print(f"{val/100}, {datetime.now().year-2000}")
+                        if val // 100 > datetime.now().year - 2000:
+                            val = 0
+                        age = datetime.now().year - (val / 100) - 2000
 
-                age_years = int(age + 0.5)
+                    except ValueError:
+                        val = 0
+
+                    if not val and len(uut.serial) >= 10:
+                        code = uut.serial[2:6]
+
+                        try:
+                            val = int(code)
+                            # start is from 1960
+                            age = datetime.now().year - (val - 4000) / 100 - 2000
+                        except ValueError:
+                            # Invalid. Just assume 10
+                            age = 10
+
+                    age_years = int(age + 0.5)
+                    excel.write_result(age_years, save=False, col=1)
 
                 # results in ppm
                 ppm = error / 1e-3 * 1e6
-                excel.row = row
-                excel.write_result(ppm, save=False, col=results_col)
-                excel.write_result(age_years, save=True, col=1)
+
+                excel.write_result(ppm, save=True, col=results_col)
+
             update_test_progress()
 
     ks33250.enable_output(False)
