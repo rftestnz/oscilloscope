@@ -248,6 +248,19 @@ class Keysight_Oscilloscope(ScopeDriver):
                             if family == "2"
                             else DSOX_FAMILY.DSOX3000
                         )
+                else:
+                    # could be an older model like the DSO5000 series
+                    # find the first non alpha character
+                    for chr in self.model:
+                        if chr.isdigit():
+                            if chr == "1":
+                                self.family = DSOX_FAMILY.DSOX1000
+                            elif chr == "5":
+                                self.family = DSOX_FAMILY.DSO5000
+                            else:
+                                self.family = DSOX_FAMILY.DSOX3000
+                            break
+
                 self.serial = identity[2]
             self.instr.timeout = self.timeout  # type: ignore
 
