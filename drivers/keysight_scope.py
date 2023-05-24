@@ -33,6 +33,7 @@ class DSOX_FAMILY(Enum):
     DSOX1000 = 1
     DSOX2000 = 2
     DSOX3000 = 3
+    DSO5000 = 5
 
 
 class Keysight_Oscilloscope(ScopeDriver):
