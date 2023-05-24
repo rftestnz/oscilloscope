@@ -9,7 +9,7 @@ import PySimpleGUI as sg
 from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.keysight_scope import Keysight_Oscilloscope
+from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
 from drivers.tek_scope import Tektronix_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
@@ -1025,10 +1025,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             reading = uut.measure_voltage(chan=channel)
 
-            if uut.keysight:
+            if uut.keysight and uut.family != DSOX_FAMILY.DSO5000:
                 voltage2 = uut.read_cursor_avg()
 
-            if uut.keysight:
                 cursor_results.append(
                     {
                         "chan": channel,
