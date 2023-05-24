@@ -1344,42 +1344,44 @@ def test_timebase(filename: str, row: int) -> bool:
                 error = ref_x - offset_x + 0.001  # type: ignore
                 print(f"TB Error {error}")
 
-                code = sg.popup_get_text(
-                    "Enter date code from serial label (0 if no code)",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
-                )
+                if uut.family != DSOX_FAMILY.DSO5000:
+                    code = sg.popup_get_text(
+                        "Enter date code from serial label (0 if no code)",
+                        background_color="blue",
+                        icon=get_path("ui\\scope.ico"),
+                    )
 
-                age = 10
-
-                try:
-                    val = int(code)  # type: ignore
-                    print(f"{val/100}, {datetime.now().year-2000}")
-                    if val // 100 > datetime.now().year - 2000:
-                        val = 0
-                    age = datetime.now().year - (val / 100) - 2000
-
-                except ValueError:
-                    val = 0
-
-                if not val and len(uut.serial) >= 10:
-                    code = uut.serial[2:6]
+                    age = 10
 
                     try:
-                        val = int(code)
-                        # start is from 1960
-                        age = datetime.now().year - (val - 4000) / 100 - 2000
-                    except ValueError:
-                        # Invalid. Just assume 10
-                        age = 10
+                        val = int(code)  # type: ignore
+                        print(f"{val/100}, {datetime.now().year-2000}")
+                        if val // 100 > datetime.now().year - 2000:
+                            val = 0
+                        age = datetime.now().year - (val / 100) - 2000
 
-                age_years = int(age + 0.5)
+                    except ValueError:
+                        val = 0
+
+                    if not val and len(uut.serial) >= 10:
+                        code = uut.serial[2:6]
+
+                        try:
+                            val = int(code)
+                            # start is from 1960
+                            age = datetime.now().year - (val - 4000) / 100 - 2000
+                        except ValueError:
+                            # Invalid. Just assume 10
+                            age = 10
+
+                    age_years = int(age + 0.5)
+                    excel.write_result(age_years, save=True, col=1)
 
                 # results in ppm
                 ppm = error / 1e-3 * 1e6
                 excel.row = row
                 excel.write_result(ppm, save=False, col=results_col)
-                excel.write_result(age_years, save=True, col=1)
+
             update_test_progress()
 
     ks33250.enable_output(False)
