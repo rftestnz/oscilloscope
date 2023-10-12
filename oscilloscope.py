@@ -10,7 +10,7 @@ from drivers.fluke_5700a import Fluke5700A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
-from drivers.tek_scope import Tektronix_Oscilloscope
+from drivers.tek_scope import Tektronix_Oscilloscope, Tek_Acq_Mode
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
@@ -642,13 +642,18 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             units = excel.get_units()
 
             settings = excel.get_volt_settings()
-            # Only need the channel
 
             uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
             uut.set_channel_impedance(
                 chan=settings.channel, impedance=settings.impedance  # type: ignore
             )
             uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
+
+            if settings.acq_mode:
+                # TODO do more checks, at the moment it is only None or Hires
+                uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)
+            else:
+                uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)
 
             rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
 
