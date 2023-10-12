@@ -375,7 +375,7 @@ class ExcelInterface:
 
         test_rows = []
         test_filter = test_filter.replace("*", ".")
-        if "." in test_filter:
+        if "." not in test_filter:
             # Not using wildcard, make exact match on whole word
             test_filter = f"^{test_filter}$"
 
@@ -597,7 +597,7 @@ class ExcelInterface:
 
         tests = []
         test_filter = test_filter.replace("*", ".")
-        if "." in test_filter:
+        if "." not in test_filter:
             # Use exact match on whole word
             test_filter = f"^{test_filter}$"
 
