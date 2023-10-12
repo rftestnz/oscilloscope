@@ -28,7 +28,7 @@ class DCV_Settings:
     bandwidth: int
     impedance: str
     invert: bool
-    acq_mode:str
+    acq_mode: str
 
 
 @dataclass(frozen=True)
@@ -502,8 +502,8 @@ class ExcelInterface:
         col += 1
         invert = str(self.ws.cell(column=col, row=row).value)
         inverted = bool(invert and invert.lower() == "y") or invert == "1"
-        col+=1
-        mode = self.ws.cell(column=col,row=row).value
+        col += 1
+        mode = self.ws.cell(column=col, row=row).value
 
         return DCV_Settings(
             function=func,
@@ -515,7 +515,7 @@ class ExcelInterface:
             bandwidth=bandwidth,  # type: ignore
             impedance=impedance,  # type: ignore
             invert=inverted,
-            acq_mode=mode
+            acq_mode=mode,
         )
 
     def get_sample_rate_settings(self, row: int = -1) -> Sampling_Settings:
@@ -603,8 +603,6 @@ class ExcelInterface:
 
         while True:
             setting = self.get_volt_settings()
-
-
 
             if re.match(test_filter, setting.function):  # type: ignore
                 tests.append(setting)
