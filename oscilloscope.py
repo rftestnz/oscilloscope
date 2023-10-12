@@ -2066,6 +2066,10 @@ if __name__ == "__main__":
             ),
             sg.Button("Select", size=(12, 1), key="-SELECT_ADDRESS-"),
         ],
+        [
+            sg.Text("Number Channels", size=(15, 1)),
+            sg.Combo([2, 4, 6, 8], size=(10, 1), key="-UUT_CHANNELS-", default_value=4),
+        ],
         [sg.Text()],
         [
             sg.ProgressBar(
@@ -2209,6 +2213,9 @@ if __name__ == "__main__":
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
+                uut.num_channels = values[
+                    "-UUT_CHANNELS-"
+                ]  # Override the ones from the model
 
                 test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
