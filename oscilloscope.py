@@ -2082,6 +2082,12 @@ if __name__ == "__main__":
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
+            sg.Button(
+                "Hide Excel Rows",
+                size=(12, 1),
+                key="-HIDE_EXCEL_ROWS-",
+                tooltip="For templates with more channels than present in UUT",
+            ),
             sg.Exit(size=(12, 1)),
         ],
     ]
