@@ -12,6 +12,7 @@ from random import random
 from typing import List
 import numpy as np
 from struct import unpack
+from enum import Enum
 
 try:
     from drivers.base_scope_driver import ScopeDriver, Scope_Simulator
@@ -19,6 +20,20 @@ except ModuleNotFoundError:
     from base_scope_driver import ScopeDriver, Scope_Simulator
 
 VERSION = "A.00.01"
+
+class Tek_Acq_Mode(Enum):
+    """
+    Tek_Acq_Mode
+    The acquisition modes for the MSO4-5-6
+
+    Args:
+        Enum (_type_): _description_
+    """
+    SAMPLE = 1
+    PEAK=2
+    HIRES = 3
+    AVERAGE=4
+    ENVELOPE=5
 
 
 class Tektronix_Oscilloscope(ScopeDriver):
