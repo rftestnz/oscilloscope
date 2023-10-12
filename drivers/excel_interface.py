@@ -776,6 +776,32 @@ class ExcelInterface:
 
         return False
 
+    def hide_excel_rows(self, channel: int) -> None:
+        """
+        hide_excel_rows
+        Hide rows from results sheet where the template has more channels than the UUT
+        Col A contains the channel filter
+
+        Args:
+            channel (int): _description_
+        """
+
+        self.initialize()
+
+        row = self.row
+
+        while row < self.__max_row:
+            filt = self.ws.cell(column=1, row=row).value
+
+            if filt and filt > channel:  # type: ignore
+                # Hide this row
+
+                self.ws.row_dimensions[row].hidden = True  # type: ignore
+
+            row += 1
+
+        self.save_sheet()
+
 
 if __name__ == "__main__":
     with ExcelInterface("c:\\Temp\\666_Tektronix_MSO44.xlsx") as excel:
@@ -825,3 +851,5 @@ if __name__ == "__main__":
         print(excel.find_results_col(80))
 
         print(excel.get_invalid_tests())
+
+        excel.hide_excel_rows(4)
