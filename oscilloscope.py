@@ -1569,7 +1569,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             message = f"Connect fast pulse generator to channel {settings.channel}"
 
             if settings.impedance != 50:
-                message += "via 50 Ohm feedthru"
+                message += " via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
                 message, background_color="blue", icon=get_path("ui\\scope.ico")  # type: ignore
