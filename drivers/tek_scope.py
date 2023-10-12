@@ -18,7 +18,7 @@ try:
 except ModuleNotFoundError:
     from base_scope_driver import ScopeDriver, Scope_Simulator
 
-VERSION = "A.00.00"
+VERSION = "A.00.01"
 
 
 class Tektronix_Oscilloscope(ScopeDriver):
