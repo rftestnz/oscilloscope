@@ -21,6 +21,7 @@ except ModuleNotFoundError:
 
 VERSION = "A.00.01"
 
+
 class Tek_Acq_Mode(Enum):
     """
     Tek_Acq_Mode
@@ -29,11 +30,12 @@ class Tek_Acq_Mode(Enum):
     Args:
         Enum (_type_): _description_
     """
+
     SAMPLE = 1
-    PEAK=2
+    PEAK = 2
     HIRES = 3
-    AVERAGE=4
-    ENVELOPE=5
+    AVERAGE = 4
+    ENVELOPE = 5
 
 
 class Tektronix_Oscilloscope(ScopeDriver):
@@ -410,6 +412,28 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.write("ACQ:MODE AVE")
         self.write(f"ACQ:NUMAV {num_samples}")
+
+    def set_acquisition_mode(self, mode: Tek_Acq_Mode) -> None:
+        """
+        set_acquisition_mode
+        Set the mode for the sampling
+
+        Args:
+            mode (Tek_Acq_Mode): _description_
+        """
+
+        if mode == Tek_Acq_Mode.SAMPLE:
+            md = "SAMPLE"
+        elif mode == Tek_Acq_Mode.PEAK:
+            md = "PEAK"
+        elif mode == Tek_Acq_Mode.HIRES:
+            md = "HIRES"
+        elif mode == Tek_Acq_Mode.ENVELOPE:
+            md = "ENV"
+        else:
+            md = "AVERAGE"
+
+        self.write(f"ACQ:MODE {md}")
 
     def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
