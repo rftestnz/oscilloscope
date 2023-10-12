@@ -1569,7 +1569,7 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             message = f"Connect fast pulse generator to channel {settings.channel}"
 
             if settings.impedance != 50:
-                message += "via 50 Ohm feedthru"
+                message += " via 50 Ohm feedthru"
 
             response = sg.popup_ok_cancel(
                 message, background_color="blue", icon=get_path("ui\\scope.ico")  # type: ignore
@@ -1938,6 +1938,20 @@ def check_impedance(filename: str) -> bool:
     return "IMP" in valid_tests
 
 
+def hide_excel_rows(filename: str, channel: int) -> None:
+    """
+    hide_excel_rows
+    Hide the template rows for sheets which have different number of channels
+    Channl filter must be in column A
+
+    Args:
+        channel (int): _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        excel.hide_excel_rows(channel=channel)
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -2066,6 +2080,10 @@ if __name__ == "__main__":
             ),
             sg.Button("Select", size=(12, 1), key="-SELECT_ADDRESS-"),
         ],
+        [
+            sg.Text("Number Channels", size=(15, 1)),
+            sg.Combo([2, 4, 6, 8], size=(10, 1), key="-UUT_CHANNELS-", default_value=4),
+        ],
         [sg.Text()],
         [
             sg.ProgressBar(
@@ -2078,6 +2096,12 @@ if __name__ == "__main__":
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
+            sg.Button(
+                "Hide Excel Rows",
+                size=(12, 1),
+                key="-HIDE_EXCEL_ROWS-",
+                tooltip="For templates with more channels than present in UUT",
+            ),
             sg.Exit(size=(12, 1)),
         ],
     ]
@@ -2209,6 +2233,9 @@ if __name__ == "__main__":
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
+                uut.num_channels = values[
+                    "-UUT_CHANNELS-"
+                ]  # Override the ones from the model
 
                 test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
@@ -2282,3 +2309,6 @@ if __name__ == "__main__":
             window["GPIB_ADDR_FLUKE_5700A"].update(
                 value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
             )
+
+        if event == "-HIDE_EXCEL_ROWS-":
+            hide_excel_rows(filename=values["-FILE-"], channel=values["-UUT_CHANNELS-"])

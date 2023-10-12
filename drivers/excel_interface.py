@@ -14,7 +14,7 @@ from datetime import datetime
 from pprint import pprint
 from dataclasses import dataclass
 
-VERSION = "A.00.02"
+VERSION = "A.00.03"
 
 
 @dataclass(frozen=True)
@@ -28,7 +28,7 @@ class DCV_Settings:
     bandwidth: int
     impedance: str
     invert: bool
-    acq_mode:str
+    acq_mode: str
 
 
 @dataclass(frozen=True)
@@ -374,14 +374,15 @@ class ExcelInterface:
         self.initialize()
 
         test_rows = []
+        test_filter = test_filter.replace("*", ".")
+        if "." not in test_filter:
+            # Not using wildcard, make exact match on whole word
+            test_filter = f"^{test_filter}$"
 
         while True:
             # match against the filter
             # Use a filter, but . is anything not *
-            test_filter = test_filter.replace("*", ".")
-            if test_filter.find(".") == -1:
-                # Not using wildcard, make exact match on whole word
-                test_filter = f"^{test_filter}$"
+
             setting = self.get_volt_settings()
             if re.match(test_filter, setting.function):  # type: ignore
                 test_rows.append(self.row)
@@ -501,8 +502,8 @@ class ExcelInterface:
         col += 1
         invert = str(self.ws.cell(column=col, row=row).value)
         inverted = bool(invert and invert.lower() == "y") or invert == "1"
-        col+=1
-        mode = self.ws.cell(column=col,row=row).value
+        col += 1
+        mode = self.ws.cell(column=col, row=row).value
 
         return DCV_Settings(
             function=func,
@@ -514,7 +515,7 @@ class ExcelInterface:
             bandwidth=bandwidth,  # type: ignore
             impedance=impedance,  # type: ignore
             invert=inverted,
-            acq_mode=mode
+            acq_mode=mode,
         )
 
     def get_sample_rate_settings(self, row: int = -1) -> Sampling_Settings:
@@ -595,13 +596,13 @@ class ExcelInterface:
         self.initialize()
 
         tests = []
+        test_filter = test_filter.replace("*", ".")
+        if "." not in test_filter:
+            # Use exact match on whole word
+            test_filter = f"^{test_filter}$"
 
         while True:
             setting = self.get_volt_settings()
-            test_filter = test_filter.replace("*", ".")
-            if test_filter.find(".") == -1:
-                # Use exact match on whole word
-                test_filter = f"^{test_filter}$"
 
             if re.match(test_filter, setting.function):  # type: ignore
                 tests.append(setting)
@@ -775,9 +776,35 @@ class ExcelInterface:
 
         return False
 
+    def hide_excel_rows(self, channel: int) -> None:
+        """
+        hide_excel_rows
+        Hide rows from results sheet where the template has more channels than the UUT
+        Col A contains the channel filter
+
+        Args:
+            channel (int): _description_
+        """
+
+        self.initialize()
+
+        row = self.row
+
+        while row < self.__max_row:
+            filt = self.ws.cell(column=1, row=row).value
+
+            if filt and filt > channel:  # type: ignore
+                # Hide this row
+
+                self.ws.row_dimensions[row].hidden = True  # type: ignore
+
+            row += 1
+
+        self.save_sheet()
+
 
 if __name__ == "__main__":
-    with ExcelInterface("testsheets\\666_Tektronix_TDS3034C.xlsx") as excel:
+    with ExcelInterface("c:\\Temp\\666_Tektronix_MSO44.xlsx") as excel:
         excel.backup()
         start_cell = excel.get_named_cell("StartCell")
         print(start_cell)
@@ -796,6 +823,8 @@ if __name__ == "__main__":
         print("Filtered:")
 
         pprint(excel.get_all_test_settings("DC*"))
+
+        pprint(excel.get_all_test_settings("NOISE"))
 
         print(f"Available: {excel.check_excel_available()}")
 
@@ -822,3 +851,5 @@ if __name__ == "__main__":
         print(excel.find_results_col(80))
 
         print(excel.get_invalid_tests())
+
+        excel.hide_excel_rows(4)
