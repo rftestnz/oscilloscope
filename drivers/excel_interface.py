@@ -14,7 +14,7 @@ from datetime import datetime
 from pprint import pprint
 from dataclasses import dataclass
 
-VERSION = "A.00.02"
+VERSION = "A.00.03"
 
 
 @dataclass(frozen=True)
