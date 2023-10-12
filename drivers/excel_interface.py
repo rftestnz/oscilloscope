@@ -780,7 +780,7 @@ class ExcelInterface:
 
 
 if __name__ == "__main__":
-    with ExcelInterface("testsheets\\666_Tektronix_TDS3034C.xlsx") as excel:
+    with ExcelInterface("c:\\Temp\\666_Tektronix_MSO44.xlsx") as excel:
         excel.backup()
         start_cell = excel.get_named_cell("StartCell")
         print(start_cell)
@@ -799,6 +799,8 @@ if __name__ == "__main__":
         print("Filtered:")
 
         pprint(excel.get_all_test_settings("DC*"))
+
+        pprint(excel.get_all_test_settings("NOISE"))
 
         print(f"Available: {excel.check_excel_available()}")
 
