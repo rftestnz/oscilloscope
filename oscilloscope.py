@@ -1938,6 +1938,20 @@ def check_impedance(filename: str) -> bool:
     return "IMP" in valid_tests
 
 
+def hide_excel_rows(filename: str, channel: int) -> None:
+    """
+    hide_excel_rows
+    Hide the template rows for sheets which have different number of channels
+    Channl filter must be in column A
+
+    Args:
+        channel (int): _description_
+    """
+
+    with ExcelInterface(filename=filename) as excel:
+        excel.hide_excel_rows(channel=channel)
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
@@ -2295,3 +2309,6 @@ if __name__ == "__main__":
             window["GPIB_ADDR_FLUKE_5700A"].update(
                 value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
             )
+
+        if event == "-HIDE_EXCEL_ROWS-":
+            hide_excel_rows(filename=values["-FILE-"], channel=values["-UUT_CHANNELS-"])
