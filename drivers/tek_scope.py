@@ -458,6 +458,18 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.write(f"ACQ:MODE {md}")
 
+    def limit_measurement_population(self, channel: int, pop: int) -> None:
+        """
+        limit_measurement_population
+        Apply a population limit for statistics
+
+        Args:
+            pop (int): _description_
+        """
+
+        self.write(f"MEASU:MEAS{channel}:POPULATION:LIMIT:STATE ON")
+        self.write(f"MEASU:MEAS{channel}:POPULATION:LIMIT:VAL {pop}")
+
     def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """
         set_trigger_mode _summary_
