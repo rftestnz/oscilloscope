@@ -614,6 +614,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
     uut.reset()
 
     uut.set_sample_rate("6.25G")  # type: ignore
+    uut.limit_measurement_population(100)  # type: ignore
     uut.set_acquisition(16)
 
     with ExcelInterface(filename) as excel:
