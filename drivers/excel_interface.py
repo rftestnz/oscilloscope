@@ -83,7 +83,7 @@ class ExcelInterface:
 
     __filename: str = ""
     __start_row: int = 10
-    __max_row: int = 1000
+    __max_row: int = 2000  # 8 channel Tek scopes very long results
     __saved: bool = True
     __data_col = 10
     __result_col = 4
