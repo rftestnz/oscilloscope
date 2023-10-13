@@ -503,7 +503,9 @@ class ExcelInterface:
         invert = str(self.ws.cell(column=col, row=row).value)
         inverted = bool(invert and invert.lower() == "y") or invert == "1"
         col += 1
-        mode = self.ws.cell(column=col, row=row).value
+        mode = str(self.ws.cell(column=col, row=row).value)
+        if mode:
+            mode = mode.upper()
 
         return DCV_Settings(
             function=func,
