@@ -413,6 +413,29 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write("ACQ:MODE AVE")
         self.write(f"ACQ:NUMAV {num_samples}")
 
+    def set_sample_rate(self, rate: str) -> None:
+        """
+        set_sample_rate
+        Set the sampling rate
+
+        Args:
+            rate (float): _description_
+        """
+
+        multipliers = ["k", "M", "G"]
+        if any(multiplier in rate for multiplier in multipliers):
+            val = float(rate[:-1])
+            if rate[-1] == "k":
+                val *= 1000
+            elif rate[-1] == "M":
+                val *= 1_000_000
+            elif rate[-1] == "G":
+                val *= 1e9
+        else:
+            val = float(rate)
+
+        self.write(f"HORZ:MODE:SAMPLERATE {val}")
+
     def set_acquisition_mode(self, mode: Tek_Acq_Mode) -> None:
         """
         set_acquisition_mode
@@ -434,6 +457,18 @@ class Tektronix_Oscilloscope(ScopeDriver):
             md = "AVERAGE"
 
         self.write(f"ACQ:MODE {md}")
+
+    def limit_measurement_population(self, channel: int, pop: int) -> None:
+        """
+        limit_measurement_population
+        Apply a population limit for statistics
+
+        Args:
+            pop (int): _description_
+        """
+
+        self.write(f"MEASU:MEAS{channel}:POPULATION:LIMIT:STATE ON")
+        self.write(f"MEASU:MEAS{channel}:POPULATION:LIMIT:VAL {pop}")
 
     def set_trigger_type(self, mode: str, auto_trig: bool = True) -> None:
         """

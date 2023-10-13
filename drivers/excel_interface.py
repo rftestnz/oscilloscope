@@ -83,7 +83,7 @@ class ExcelInterface:
 
     __filename: str = ""
     __start_row: int = 10
-    __max_row: int = 1000
+    __max_row: int = 2000  # 8 channel Tek scopes very long results
     __saved: bool = True
     __data_col = 10
     __result_col = 4
@@ -503,7 +503,9 @@ class ExcelInterface:
         invert = str(self.ws.cell(column=col, row=row).value)
         inverted = bool(invert and invert.lower() == "y") or invert == "1"
         col += 1
-        mode = self.ws.cell(column=col, row=row).value
+        mode = str(self.ws.cell(column=col, row=row).value)
+        if mode:
+            mode = mode.upper()
 
         return DCV_Settings(
             function=func,

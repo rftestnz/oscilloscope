@@ -613,6 +613,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
     uut.open_connection()
     uut.reset()
 
+    uut.set_sample_rate("6.25G")  # type: ignore
+    uut.limit_measurement_population(100)  # type: ignore
     uut.set_acquisition(16)
 
     with ExcelInterface(filename) as excel:
@@ -650,10 +652,14 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
 
             if settings.acq_mode:
-                # TODO do more checks, at the moment it is only None or Hires
-                uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)
+                if settings.acq_mode == "HIRES":
+                    uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)  # type: ignore
+                elif settings.acq_mode == "SAMPLE":
+                    uut.set_acquisition(Tek_Acq_Mode.SAMPLE)  # type: ignore
+                else:
+                    uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
             else:
-                uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)
+                uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
 
             rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
 
