@@ -25,7 +25,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.03"
+VERSION = "A.01.04"
 
 
 calibrator = Fluke5700A()
@@ -615,7 +615,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
     if uut.model.startswith("MSO5"):
         uut.set_sample_rate("6.25G")  # type: ignore
-        
+
     uut.limit_measurement_population(100)  # type: ignore
     uut.set_acquisition(16)
 

@@ -3,6 +3,8 @@
 # Quick script to control Meatest M142
 """
 
+
+import contextlib
 import pyvisa
 import time
 from pprint import pprint
@@ -125,7 +127,8 @@ class M142:
         """
 
         if not self.simulating:
-            self.instr.control_ren(6)  # type: ignore    def go_to_local(self)->None:
+            with contextlib.suppress(Exception):
+                self.instr.control_ren(6)  # type: ignore    def go_to_local(self)->None:
 
     def is_connected(self) -> bool:
         """
