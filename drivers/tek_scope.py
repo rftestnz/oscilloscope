@@ -264,7 +264,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             bw_limit (bool): _description_
         """
 
-        if self.model.startswith("MSO5"):
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
             state = str(bw_limit) if bw_limit else "FULL"
         elif type(bw_limit) is bool:
             state = "TWE" if bw_limit else "FULL"
@@ -290,7 +290,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             imedance (str): _description_
         """
 
-        if self.model.startswith("MSO5"):
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
             if type(impedance) is str and impedance.find("k") > 0:
                 imp = int(impedance.strip()[:-1]) * 1000
             elif type(impedance) is str and impedance.find("M") > 0:
