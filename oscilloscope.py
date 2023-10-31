@@ -657,9 +657,9 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
             if settings.acq_mode:
-                if settings.acq_mode == "HIRES":
+                if settings.acq_mode.upper() == "HIRES":
                     uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)  # type: ignore
-                elif settings.acq_mode == "SAMPLE":
+                elif settings.acq_mode.upper() == "SAMPLE":
                     uut.set_acquisition(Tek_Acq_Mode.SAMPLE)  # type: ignore
                 else:
                     uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
