@@ -2014,6 +2014,14 @@ if __name__ == "__main__":
             ),
             sg.Button("View", size=(15, 1), key="-VIEW-", disabled=False),
         ],
+        [
+            sg.Text(" " * 137),
+            sg.Button(
+                "Hide Extra Channels",
+                tooltip="For templates which provide multiple channel counts",
+                key="-HIDE_CHANNELS-",
+            ),
+        ],
         [sg.Text()],
         [
             sg.Check(
