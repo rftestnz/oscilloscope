@@ -666,12 +666,22 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             else:
                 uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
 
-            rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
+            uut.limit_measurement_population(channel=channel, pop=100)  # type: ignore
+
+            uut.set_voltage_position(
+                chan=channel, position=settings.scale * 0.34
+            )  # 340 mdiv
+
+            rnd = uut.measure_rms_noise(chan=settings.channel, delay=5)  # type: ignore
 
             uut.measure_clear()
-            avg = uut.measure_voltage(chan=settings.channel)  # type: ignore
+            uut.set_voltage_position(
+                chan=channel, position=settings.scale * 0.36
+            )  # 360 mdiv
 
-            result = rnd - avg
+            avg = uut.measure_voltage(chan=settings.channel, delay=5)  # type: ignore
+
+            result = (rnd + avg) / 2
 
             if units.startswith("m"):
                 result *= 1000
