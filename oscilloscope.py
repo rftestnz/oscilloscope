@@ -1753,7 +1753,9 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
     elif manufacturer == "TEKTRONIX":
         uut = Tektronix_Oscilloscope(simulate=False)
-
+    elif manufacturer == "ROHDE&SCHWARZ":
+        uut = RohdeSchwarz_Oscilloscope(simulate=False)
+        num_channels = 4
     else:
         sg.popup_error(
             f"No driver for {manufacturer}. Using Tektronix driver",
