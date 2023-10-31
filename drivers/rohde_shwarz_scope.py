@@ -113,7 +113,16 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        return super().write(command)
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
 
     def read(self) -> str:
         """
@@ -122,7 +131,20 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().read()
+
+        attempts = 0
+
+        ret: str = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def query(self, command: str) -> str:
         """
@@ -134,7 +156,21 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().query(command)
+
+        assert command.find("?") > 0
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def read_query(self, command: str) -> float:
         """
@@ -146,7 +182,17 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             float: _description_
         """
-        return super().read_query(command)
+
+        assert command.find("?") > 0
+
+        reply = self.query(command)
+
+        try:
+            val = float(reply)
+        except ValueError:
+            val = 0.0
+
+        return val
 
     def reset(self) -> None:
         """
