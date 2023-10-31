@@ -639,13 +639,15 @@ if __name__ == "__main__":
 
     rth1004.set_channel(chan=1, enabled=True)
     rth1004.set_channel(chan=2, enabled=True)
-    rth1004.set_voltage_scale(chan=1, scale=1)
+    rth1004.set_voltage_scale(chan=1, scale=0.002)
     rth1004.set_voltage_scale(chan=2, scale=0.2)
-    rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
-    rth1004.set_voltage_offset(chan=2, offset=+0.5)
+    # rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    # rth1004.set_voltage_offset(chan=2, offset=+0.5)
     rth1004.set_timebase(0.001)
 
     rth1004.set_acquisition(32)
+
+    print(rth1004.measure_voltage(2))
 
     print(rth1004.check_triggered())
 
