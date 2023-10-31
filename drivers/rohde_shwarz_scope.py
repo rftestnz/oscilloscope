@@ -100,7 +100,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         """
         return bool(
             self.open_connection()
-            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
+            and (not self.simulating and self.model.find("RTH") >= 0 or self.simulating)
         )
 
     def write(self, command: str) -> None:
