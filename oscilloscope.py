@@ -1067,9 +1067,9 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if units.startswith("m"):
                 reading *= 1000
-                reading1 *= 1000
 
             if settings.function == "DCV-BAL":
+                reading1 *= 1000
                 diff = reading1 - reading
                 excel.write_result(diff, col=results_col)  # auto saving
             else:
