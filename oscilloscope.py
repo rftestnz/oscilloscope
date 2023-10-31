@@ -1003,29 +1003,30 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
 
-            if settings.function == "DCV-BAL":
-                # Non keysight, apply the half the voltage and the offset then do the reverse
+            if uut.keysight or settings.function == "DCV-BAL":
+                if settings.function == "DCV-BAL":
+                    # Non keysight, apply the half the voltage and the offset then do the reverse
 
-                calibrator.set_voltage_dc(settings.voltage)
+                    calibrator.set_voltage_dc(settings.voltage)
 
-            # 0V test
-            calibrator.operate()
+                # 0V test
+                calibrator.operate()
 
-            uut.set_acquisition(1)
+                uut.set_acquisition(1)
 
-            if not simulating:
-                time.sleep(0.2)
+                if not simulating:
+                    time.sleep(0.2)
 
-            uut.set_acquisition(32)
+                uut.set_acquisition(32)
 
-            if not simulating:
-                time.sleep(1)
+                if not simulating:
+                    time.sleep(1)
 
-            if uut.keysight:
-                voltage1 = uut.read_cursor_avg()
+                if uut.keysight:
+                    voltage1 = uut.read_cursor_avg()
 
-            uut.measure_clear()
-            reading1 = uut.measure_voltage(chan=channel)
+                uut.measure_clear()
+                reading1 = uut.measure_voltage(chan=channel)
 
             if settings.function == "DCV-BAL":
                 # still set up for the + voltage
