@@ -11,6 +11,7 @@ from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
 from drivers.tek_scope import Tektronix_Oscilloscope, Tek_Acq_Mode
+from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.excel_interface import ExcelInterface
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
