@@ -628,9 +628,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
 
 if __name__ == "__main__":
-
     rth1004 = RohdeSchwarz_Oscilloscope(simulate=False)
-    rth1004.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
+    rth1004.visa_address = "USB0::0x0AAD::0x012F::1317.5000K04/101102::INSTR"
 
     rth1004.open_connection()
 
