@@ -1588,6 +1588,9 @@ def test_risetime(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_tb_test_settings()
 
+            if settings.channel > uut.num_channels:
+                continue
+
             message = f"Connect fast pulse generator to channel {settings.channel}"
 
             if settings.impedance != 50:
