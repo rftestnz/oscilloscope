@@ -212,6 +212,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         try:
             self.instr.timeout = 2000  # type: ignore
             response = self.instr.query("*IDN?")  # type: ignore
+            print(response)
             identity = response.split(",")
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
@@ -440,7 +441,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:SOUR C{chan}")
         self.write(f"TRIG:LEV{chan}:VAL {level}")
 
-    def measure_voltage(self, chan: int, delay: float = 2) -> float:
+    def measure_voltage(self, chan: int, delay: float = 6) -> float:
         """
         measure_voltage _summary_
 
