@@ -648,11 +648,13 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_volt_settings()
 
-            uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
+            channel = int(settings.channel)
+
+            uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
             uut.set_channel_impedance(
-                chan=settings.channel, impedance=settings.impedance  # type: ignore
+                chan=channel, impedance=settings.impedance  # type: ignore
             )
-            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
+            uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
             if settings.acq_mode:
                 if settings.acq_mode == "HIRES":
