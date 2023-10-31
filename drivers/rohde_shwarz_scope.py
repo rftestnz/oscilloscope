@@ -100,7 +100,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         """
         return bool(
             self.open_connection()
-            and (not self.simulating and self.model.find("DPO") >= 0 or self.simulating)
+            and (not self.simulating and self.model.find("RTH") >= 0 or self.simulating)
         )
 
     def write(self, command: str) -> None:
@@ -113,7 +113,16 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             _type_: _description_
         """
-        return super().write(command)
+
+        attempts = 0
+
+        while attempts < 3:
+            try:
+                self.instr.write(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
 
     def read(self) -> str:
         """
@@ -122,7 +131,20 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().read()
+
+        attempts = 0
+
+        ret: str = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.read()  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def query(self, command: str) -> str:
         """
@@ -134,7 +156,21 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             str: _description_
         """
-        return super().query(command)
+
+        assert command.find("?") > 0
+
+        attempts = 0
+        ret = ""
+
+        while attempts < 3:
+            try:
+                ret = self.instr.query(command)  # type: ignore
+                break
+            except pyvisa.VisaIOError:
+                time.sleep(1)
+                attempts += 1
+
+        return ret
 
     def read_query(self, command: str) -> float:
         """
@@ -146,7 +182,17 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         Returns:
             float: _description_
         """
-        return super().read_query(command)
+
+        assert command.find("?") > 0
+
+        reply = self.query(command)
+
+        try:
+            val = float(reply)
+        except ValueError:
+            val = 0.0
+
+        return val
 
     def reset(self) -> None:
         """
@@ -166,6 +212,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         try:
             self.instr.timeout = 2000  # type: ignore
             response = self.instr.query("*IDN?")  # type: ignore
+            print(response)
             identity = response.split(",")
             if len(identity) >= 3:
                 self.manufacturer = identity[0]
@@ -394,7 +441,7 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:SOUR C{chan}")
         self.write(f"TRIG:LEV{chan}:VAL {level}")
 
-    def measure_voltage(self, chan: int, delay: float = 2) -> float:
+    def measure_voltage(self, chan: int, delay: float = 6) -> float:
         """
         measure_voltage _summary_
 
@@ -581,9 +628,8 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
 
 if __name__ == "__main__":
-
     rth1004 = RohdeSchwarz_Oscilloscope(simulate=False)
-    rth1004.visa_address = "USB0::0x0699::0x03A3::C044602::INSTR"
+    rth1004.visa_address = "USB0::0x0AAD::0x012F::1317.5000K04/101102::INSTR"
 
     rth1004.open_connection()
 
@@ -593,13 +639,15 @@ if __name__ == "__main__":
 
     rth1004.set_channel(chan=1, enabled=True)
     rth1004.set_channel(chan=2, enabled=True)
-    rth1004.set_voltage_scale(chan=1, scale=1)
+    rth1004.set_voltage_scale(chan=1, scale=0.002)
     rth1004.set_voltage_scale(chan=2, scale=0.2)
-    rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
-    rth1004.set_voltage_offset(chan=2, offset=+0.5)
+    # rth1004.set_voltage_offset(chan=1, offset=-1.5)  # Opposite direction to Keysight
+    # rth1004.set_voltage_offset(chan=2, offset=+0.5)
     rth1004.set_timebase(0.001)
 
     rth1004.set_acquisition(32)
+
+    print(rth1004.measure_voltage(2))
 
     print(rth1004.check_triggered())
 
