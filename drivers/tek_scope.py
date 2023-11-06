@@ -264,7 +264,9 @@ class Tektronix_Oscilloscope(ScopeDriver):
             bw_limit (bool): _description_
         """
 
-        if self.model.startswith("MSO5"):
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+            if type(bw_limit) is str and bw_limit.find("M") > 0:
+                bw_limit = int(bw_limit.strip()[:-1]) * 1000000
             state = str(bw_limit) if bw_limit else "FULL"
         elif type(bw_limit) is bool:
             state = "TWE" if bw_limit else "FULL"
@@ -290,7 +292,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             imedance (str): _description_
         """
 
-        if self.model.startswith("MSO5"):
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
             if type(impedance) is str and impedance.find("k") > 0:
                 imp = int(impedance.strip()[:-1]) * 1000
             elif type(impedance) is str and impedance.find("M") > 0:
@@ -494,7 +496,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
         self.write(f"TRIG:A:LEV {level}")
 
-    def measure_voltage(self, chan: int, delay: float = 2) -> float:
+    def measure_voltage(self, chan: int, delay: float = 1.5) -> float:
         """
         measure_voltage _summary_
 
@@ -533,6 +535,8 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
+
+        # self.limit_measurement_population(channel=chan, pop=100)  # type: ignore
 
         if not self.simulating:
             time.sleep(delay)
@@ -598,7 +602,10 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.measure_clear()
 
-        self.write("MEASU:MEAS1:TYPE RISE")
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+            self.write("MEASU:MEAS1:TYPE RISETIME")
+        else:
+            self.write("MEASU:MEAS1:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 

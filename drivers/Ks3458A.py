@@ -58,7 +58,6 @@ class Ks3458A_Simulator:
         return str(result)
 
     def read() -> str:
-
         """
         read _summary_
 
@@ -256,7 +255,8 @@ class Ks3458A:
         """
 
         if not self.simulating:
-            self.instr.control_ren(6)  # type: ignore
+            with contextlib.suppress(Exception):
+                self.instr.control_ren(6)  # type: ignore    def go_to_local(self)->None:
 
     def __wait_until_ready(self) -> None:
         """
@@ -406,7 +406,6 @@ class Ks3458A:
 
         try:
             for _ in range(number_readings):
-
                 reply = self.instr.read().strip()  # type: ignore
                 with contextlib.suppress(ValueError):
                     # TODO force a re-read on exception

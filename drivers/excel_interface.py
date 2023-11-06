@@ -408,7 +408,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = str(self.ws.cell(column=col, row=row).value)
+        func = str(self.ws.cell(column=col, row=row).value).upper()
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -442,7 +442,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = str(self.ws.cell(column=col, row=row).value)
+        func = str(self.ws.cell(column=col, row=row).value).upper()
         col += 1
         channel = self.ws.cell(column=col, row=row).value
         col += 1
@@ -484,7 +484,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = str(self.ws.cell(column=col, row=row).value)
+        func = str(self.ws.cell(column=col, row=row).value).upper()
         col += 1
         chan = self.ws.cell(column=col, row=row).value
         col += 1
@@ -535,7 +535,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = str(self.ws.cell(column=col, row=row).value)
+        func = str(self.ws.cell(column=col, row=row).value).upper()
         col += 1
         chan = self.ws.cell(column=col, row=row).value
         col += 1
@@ -574,7 +574,7 @@ class ExcelInterface:
             row = self.row
 
         col = self.__data_col
-        func = str(self.ws.cell(column=col, row=row).value)
+        func = str(self.ws.cell(column=col, row=row).value).upper()
         col += 1
         pod = self.ws.cell(column=col, row=row).value
         col += 1

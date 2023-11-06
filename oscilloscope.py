@@ -617,7 +617,6 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
     if uut.model.startswith("MSO5"):
         uut.set_sample_rate("6.25G")  # type: ignore
 
-    uut.limit_measurement_population(100)  # type: ignore
     uut.set_acquisition(16)
 
     with ExcelInterface(filename) as excel:
@@ -641,6 +640,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
         if response == "Cancel":
             return False
 
+        row_count = 0
+
         for row in test_rows:
             excel.row = row
 
@@ -648,35 +649,53 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
             settings = excel.get_volt_settings()
 
-            uut.set_channel(chan=settings.channel, enabled=True, only=True)  # type: ignore
+            # if settings.bandwidth == "250M":
+            #    continue
+
+            channel = int(settings.channel)
+
+            uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
             uut.set_channel_impedance(
-                chan=settings.channel, impedance=settings.impedance  # type: ignore
+                chan=channel, impedance=settings.impedance  # type: ignore
             )
-            uut.set_channel_bw_limit(chan=settings.channel, bw_limit=settings.bandwidth)  # type: ignore
+            uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
             if settings.acq_mode:
-                if settings.acq_mode == "HIRES":
+                if settings.acq_mode.upper() == "HIRES":
                     uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)  # type: ignore
-                elif settings.acq_mode == "SAMPLE":
+                elif settings.acq_mode.upper() == "SAMPLE":
                     uut.set_acquisition(Tek_Acq_Mode.SAMPLE)  # type: ignore
                 else:
                     uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
             else:
                 uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
 
-            rnd = uut.measure_rms_noise(chan=settings.channel)  # type: ignore
+            uut.set_voltage_position(
+                chan=channel, position=settings.scale * 0.34
+            )  # 340 mdiv
+
+            rnd = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
             uut.measure_clear()
-            avg = uut.measure_voltage(chan=settings.channel)  # type: ignore
+            uut.set_voltage_position(
+                chan=channel, position=settings.scale * 0.36
+            )  # 360 mdiv
 
-            result = rnd - avg
+            avg = uut.measure_voltage(chan=settings.channel, delay=10)  # type: ignore
+
+            result = (rnd + avg) / 2
 
             if units.startswith("m"):
                 result *= 1000
 
-            excel.write_result(result=result, col=results_col, save=False)
+            excel.write_result(result=result, col=results_col, save=True)
 
             update_test_progress()
+
+            row_count += 1
+            print(row)
+            # if row_count > 5:
+            #    break
 
         excel.save_sheet()
 
@@ -889,6 +908,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
+    acquisitions = 64
+
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
@@ -920,7 +941,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-    uut.set_acquisition(32)
+    uut.set_acquisition(acquisitions)
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -991,29 +1012,33 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
 
-            if settings.function == "DCV-BAL":
-                # Non keysight, apply the half the voltage and the offset then do the reverse
+            if uut.keysight or settings.function == "DCV-BAL":
+                if settings.function == "DCV-BAL":
+                    # Non keysight, apply the half the voltage and the offset then do the reverse
 
-                calibrator.set_voltage_dc(settings.voltage)
+                    calibrator.set_voltage_dc(settings.voltage)
 
-            # 0V test
-            calibrator.operate()
+                # 0V test
+                calibrator.operate()
 
-            uut.set_acquisition(1)
+                uut.set_acquisition(1)
 
-            if not simulating:
-                time.sleep(0.2)
+                if not simulating:
+                    time.sleep(0.2)
 
-            uut.set_acquisition(32)
+                uut.set_acquisition(acquisitions)
 
-            if not simulating:
-                time.sleep(1)
+                if not simulating:
+                    time.sleep(1)
 
-            if uut.keysight:
-                voltage1 = uut.read_cursor_avg()
+                if settings.scale <= 0.005:
+                    time.sleep(3)  # little longer to average for sensitive scales
 
-            uut.measure_clear()
-            reading1 = uut.measure_voltage(chan=channel)
+                if uut.keysight:
+                    voltage1 = uut.read_cursor_avg()
+
+                uut.measure_clear()
+                reading1 = uut.measure_voltage(chan=channel)
 
             if settings.function == "DCV-BAL":
                 # still set up for the + voltage
@@ -1030,10 +1055,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(0.2)
 
-            uut.set_acquisition(32)
+            uut.set_acquisition(acquisitions)
 
             if not simulating:
                 time.sleep(1)
+
+            if settings.scale <= 0.005:
+                time.sleep(3)  # little longer to average for sensitive scales
 
             uut.measure_clear()
 
@@ -1054,13 +1082,14 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
             if units.startswith("m"):
                 reading *= 1000
-                reading1 *= 1000
 
             if settings.function == "DCV-BAL":
+                if units.startswith("m"):
+                    reading1 *= 1000
                 diff = reading1 - reading
                 excel.write_result(diff, col=results_col)  # auto saving
             else:
-                # Keysight simple test. 0V is measured for the cursors only
+                # DCV (offset) test. 0V is measured for the cursors only
                 excel.write_result(reading, col=results_col)
 
             update_test_progress()
@@ -1574,6 +1603,9 @@ def test_risetime(filename: str, test_rows: List) -> bool:
             excel.row = row
 
             settings = excel.get_tb_test_settings()
+
+            if settings.channel > uut.num_channels:
+                continue
 
             message = f"Connect fast pulse generator to channel {settings.channel}"
 
