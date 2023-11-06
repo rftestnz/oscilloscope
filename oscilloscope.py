@@ -640,12 +640,17 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
         if response == "Cancel":
             return False
 
+        row_count = 0
+
         for row in test_rows:
             excel.row = row
 
             units = excel.get_units()
 
             settings = excel.get_volt_settings()
+
+            # if settings.bandwidth == "250M":
+            #    continue
 
             channel = int(settings.channel)
 
@@ -665,29 +670,32 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
             else:
                 uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
 
-            uut.limit_measurement_population(channel=channel, pop=100)  # type: ignore
-
             uut.set_voltage_position(
                 chan=channel, position=settings.scale * 0.34
             )  # 340 mdiv
 
-            rnd = uut.measure_rms_noise(chan=settings.channel, delay=5)  # type: ignore
+            rnd = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
             uut.measure_clear()
             uut.set_voltage_position(
                 chan=channel, position=settings.scale * 0.36
             )  # 360 mdiv
 
-            avg = uut.measure_voltage(chan=settings.channel, delay=5)  # type: ignore
+            avg = uut.measure_voltage(chan=settings.channel, delay=10)  # type: ignore
 
             result = (rnd + avg) / 2
 
             if units.startswith("m"):
                 result *= 1000
 
-            excel.write_result(result=result, col=results_col, save=False)
+            excel.write_result(result=result, col=results_col, save=True)
 
             update_test_progress()
+
+            row_count += 1
+            print(row)
+            # if row_count > 5:
+            #    break
 
         excel.save_sheet()
 
@@ -900,6 +908,8 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
+    acquisitions = 64
+
     # require calibrator
 
     if not connections["FLUKE_5700A"]:
@@ -931,7 +941,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
     for chan in range(uut.num_channels):
         uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-    uut.set_acquisition(32)
+    uut.set_acquisition(acquisitions)
 
     with ExcelInterface(filename) as excel:
         results_col = excel.find_results_col(test_rows[0])
@@ -1016,10 +1026,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 if not simulating:
                     time.sleep(0.2)
 
-                uut.set_acquisition(32)
+                uut.set_acquisition(acquisitions)
 
                 if not simulating:
                     time.sleep(1)
+
+                if settings.scale <= 0.005:
+                    time.sleep(3)  # little longer to average for sensitive scales
 
                 if uut.keysight:
                     voltage1 = uut.read_cursor_avg()
@@ -1042,10 +1055,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             if not simulating:
                 time.sleep(0.2)
 
-            uut.set_acquisition(32)
+            uut.set_acquisition(acquisitions)
 
             if not simulating:
                 time.sleep(1)
+
+            if settings.scale <= 0.005:
+                time.sleep(3)  # little longer to average for sensitive scales
 
             uut.measure_clear()
 
@@ -1068,11 +1084,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 reading *= 1000
 
             if settings.function == "DCV-BAL":
-                reading1 *= 1000
+                if units.startswith("m"):
+                    reading1 *= 1000
                 diff = reading1 - reading
                 excel.write_result(diff, col=results_col)  # auto saving
             else:
-                # Keysight simple test. 0V is measured for the cursors only
+                # DCV (offset) test. 0V is measured for the cursors only
                 excel.write_result(reading, col=results_col)
 
             update_test_progress()
