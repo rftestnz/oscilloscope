@@ -265,6 +265,8 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
 
         if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+            if type(bw_limit) is str and bw_limit.find("M") > 0:
+                bw_limit = int(bw_limit.strip()[:-1]) * 1000000
             state = str(bw_limit) if bw_limit else "FULL"
         elif type(bw_limit) is bool:
             state = "TWE" if bw_limit else "FULL"
@@ -533,6 +535,8 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
+
+        # self.limit_measurement_population(channel=chan, pop=100)  # type: ignore
 
         if not self.simulating:
             time.sleep(delay)
