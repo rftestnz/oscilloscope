@@ -496,7 +496,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:A:EDGE:SOUR CH{chan}")
         self.write(f"TRIG:A:LEV {level}")
 
-    def measure_voltage(self, chan: int, delay: float = 4) -> float:
+    def measure_voltage(self, chan: int, delay: float = 1.5) -> float:
         """
         measure_voltage _summary_
 
