@@ -602,7 +602,10 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.measure_clear()
 
-        self.write("MEASU:MEAS1:TYPE RISETIME")
+        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+            self.write("MEASU:MEAS1:TYPE RISETIME")
+        else:
+            self.write("MEASU:MEAS1:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
