@@ -909,7 +909,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
-    acquisitions = 64
+    acquisitions = 32
 
     # require calibrator
 
