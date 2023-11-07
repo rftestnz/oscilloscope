@@ -294,7 +294,9 @@ class Fluke5700A:
         while timeout_count < self.settle_timeout:
             try:
                 status = self.query("ISR?")
-                if int(status) & 0b0001_0000_0000_0000 > 0:  # bit 12 is settled
+                if (
+                    status and int(status) & 0b0001_0000_0000_0000 > 0
+                ):  # bit 12 is settled
                     break
                 time.sleep(1)
                 timeout_count += 1
