@@ -762,6 +762,21 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return response in ["AUTO", "TRIG"]
 
+    def set_horizontal_mode(self, mode, record_length) -> None:
+        """
+        set_horizontal_mode
+
+
+        Args:
+            mode (_type_): _description_
+            record_length (_type_): _description_
+        """
+
+        self.write(f"HOR:MODE {mode.upper()}")
+
+        if mode.upper().startswith("MAN"):
+            self.write(f"HOR:MODE:RECORDLENGTH {record_length}")
+
 
 if __name__ == "__main__":
     dpo2014 = Tektronix_Oscilloscope(simulate=False)
