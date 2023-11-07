@@ -2287,9 +2287,7 @@ if __name__ == "__main__":
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
-                uut.num_channels = values[
-                    "-UUT_CHANNELS-"
-                ]  # Override the ones from the model
+                window["-UUT_CHANNELS-"].update(value=f"{uut.num_channels}")
 
                 test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
