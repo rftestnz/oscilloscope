@@ -642,6 +642,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
         row_count = 0
 
+        uut.set_horizontal_mode("MAN", 2000000)
+
         for row in test_rows:
             excel.row = row
 
