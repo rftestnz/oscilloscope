@@ -1033,13 +1033,16 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     time.sleep(1)
 
                 if settings.scale <= 0.005:
-                    time.sleep(3)  # little longer to average for sensitive scales
+                    uut.set_acquisition(64)
+                    time.sleep(5)  # little longer to average for sensitive scales
 
                 if uut.keysight:
                     voltage1 = uut.read_cursor_avg()
 
                 uut.measure_clear()
-                reading1 = uut.measure_voltage(chan=channel)
+                reading1 = uut.measure_voltage(chan=channel, delay=2)
+
+                print(reading1)
 
             if settings.function == "DCV-BAL":
                 # still set up for the + voltage
@@ -1062,11 +1065,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 time.sleep(1)
 
             if settings.scale <= 0.005:
-                time.sleep(3)  # little longer to average for sensitive scales
+                uut.set_acquisition(64)
+                time.sleep(5)  # little longer to average for sensitive scales
 
             uut.measure_clear()
 
-            reading = uut.measure_voltage(chan=channel)
+            reading = uut.measure_voltage(chan=channel, delay=3)
 
             if uut.keysight and uut.family != DSOX_FAMILY.DSO5000:
                 voltage2 = uut.read_cursor_avg()
