@@ -2148,6 +2148,11 @@ if __name__ == "__main__":
         [sg.Text(key="-CURRENT_TEST-")],
         [sg.Text()],
         [
+            sg.Check(
+                "Skip already tested", default=False, disabled=True, key="-SKIP_TESTED-"
+            )
+        ],
+        [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
             sg.Button(
