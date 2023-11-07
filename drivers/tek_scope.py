@@ -254,6 +254,28 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return response.split(",")
 
+    def get_number_channels(self) -> int:
+        """
+        get_number_channels
+        Work out how mnay channels from the model number
+
+        Args:
+            seld (_type_): _description_
+
+        Returns:
+            int: _description_
+        """
+
+        self.num_channels = 4
+
+        if self.model.startswith("MSO") and len(self.model) == 5:
+            with contextlib.suppress(ValueError):
+                self.num_channels = int(self.model[-1])
+
+        # TODO Support mode models
+
+        return self.num_channels
+
     def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit

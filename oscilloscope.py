@@ -1790,6 +1790,10 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
     elif manufacturer == "TEKTRONIX":
         uut = Tektronix_Oscilloscope(simulate=False)
+        uut.visa_address = address
+        uut.open_connection()
+        num_channels = uut.get_number_channels()
+
     elif manufacturer == "ROHDE&SCHWARZ":
         uut = RohdeSchwarz_Oscilloscope(simulate=False)
         num_channels = 4
