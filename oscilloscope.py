@@ -681,7 +681,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
                 chan=channel, position=settings.scale * 0.36
             )  # 360 mdiv
 
-            avg = uut.measure_voltage(chan=settings.channel, delay=10)  # type: ignore
+            avg = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
             result = (rnd + avg) / 2
 
