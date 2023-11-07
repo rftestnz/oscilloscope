@@ -254,6 +254,28 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return response.split(",")
 
+    def get_number_channels(self) -> int:
+        """
+        get_number_channels
+        Work out how mnay channels from the model number
+
+        Args:
+            seld (_type_): _description_
+
+        Returns:
+            int: _description_
+        """
+
+        self.num_channels = 4
+
+        if self.model.startswith("MSO") and len(self.model) == 5:
+            with contextlib.suppress(ValueError):
+                self.num_channels = int(self.model[-1])
+
+        # TODO Support mode models
+
+        return self.num_channels
+
     def set_channel_bw_limit(self, chan: int, bw_limit: bool | int) -> None:
         """
         set_channel_bw_limit
@@ -739,6 +761,21 @@ class Tektronix_Oscilloscope(ScopeDriver):
         response = self.query("TRIG:STATE?").strip()
 
         return response in ["AUTO", "TRIG"]
+
+    def set_horizontal_mode(self, mode, record_length) -> None:
+        """
+        set_horizontal_mode
+
+
+        Args:
+            mode (_type_): _description_
+            record_length (_type_): _description_
+        """
+
+        self.write(f"HOR:MODE {mode.upper()}")
+
+        if mode.upper().startswith("MAN"):
+            self.write(f"HOR:MODE:RECORDLENGTH {record_length}")
 
 
 if __name__ == "__main__":

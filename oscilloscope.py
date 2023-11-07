@@ -642,6 +642,8 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
         row_count = 0
 
+        uut.set_horizontal_mode("MAN", 2000000)
+
         for row in test_rows:
             excel.row = row
 
@@ -681,7 +683,7 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
                 chan=channel, position=settings.scale * 0.36
             )  # 360 mdiv
 
-            avg = uut.measure_voltage(chan=settings.channel, delay=10)  # type: ignore
+            avg = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
             result = (rnd + avg) / 2
 
@@ -846,7 +848,8 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             if channel != last_channel:
                 sg.popup(
-                    f"Connect 3458A Input to UUT Ch {channel}", background_color="blue"
+                    f"Connect 3458A Input to UUT Ch {channel}, and sense",
+                    background_color="blue",
                 )
                 if last_channel > 0:
                     # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
@@ -867,7 +870,7 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             time.sleep(0.5)
 
-            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]  # type: ignore
+            reading = ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
             if units.lower().startswith("k"):
                 reading /= 1000
             if units.upper().startswith("M"):
@@ -908,7 +911,7 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
 
     connections = test_connections(check_3458=False)  # Don't need 3458 for this test
 
-    acquisitions = 64
+    acquisitions = 32
 
     # require calibrator
 
@@ -1032,13 +1035,16 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                     time.sleep(1)
 
                 if settings.scale <= 0.005:
-                    time.sleep(3)  # little longer to average for sensitive scales
+                    uut.set_acquisition(64)
+                    time.sleep(5)  # little longer to average for sensitive scales
 
                 if uut.keysight:
                     voltage1 = uut.read_cursor_avg()
 
                 uut.measure_clear()
-                reading1 = uut.measure_voltage(chan=channel)
+                reading1 = uut.measure_voltage(chan=channel, delay=2)
+
+                print(reading1)
 
             if settings.function == "DCV-BAL":
                 # still set up for the + voltage
@@ -1061,11 +1067,12 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
                 time.sleep(1)
 
             if settings.scale <= 0.005:
-                time.sleep(3)  # little longer to average for sensitive scales
+                uut.set_acquisition(64)
+                time.sleep(5)  # little longer to average for sensitive scales
 
             uut.measure_clear()
 
-            reading = uut.measure_voltage(chan=channel)
+            reading = uut.measure_voltage(chan=channel, delay=3)
 
             if uut.keysight and uut.family != DSOX_FAMILY.DSO5000:
                 voltage2 = uut.read_cursor_avg()
@@ -1785,6 +1792,10 @@ def load_uut_driver(address: str, simulating: bool = False) -> bool:
 
     elif manufacturer == "TEKTRONIX":
         uut = Tektronix_Oscilloscope(simulate=False)
+        uut.visa_address = address
+        uut.open_connection()
+        num_channels = uut.get_number_channels()
+
     elif manufacturer == "ROHDE&SCHWARZ":
         uut = RohdeSchwarz_Oscilloscope(simulate=False)
         num_channels = 4
@@ -2276,9 +2287,7 @@ if __name__ == "__main__":
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
                 uut.visa_address = values["-UUT_ADDRESS-"]
                 uut.open_connection()
-                uut.num_channels = values[
-                    "-UUT_CHANNELS-"
-                ]  # Override the ones from the model
+                window["-UUT_CHANNELS-"].update(value=f"{uut.num_channels}")
 
                 test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
