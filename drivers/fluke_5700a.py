@@ -276,7 +276,7 @@ class Fluke5700A:
         Set back to local operation
         """
 
-        with contextlib.suppress(InvalidSession):
+        with contextlib.suppress(Exception):
             if not self.simulating:
                 self.instr.control_ren(6)  # type: ignore
 
