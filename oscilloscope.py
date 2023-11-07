@@ -846,7 +846,8 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             if channel != last_channel:
                 sg.popup(
-                    f"Connect 3458A Input to UUT Ch {channel}", background_color="blue"
+                    f"Connect 3458A Input to UUT Ch {channel}, and sense",
+                    background_color="blue",
                 )
                 if last_channel > 0:
                     # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
@@ -867,7 +868,7 @@ def test_impedance(filename: str, test_rows: List) -> bool:
 
             time.sleep(0.5)
 
-            reading = ks3458.measure(function=Ks3458A_Function.R2W)["Average"]  # type: ignore
+            reading = ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
             if units.lower().startswith("k"):
                 reading /= 1000
             if units.upper().startswith("M"):
