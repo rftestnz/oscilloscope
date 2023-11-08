@@ -296,16 +296,19 @@ def run_tests(
             name for name in excel.supported_test_names if name in test_names
         ]
 
+        # Would like to join DCV and DCV-BAL into same test for consolidating.
+
         for test_name in ordered_test_names:
             testing_rows = excel.get_test_rows(test_name)
-            # At the moment we only do full tests, so we can get the test rows form the excel sheet
+            # At the moment we only do full tests, so we can get the test rows from the excel sheet
 
             # TODO use functional method
 
             if "DCV" in test_name:
+                sorted_rows = consolidate_dcv_tests(test_rows, filename=filename)
                 if not test_dcv(
                     filename=filename,
-                    test_rows=testing_rows,
+                    test_rows=sorted_rows,
                     parallel_channels=parallel_channels,
                     skip_completed=skip_completed,
                 ):
@@ -2223,7 +2226,7 @@ if __name__ == "__main__":
         ],
         [sg.Text(key="-CURRENT_TEST-")],
         [sg.Text()],
-        [sg.Check("Skip already tested", default=False, key="-SKIP_TESTED-")],
+        [sg.Check("Skip already tested", default=True, key="-SKIP_TESTED-")],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
