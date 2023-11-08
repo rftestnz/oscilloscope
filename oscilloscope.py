@@ -659,6 +659,10 @@ def test_random_noise(
         for row in test_rows:
             excel.row = row
 
+            if skip_completed:
+                if not excel.check_empty_result(col=results_col):
+                    continue
+
             units = excel.get_units()
 
             settings = excel.get_volt_settings()
@@ -973,8 +977,13 @@ def test_dcv(
             )
             return False
         excel.find_units_col(test_rows[0])
+
         for row in test_rows:
             excel.row = row
+
+            if skip_completed:
+                if not excel.check_empty_result(results_col):
+                    continue
 
             settings = excel.get_volt_settings()
 
