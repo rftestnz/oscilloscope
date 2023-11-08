@@ -239,7 +239,12 @@ def local_all() -> None:
     ks3458.go_to_local()
 
 
-def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
+def run_tests(
+    filename: str,
+    test_rows: List,
+    parallel_channels: bool = False,
+    skip_completed: bool = False,
+) -> None:
     """
     run_tests
     Main test sequencer
@@ -302,6 +307,7 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
+                    skip_completed=skip_completed,
                 ):
                     break
 
@@ -340,7 +346,11 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                     break
 
             elif test_name == "NOISE":
-                if not test_random_noise(filename=filename, test_rows=test_rows):
+                if not test_random_noise(
+                    filename=filename,
+                    test_rows=test_rows,
+                    skip_completed=skip_completed,
+                ):
                     break
 
             elif test_name == "DELTAT":
@@ -591,7 +601,9 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     return True
 
 
-def test_random_noise(filename: str, test_rows: List) -> bool:
+def test_random_noise(
+    filename: str, test_rows: List, skip_completed: bool = False
+) -> bool:
     """
     test_random_noise
     Test sampling random noise
@@ -891,7 +903,12 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     return True
 
 
-def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
+def test_dcv(
+    filename: str,
+    test_rows: List,
+    parallel_channels: bool = False,
+    skip_completed: bool = False,
+) -> bool:
     # sourcery skip: extract-method, low-code-quality
     """
     test_dcv
