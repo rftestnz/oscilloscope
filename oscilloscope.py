@@ -1070,8 +1070,6 @@ def test_dcv(
                 uut.measure_clear()
                 reading1 = uut.measure_voltage(chan=channel, delay=2)
 
-                print(reading1)
-
             if settings.function == "DCV-BAL":
                 # still set up for the + voltage
 
