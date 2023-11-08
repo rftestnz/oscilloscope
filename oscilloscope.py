@@ -2030,6 +2030,58 @@ def hide_excel_rows(filename: str, channel: int) -> None:
         excel.hide_excel_rows(channel=channel)
 
 
+def consolidate_dcv_tests(test_steps: List, filename: str) -> List:
+    """
+    consolidate_dcv_tests
+    Go through the test steps and all of the DCV and DCV-BAL tests group by channel to minimize channel swapping
+
+    Args:
+        test_steps (List): _description_
+        filename (str): _description_
+
+    Returns:
+        List: _description_
+    """
+
+    sorted_steps = []
+
+    # we only have the row number, so have to read it again
+
+    # TODO full settings are available, use them
+
+    # Go through first to get the DCV tests
+
+    with ExcelInterface(filename=filename) as excel:
+        for step in test_steps:
+            test_name, channel = excel.get_test_name(step)
+            if test_name.startswith("DCV"):
+                sorted_steps.append(
+                    (channel, step)
+                )  # Append channel first to help with sorting
+
+        new_list = sorted(sorted_steps)
+
+        print(new_list)
+
+        # and make a new list with just the row numbers
+
+        sorted_steps = []
+
+        for step in new_list:
+            sorted_steps.append(step[1])
+
+        # And the rest of the steps
+
+        for step in test_steps:
+            test_name, channel = excel.get_test_name(step)
+            if not test_name.startswith("DCV"):
+                sorted_steps.append(step)
+
+    print(sorted_steps)
+
+    return sorted_steps
+
+
 if __name__ == "__main__":
     sg.theme("black")
 
