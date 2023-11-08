@@ -2368,9 +2368,6 @@ if __name__ == "__main__":
 
                 test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
                 if len(test_rows):
-                    # consolidate all of the DCV test in order to reduce channel cable swapping
-                    test_rows = consolidate_dcv_tests(test_rows, values["-FILE-"])
-
                     test_progress.update(0, max=len(test_rows))
                     test_progress.update(visible=True)
                     window["-PROG_TEXT-"].update(visible=True)
