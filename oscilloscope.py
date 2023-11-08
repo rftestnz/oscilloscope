@@ -2308,6 +2308,7 @@ if __name__ == "__main__":
                         filename=values["-FILE-"],
                         test_rows=test_rows,
                         parallel_channels=parallel == "Yes",
+                        skip_completed=values["-SKIP_TESTED-"],
                     )
 
                     test_progress.update(visible=False)
