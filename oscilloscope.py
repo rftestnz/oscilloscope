@@ -26,7 +26,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.05"
+VERSION = "A.01.06"
 
 
 calibrator = Fluke5700A()
@@ -239,7 +239,12 @@ def local_all() -> None:
     ks3458.go_to_local()
 
 
-def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -> None:
+def run_tests(
+    filename: str,
+    test_rows: List,
+    parallel_channels: bool = False,
+    skip_completed: bool = False,
+) -> None:
     """
     run_tests
     Main test sequencer
@@ -302,6 +307,7 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                     filename=filename,
                     test_rows=testing_rows,
                     parallel_channels=parallel_channels,
+                    skip_completed=skip_completed,
                 ):
                     break
 
@@ -340,7 +346,11 @@ def run_tests(filename: str, test_rows: List, parallel_channels: bool = False) -
                     break
 
             elif test_name == "NOISE":
-                if not test_random_noise(filename=filename, test_rows=test_rows):
+                if not test_random_noise(
+                    filename=filename,
+                    test_rows=test_rows,
+                    skip_completed=skip_completed,
+                ):
                     break
 
             elif test_name == "DELTAT":
@@ -591,7 +601,9 @@ def test_delta_time(filename: str, test_rows: List) -> bool:
     return True
 
 
-def test_random_noise(filename: str, test_rows: List) -> bool:
+def test_random_noise(
+    filename: str, test_rows: List, skip_completed: bool = False
+) -> bool:
     """
     test_random_noise
     Test sampling random noise
@@ -646,6 +658,10 @@ def test_random_noise(filename: str, test_rows: List) -> bool:
 
         for row in test_rows:
             excel.row = row
+
+            if skip_completed:
+                if not excel.check_empty_result(col=results_col):
+                    continue
 
             units = excel.get_units()
 
@@ -891,7 +907,12 @@ def test_impedance(filename: str, test_rows: List) -> bool:
     return True
 
 
-def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) -> bool:
+def test_dcv(
+    filename: str,
+    test_rows: List,
+    parallel_channels: bool = False,
+    skip_completed: bool = False,
+) -> bool:
     # sourcery skip: extract-method, low-code-quality
     """
     test_dcv
@@ -956,8 +977,13 @@ def test_dcv(filename: str, test_rows: List, parallel_channels: bool = False) ->
             )
             return False
         excel.find_units_col(test_rows[0])
+
         for row in test_rows:
             excel.row = row
+
+            if skip_completed:
+                if not excel.check_empty_result(results_col):
+                    continue
 
             settings = excel.get_volt_settings()
 
@@ -2147,6 +2173,7 @@ if __name__ == "__main__":
         ],
         [sg.Text(key="-CURRENT_TEST-")],
         [sg.Text()],
+        [sg.Check("Skip already tested", default=False, key="-SKIP_TESTED-")],
         [
             sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
             sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
@@ -2307,6 +2334,7 @@ if __name__ == "__main__":
                         filename=values["-FILE-"],
                         test_rows=test_rows,
                         parallel_channels=parallel == "Yes",
+                        skip_completed=values["-SKIP_TESTED-"],
                     )
 
                     test_progress.update(visible=False)

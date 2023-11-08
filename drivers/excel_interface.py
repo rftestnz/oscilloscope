@@ -778,6 +778,22 @@ class ExcelInterface:
 
         return False
 
+    def check_empty_result(self, col: int) -> bool:
+        """
+        check_empty_result
+        Check the result cell is empty if using the skip already tested
+
+        Args:
+            col (str): _description_
+
+        Returns:
+            bool: _description_
+        """
+
+        val = self.ws.cell(column=col, row=self.row).value
+
+        return val == None
+
     def hide_excel_rows(self, channel: int) -> None:
         """
         hide_excel_rows
