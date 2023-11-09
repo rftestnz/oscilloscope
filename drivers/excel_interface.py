@@ -362,6 +362,23 @@ class ExcelInterface:
 
         return valid
 
+    def get_test_name(self, row: int):
+        """
+        get_test_name
+        Read the test name for the specified row
+
+        Args:
+            row (int): _description_
+
+        Returns:
+            str: _description_
+        """
+
+        test_name = self.ws.cell(column=self.__data_col, row=row).value
+        channel = self.ws.cell(column=self.__data_col + 1, row=row).value
+
+        return test_name, channel
+
     def get_test_rows(self, test_filter: str = "*") -> List:
         """
         get_test_rows
