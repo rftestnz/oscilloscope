@@ -1114,7 +1114,7 @@ def test_dcv(
 
             calibrator.standby()
 
-            if units.startswith("m"):
+            if units and units.startswith("m"):
                 reading *= 1000
 
             if settings.function == "DCV-BAL":
