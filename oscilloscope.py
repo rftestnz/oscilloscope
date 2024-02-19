@@ -2151,9 +2151,11 @@ if __name__ == "__main__":
             ),
             sg.Combo(
                 gpib_addresses,
-                default_value="4"
-                if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
-                else "6",
+                default_value=(
+                    "4"
+                    if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
+                    else "6"
+                ),
                 size=(6, 1),
                 key="GPIB_ADDR_FLUKE_5700A",
             ),
