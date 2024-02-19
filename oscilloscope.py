@@ -954,6 +954,8 @@ def test_dcv(
 
     cursor_results = []  # save results for cursor tests
 
+    filter_connected = False
+
     if parallel_channels:
         response = sg.popup_ok_cancel(
             "Connect calibrator output to all channels in parallel",
@@ -1043,6 +1045,20 @@ def test_dcv(
                 uut.set_channel_invert(chan=channel, inverted=settings.invert)
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
+
+            if not filter_connected and settings.voltage < 1:
+                calibrator.standby()
+                sg.popup(
+                    "Connect filter capacitor to input channel", background_color="blue"
+                )
+                filter_connected = True
+            elif filter_connected and settings.voltage > 1:
+                calibrator.standby()
+                sg.popup(
+                    "Remove filter capacitor from input channel",
+                    background_color="blue",
+                )
+                filter_connected = False
 
             if uut.keysight or settings.function == "DCV-BAL":
                 if settings.function == "DCV-BAL":
