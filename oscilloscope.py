@@ -1046,13 +1046,13 @@ def test_dcv(
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
 
-            if not filter_connected and settings.voltage < 1:
+            if not filter_connected and settings.voltage < 0.1:
                 calibrator.standby()
                 sg.popup(
                     "Connect filter capacitor to input channel", background_color="blue"
                 )
                 filter_connected = True
-            elif filter_connected and settings.voltage > 1:
+            elif filter_connected and settings.voltage >= 0.1:
                 calibrator.standby()
                 sg.popup(
                     "Remove filter capacitor from input channel",
