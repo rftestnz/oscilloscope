@@ -26,7 +26,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.06"
+VERSION = "A.01.07"
 
 
 calibrator = Fluke5700A()
@@ -1114,7 +1114,7 @@ def test_dcv(
 
             calibrator.standby()
 
-            if units.startswith("m"):
+            if units and units.startswith("m"):
                 reading *= 1000
 
             if settings.function == "DCV-BAL":
@@ -2151,9 +2151,11 @@ if __name__ == "__main__":
             ),
             sg.Combo(
                 gpib_addresses,
-                default_value="4"
-                if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
-                else "6",
+                default_value=(
+                    "4"
+                    if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
+                    else "6"
+                ),
                 size=(6, 1),
                 key="GPIB_ADDR_FLUKE_5700A",
             ),
