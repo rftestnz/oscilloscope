@@ -1046,6 +1046,7 @@ def test_dcv(
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
 
+            """
             if not filter_connected and settings.voltage < 0.1:
                 calibrator.standby()
                 sg.popup(
@@ -1059,6 +1060,7 @@ def test_dcv(
                     background_color="blue",
                 )
                 filter_connected = False
+            """
 
             if uut.keysight or settings.function == "DCV-BAL":
                 if settings.function == "DCV-BAL":
