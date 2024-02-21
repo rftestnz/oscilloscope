@@ -2194,21 +2194,6 @@ if __name__ == "__main__":
             ),
         ],
         [
-            sg.Text("RF Gen", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_IFC_RFGEN",
-                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_ADDR-"),
-                size=(6, 1),
-                key="GPIB_ADDR_RFGEN",
-            ),
-        ],
-        [
             sg.Text("3458A", size=(15, 1)),
             sg.Combo(
                 gpib_ifc_list,
