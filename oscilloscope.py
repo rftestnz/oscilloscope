@@ -26,7 +26,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.08"
+VERSION = "A.01.09"
 
 
 calibrator = Fluke5700A()
