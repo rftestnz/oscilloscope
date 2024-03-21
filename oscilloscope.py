@@ -26,7 +26,7 @@ from pprint import pprint, pformat
 from zipfile import BadZipFile
 
 
-VERSION = "A.01.08"
+VERSION = "A.01.09"
 
 
 calibrator = Fluke5700A()
@@ -103,7 +103,6 @@ def connections_check_form(check_3458: bool) -> None:
         [sg.Text("Checking instruments.....", key="-CHECK_MSG-", text_color="Red")],
         [sg.Text("Calibrator", size=(20, 1)), led_indicator("-FLUKE_5700A_CONN-")],
         [sg.Text("33250A", size=(20, 1)), led_indicator("-33250_CONN-")],
-        [sg.Text("RF Generator", size=(20, 1)), led_indicator("-RFGEN_CONN-")],
         [
             sg.Text(
                 "3458A", size=(20, 1), text_color="white" if check_3458 else "grey"
@@ -134,11 +133,6 @@ def connections_check_form(check_3458: bool) -> None:
         window,
         "-33250_CONN-",
         color="green" if connected["33250A"] else "red",
-    )
-    set_led(
-        window,
-        "-RFGEN_CONN-",
-        color="green" if connected["RFGEN"] else "red",
     )
     set_led(
         window,
@@ -173,11 +167,6 @@ def connections_check_form(check_3458: bool) -> None:
             )
             set_led(
                 window,
-                "-RFGEN_CONN-",
-                color="green" if connected["RFGEN"] else "red",
-            )
-            set_led(
-                window,
                 "-UUT-",
                 color="green" if connected["DSO"] else "red",
             )
@@ -197,14 +186,12 @@ def test_connections(check_3458: bool) -> Dict:
 
     fluke_5700a_conn = calibrator.is_connected()
     ks33250_conn = ks33250.is_connected()
-    rfgen_conn = mxg.is_connected()
     uut_conn = uut.is_connected()
     ks3458_conn = ks3458.is_connected() if check_3458 else False
 
     return {
         "FLUKE_5700A": fluke_5700a_conn,
         "33250A": ks33250_conn,
-        "RFGEN": rfgen_conn,
         "DSO": uut_conn,
         "3458": ks3458_conn,
     }
@@ -1046,6 +1033,7 @@ def test_dcv(
             else:
                 uut.set_channel_invert(chan=channel, inverted=False)
 
+            """
             if not filter_connected and settings.voltage < 0.1:
                 calibrator.standby()
                 sg.popup(
@@ -1059,6 +1047,7 @@ def test_dcv(
                     background_color="blue",
                 )
                 filter_connected = False
+            """
 
             if uut.keysight or settings.function == "DCV-BAL":
                 if settings.function == "DCV-BAL":
@@ -2192,21 +2181,6 @@ if __name__ == "__main__":
             ),
         ],
         [
-            sg.Text("RF Gen", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_IFC_RFGEN",
-                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value=sg.user_settings_get_entry("-RFGEN_GPIB_ADDR-"),
-                size=(6, 1),
-                key="GPIB_ADDR_RFGEN",
-            ),
-        ],
-        [
             sg.Text("3458A", size=(15, 1)),
             sg.Combo(
                 gpib_ifc_list,
@@ -2292,8 +2266,6 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
         sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
-        sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
-        sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
         sg.user_settings_set_entry("-3458_GPIB_IFC-", values["GPIB_IFC_3458"])
         sg.user_settings_set_entry("-3458_GPIB_ADDR-", values["GPIB_ADDR_3458"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
@@ -2312,9 +2284,6 @@ if __name__ == "__main__":
         ks33250_address = (
             f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
         )
-
-        mxg.simulating = simulating
-        mxg_address = f"{values['GPIB_IFC_RFGEN']}::{values['GPIB_ADDR_RFGEN']}::INSTR"
 
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
@@ -2379,7 +2348,6 @@ if __name__ == "__main__":
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
-            mxg.visa_address = mxg_address
             ks3458.visa_address = ks3458_address
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
@@ -2426,7 +2394,6 @@ if __name__ == "__main__":
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
-            mxg.visa_address = mxg_address
             ks3458.visa_address = ks3458_address
 
             # Check if the 3458A is needed
