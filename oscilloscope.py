@@ -94,7 +94,7 @@ class UI(QMainWindow):
         self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
-        self.txt_u_u_t_addr = self.findChild(QLineEdit, "txtUUTAddr")
+        self.txt_uut_addr = self.findChild(QLineEdit, "txtUUTAddr")
 
         self.cmb_calibrator = self.findChild(QComboBox, "cmbCalibrator")
         self.cmb_calibrator_gpib = self.findChild(QComboBox, "cmbCalibratorGPIB")
@@ -188,14 +188,14 @@ class UI(QMainWindow):
                 self.cmb3458_addr.findText(self.settings.value("3458 addr")),
             )
         )
-        self.txt_u_u_t_addr.setText(self.settings.value("uut addr"))
+        self.txt_uut_addr.setText(self.settings.value("uut addr"))
 
     def test_connections(self) -> None:
         connected_pix = get_path("diagrams\\tick.png")
         unconnected_pix = get_path("diagrams\\cross.png")
         simulating = False
 
-        self.calibrator.visa_address = f"{self.cmb_calibrator_g_p_i_b.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
+        self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
         self.lbl_calibrator_connection.setPixmap(
@@ -206,7 +206,7 @@ class UI(QMainWindow):
         self.lbl_calibrator_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks33250.visa_address = f"{self.cmb33250_g_p_i_b.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
+        self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
         self.ks33250.simulating = simulating
         self.ks33250.open_connection()
         self.lbl33250_connection.setPixmap(
@@ -217,7 +217,7 @@ class UI(QMainWindow):
         self.lbl33250_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks3458.visa_address = f"{self.cmb3458_g_p_i_b.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
+        self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
         self.ks3458.simulating = simulating
         self.ks3458.open_connection()
         self.lbl3458_connection.setPixmap(
@@ -228,7 +228,7 @@ class UI(QMainWindow):
         self.lbl3458_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.uut.visa_address = self.txt_u_u_t_addr.text()
+        self.uut.visa_address = self.txt_uut_addr.text()
         self.uut.simulating = simulating
         self.uut.open_connection()
         self.lbl_uut_connection.setPixmap(
@@ -238,6 +238,21 @@ class UI(QMainWindow):
         )
         self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
+
+        # Save details
+
+        self.settings.setValue("calibrator", self.cmb_calibrator.currentText())
+        self.settings.setValue(
+            "calibrator gpib", self.cmb_calibrator_gpib.currentText()
+        )
+        self.settings.setValue(
+            "calibrator addr", self.cmb_calibrator_addr.currentText()
+        )
+        self.settings.setValue("33250 gpib", self.cmb33250_gpib.currentText())
+        self.settings.setValue("33250 addr", self.cmb33250_addr.currentText())
+        self.settings.setValue("3458 gpib", self.cmb3458_gpib.currentText())
+        self.settings.setValue("3458 addr", self.cmb3458_addr.currentText())
+        self.settings.setValue("uut addr", self.txt_uut_addr.text())
 
     def browse_results(self) -> None:
         if fname := QFileDialog.getOpenFileName(
