@@ -47,6 +47,61 @@ class TestOscilloscope:
         self.ks33250.go_to_local()
         self.ks3458.go_to_local()
 
+
+    def load_uut_driver(self,address: str, simulating: bool = False) -> bool:
+        """
+        load_uut_driver
+        Use a generic driver to figure out which driver of the scope should be used
+        """
+
+
+
+        if simulating:
+            self.uut = Tektronix_Oscilloscope(simulate=simulating)
+            self.uut.model = "MSO5104B"
+            self.uut.open_connection()
+            return True
+
+        # TODO when using the SCPI ID class, it affects all subsequent uses
+
+        with Keysight_Oscilloscope(simulate=False) as scpi_uut:
+            scpi_uut.visa_address = address
+            scpi_uut.open_connection()
+            manufacturer = scpi_uut.get_manufacturer()
+            num_channels = scpi_uut.get_number_channels()
+
+        if manufacturer == "":
+            sg.popup_error(
+                "Unable to contact UUT. Is address correct?",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            return False
+        elif manufacturer == "KEYSIGHT":
+            self.uut = Keysight_Oscilloscope(simulate=False)
+
+        elif manufacturer == "TEKTRONIX":
+            self.uut = Tektronix_Oscilloscope(simulate=False)
+            self.uut.visa_address = address
+            self.uut.open_connection()
+            self.num_channels = self.uut.get_number_channels()
+
+        elif manufacturer == "ROHDE&SCHWARZ":
+            self.uut = RohdeSchwarz_Oscilloscope(simulate=False)
+            num_channels = 4
+        else:
+            sg.popup_error(
+                f"No driver for {manufacturer}. Using Tektronix driver",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
+            )
+            self.uut = Tektronix_Oscilloscope(simulate=False)
+
+        self.uut.num_channels = num_channels
+
+        return True
+
+
     def run_tests(
         self,
         filename: str,
