@@ -3,28 +3,45 @@ Test Oscilloscopes
 # DK Jan 23
 """
 
-from typing import Dict, List, Tuple
-import PySimpleGUI as sg
-
-from drivers.fluke_5700a import Fluke5700A
-from drivers.Ks33250A import Ks33250A
-from drivers.meatest_m142 import M142
-from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
-from drivers.tek_scope import Tektronix_Oscilloscope, Tek_Acq_Mode
-from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
-from drivers.excel_interface import ExcelInterface
-from drivers.rf_signal_generator import RF_Signal_Generator
-from drivers.scpi_id import SCPI_ID
-from drivers.Ks3458A import Ks3458A, Ks3458A_Function
+import math
 import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
-import math
-from pprint import pprint, pformat
+from pathlib import Path
+from pprint import pformat, pprint
+from typing import Dict, List, Tuple
 from zipfile import BadZipFile
 
+import PySimpleGUI as sg
+from PyQt6 import uic
+from PyQt6.QtCore import QObject, QSettings
+from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMenuBar,
+    QMessageBox,
+    QPushButton,
+    QStatusBar,
+)
+
+from drivers.excel_interface import ExcelInterface
+from drivers.fluke_5700a import Fluke5700A
+from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
+from drivers.Ks3458A import Ks3458A, Ks3458A_Function
+from drivers.Ks33250A import Ks33250A
+from drivers.meatest_m142 import M142
+from drivers.rf_signal_generator import RF_Signal_Generator
+from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
+from drivers.scpi_id import SCPI_ID
+from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
 VERSION = "A.01.09"
 
@@ -48,16 +65,230 @@ def get_path(filename: str) -> str:
     The location of the diagram is different if run through interpreter or compiled.
 
     Args:
-        filename ([type]): [description]
+        filename ([str]): filename with relative path
 
     Returns:
-        [type]: [description]
+        [str]: Full path to the file
     """
-
     if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS, filename).__str__()  # type: ignore
+        return os.path.join(sys._MEIPASS, filename)  # type: ignore
     else:
         return filename
+
+
+class UI(QMainWindow):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.m142 = M142()
+        self.fl5700 = Fluke5700A()
+        self.ks33250 = Ks33250A()
+        self.ks3458 = Ks3458A()
+        self.uut = Keysight_Oscilloscope()
+
+        self.calibrator = self.m142
+
+        uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
+
+        self.settings = QSettings("RFTS", "Oscilloscope")  # TODO set name
+        self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
+
+        self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
+        self.txt_uut_addr = self.findChild(QLineEdit, "txtUUTAddr")
+
+        self.cmb_calibrator = self.findChild(QComboBox, "cmbCalibrator")
+        self.cmb_calibrator_gpib = self.findChild(QComboBox, "cmbCalibratorGPIB")
+        self.cmb_calibrator_addr = self.findChild(QComboBox, "cmbCalibratorAddr")
+        self.cmb33250_gpib = self.findChild(QComboBox, "cmb33250GPIB")
+        self.cmb33250_addr = self.findChild(QComboBox, "cmb33250Addr")
+        self.cmb3458_gpib = self.findChild(QComboBox, "cmb3458GPIB")
+        self.cmb3458_addr = self.findChild(QComboBox, "cmb3458Addr")
+        self.cmb_number_channels = self.findChild(QComboBox, "cmbNumberChannels")
+
+        self.lbl_calibrator_connection = self.findChild(
+            QLabel, "lblCalibratorConnection"
+        )
+        self.lbl33250_connection = self.findChild(QLabel, "lbl33250Connection")
+        self.lbl3458_connection = self.findChild(QLabel, "lbl3458Connection")
+        self.lbl_uut_connection = self.findChild(QLabel, "lblUUTConnection")
+
+        self.cb_skip_rows = self.findChild(QCheckBox, "cbSkipRows")
+        self.cb_simulating = self.findChild(QCheckBox, "cbSimulation")
+
+        self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
+        self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
+        self.btn_select_u_u_t_addr = self.findChild(QPushButton, "btnSelectUUTAddr")
+        self.btn_test_connections = self.findChild(QPushButton, "btnTestConnections")
+        self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
+        self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
+
+        self.initialize_controls()
+
+        self.create_connections()
+
+    def create_connections(self) -> None:
+        self.btn_browse_results.clicked.connect(self.browse_results)
+        self.btn_view_results.clicked.connect(self.view_results)
+        self.btn_select_u_u_t_addr.clicked.connect(self.select_u_u_t_addr)
+        self.btn_test_connections.clicked.connect(self.test_connections)
+        self.btn_perform_tests.clicked.connect(self.perform_tests)
+        self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
+
+    def initialize_controls(self) -> None:
+        self.txt_results_file.setText(self.settings.value("filename"))
+
+        self.cmb_number_channels.addItems(["2","4","6","8"])
+
+        self.cmb_calibrator.addItems(["5700A/5730A", "M142"])
+
+        for gpib in range(5):
+            self.cmb_calibrator_gpib.addItem(f"GPIB{gpib}")
+            self.cmb33250_gpib.addItem(f"GPIB{gpib}")
+            self.cmb3458_gpib.addItem(f"GPIB{gpib}")
+
+        for addr in range(1, 31):
+            self.cmb_calibrator_addr.addItem(f"{addr}")
+            self.cmb33250_addr.addItem(f"{addr}")
+            self.cmb3458_addr.addItem(f"{addr}")
+
+        self.cmb_calibrator.setCurrentIndex(
+            max(0, self.cmb_calibrator.findText(self.settings.value("calibrator")))
+        )
+        self.cmb_calibrator_gpib.setCurrentIndex(
+            max(
+                0,
+                self.cmb_calibrator_gpib.findText(
+                    self.settings.value("calibrator gpib")
+                ),
+            )
+        )
+        self.cmb_calibrator_addr.setCurrentIndex(
+            max(
+                0,
+                self.cmb_calibrator_addr.findText(
+                    self.settings.value("calibrator addr")
+                ),
+            )
+        )
+        self.cmb33250_gpib.setCurrentIndex(
+            max(
+                0,
+                self.cmb33250_gpib.findText(self.settings.value("33250 gpib")),
+            )
+        )
+        self.cmb33250_addr.setCurrentIndex(
+            max(
+                0,
+                self.cmb33250_addr.findText(self.settings.value("33250 addr")),
+            )
+        )
+
+        self.cmb3458_gpib.setCurrentIndex(
+            max(
+                0,
+                self.cmb3458_gpib.findText(self.settings.value("3458 gpib")),
+            )
+        )
+        self.cmb3458_addr.setCurrentIndex(
+            max(
+                0,
+                self.cmb3458_addr.findText(self.settings.value("3458 addr")),
+            )
+        )
+        self.txt_uut_addr.setText(self.settings.value("uut addr"))
+
+    def test_connections(self) -> None:
+        connected_pix = get_path("ui\\tick.png")
+        unconnected_pix = get_path("ui\\cross.png")
+        simulating = self.cb_simulating.isChecked()
+
+        self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
+        self.calibrator.simulating = simulating
+        self.calibrator.open_connection()
+        self.lbl_calibrator_connection.setPixmap(
+            QPixmap(connected_pix)
+            if self.calibrator.is_connected()
+            else QPixmap(unconnected_pix)
+        )
+        self.lbl_calibrator_connection.resize(QPixmap(connected_pix).size())
+        QApplication.processEvents()
+
+        self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
+        self.ks33250.simulating = simulating
+        self.ks33250.open_connection()
+        self.lbl33250_connection.setPixmap(
+            QPixmap(connected_pix)
+            if self.ks33250.is_connected()
+            else QPixmap(unconnected_pix)
+        )
+        self.lbl33250_connection.resize(QPixmap(connected_pix).size())
+        QApplication.processEvents()
+
+        self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
+        self.ks3458.simulating = simulating
+        self.ks3458.open_connection()
+        self.lbl3458_connection.setPixmap(
+            QPixmap(connected_pix)
+            if self.ks3458.is_connected()
+            else QPixmap(unconnected_pix)
+        )
+        self.lbl3458_connection.resize(QPixmap(connected_pix).size())
+        QApplication.processEvents()
+
+        self.uut.visa_address = self.txt_uut_addr.text()
+        self.uut.simulating = simulating
+        self.uut.open_connection()
+        self.lbl_uut_connection.setPixmap(
+            QPixmap(connected_pix)
+            if self.uut.is_connected()
+            else QPixmap(unconnected_pix)
+        )
+        self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
+        QApplication.processEvents()
+
+        # Save details
+
+        self.settings.setValue("calibrator", self.cmb_calibrator.currentText())
+        self.settings.setValue(
+            "calibrator gpib", self.cmb_calibrator_gpib.currentText()
+        )
+        self.settings.setValue(
+            "calibrator addr", self.cmb_calibrator_addr.currentText()
+        )
+        self.settings.setValue("33250 gpib", self.cmb33250_gpib.currentText())
+        self.settings.setValue("33250 addr", self.cmb33250_addr.currentText())
+        self.settings.setValue("3458 gpib", self.cmb3458_gpib.currentText())
+        self.settings.setValue("3458 addr", self.cmb3458_addr.currentText())
+        self.settings.setValue("uut addr", self.txt_uut_addr.text())
+
+    def browse_results(self) -> None:
+        if fname := QFileDialog.getOpenFileName(
+            self, "Select results file", filter="Excel Files (*.xlsx)"
+        ):
+            self.txt_results_file.setText(fname[0])  # type: ignore
+            self.settings.setValue("filename", fname[0])
+
+    def view_results(self) -> None:
+        try:
+            os.startfile(f'"{self.txt_results_file.text()}"')
+        except FileNotFoundError:
+            QMessageBox.critical(self, "Error", "Results file not found")
+
+    def select_u_u_t_addr(self) -> None:
+        pass
+
+    def perform_tests(self) -> None:
+        pass
+
+    def hide_excel_rows(self) -> None:
+        pass
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+    window = UI()
+    window.show()
+    app.exec()
 
 
 def led_indicator(key: str | None = None, radius: float = 30) -> sg.Graph:
@@ -2090,7 +2321,7 @@ def consolidate_dcv_tests(test_steps: List, filename: str) -> List:
     return sorted_steps
 
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     sg.theme("black")
 
     gpib_ifc_list = [f"GPIB{x}" for x in range(5)]
