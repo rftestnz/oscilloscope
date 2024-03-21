@@ -2321,7 +2321,7 @@ def consolidate_dcv_tests(test_steps: List, filename: str) -> List:
     return sorted_steps
 
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     sg.theme("black")
 
     gpib_ifc_list = [f"GPIB{x}" for x in range(5)]
