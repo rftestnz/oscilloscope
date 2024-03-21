@@ -137,6 +137,8 @@ class UI(QMainWindow):
     def initialize_controls(self) -> None:
         self.txt_results_file.setText(self.settings.value("filename"))
 
+        self.cmb_number_channels.addItems(["2","4","6","8"])
+
         self.cmb_calibrator.addItems(["5700A/5730A", "M142"])
 
         for gpib in range(5):
