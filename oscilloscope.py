@@ -142,10 +142,12 @@ class UI(QMainWindow):
         for gpib in range(5):
             self.cmb_calibrator_gpib.addItem(f"GPIB{gpib}")
             self.cmb33250_gpib.addItem(f"GPIB{gpib}")
+            self.cmb3458_gpib.addItem(f"GPIB{gpib}")
 
         for addr in range(1, 31):
             self.cmb_calibrator_addr.addItem(f"{addr}")
             self.cmb33250_addr.addItem(f"{addr}")
+            self.cmb3458_addr.addItem(f"{addr}")
 
         self.cmb_calibrator.setCurrentIndex(
             max(0, self.cmb_calibrator.findText(self.settings.value("calibrator")))
