@@ -112,7 +112,8 @@ class UI(QMainWindow):
         self.lbl3458_connection = self.findChild(QLabel, "lbl3458Connection")
         self.lbl_uut_connection = self.findChild(QLabel, "lblUUTConnection")
 
-        self.check_box = self.findChild(QCheckBox, "checkBox")
+        self.cb_skip_rows = self.findChild(QCheckBox, "cbSkipRows")
+        self.cb_simulating = self.findChild(QCheckBox, "cbSimulation")
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
