@@ -7,13 +7,18 @@
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
-from drivers.Ks3458A import Ks3458A, Ks3458A_Function
+from drivers.Ks3458A import  Ks3458A, Ks3458A_Function
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.scpi_id import SCPI_ID
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
+import math
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Tuple
 
 
 class TestOscilloscope:
@@ -42,8 +47,8 @@ class TestOscilloscope:
         self.ks33250.go_to_local()
         self.ks3458.go_to_local()
 
-
     def run_tests(
+        self,
         filename: str,
         test_rows: List,
         parallel_channels: bool = False,
@@ -73,11 +78,11 @@ class TestOscilloscope:
 
             # first update the model and serial
 
-            uut.open_connection()
+            self.uut.open_connection()
 
             # If the named range doesn't exist, nothing is written
-            excel.write_data(data=uut.model, named_range="Model")
-            excel.write_data(data=uut.serial, named_range="Serial")
+            excel.write_data(data=self.uut.model, named_range="Model")
+            excel.write_data(data=self.uut.serial, named_range="Serial")
 
             test_names = set()
 
@@ -109,8 +114,10 @@ class TestOscilloscope:
                 # TODO use functional method
 
                 if "DCV" in test_name:
-                    sorted_rows = consolidate_dcv_tests(test_rows, filename=filename)
-                    if not test_dcv(
+                    sorted_rows = self.consolidate_dcv_tests(
+                        test_rows, filename=filename
+                    )
+                    if not self.test_dcv(
                         filename=filename,
                         test_rows=sorted_rows,
                         parallel_channels=parallel_channels,
@@ -119,7 +126,7 @@ class TestOscilloscope:
                         break
 
                 elif test_name == "POS":
-                    if not test_position(
+                    if not self.test_position(
                         filename=filename,
                         test_rows=testing_rows,
                         parallel_channels=parallel_channels,
@@ -127,33 +134,39 @@ class TestOscilloscope:
                         break
 
                 elif test_name == "BAL":
-                    if not test_dc_balance(filename=filename, test_rows=testing_rows):
+                    if not self.test_dc_balance(
+                        filename=filename, test_rows=testing_rows
+                    ):
                         break
 
                 elif test_name == "CURS":
-                    if not test_cursor(filename=filename, test_rows=testing_rows):
+                    if not self.test_cursor(filename=filename, test_rows=testing_rows):
                         break
 
                 elif test_name == "RISE":
-                    if not test_risetime(filename=filename, test_rows=testing_rows):
+                    if not self.test_risetime(
+                        filename=filename, test_rows=testing_rows
+                    ):
                         break
 
                 elif test_name == "TIME":
-                    if not test_timebase(filename=filename, row=testing_rows[0]):
+                    if not self.test_timebase(filename=filename, row=testing_rows[0]):
                         break
 
                 elif test_name == "TRIG":
-                    if not test_trigger_sensitivity(
+                    if not self.test_trigger_sensitivity(
                         filename=filename, test_rows=testing_rows
                     ):
                         break
 
                 elif test_name == "IMP":
-                    if not test_impedance(filename=filename, test_rows=testing_rows):
+                    if not self.test_impedance(
+                        filename=filename, test_rows=testing_rows
+                    ):
                         break
 
                 elif test_name == "NOISE":
-                    if not test_random_noise(
+                    if not self.test_random_noise(
                         filename=filename,
                         test_rows=test_rows,
                         skip_completed=skip_completed,
@@ -161,17 +174,18 @@ class TestOscilloscope:
                         break
 
                 elif test_name == "DELTAT":
-                    if not test_delta_time(filename=filename, test_rows=test_rows):
+                    if not self.test_delta_time(filename=filename, test_rows=test_rows):
                         break
 
                 elif test_name == "THR":
-                    if not test_threshold(filename=filename, test_rows=testing_rows):
+                    if not self.test_threshold(
+                        filename=filename, test_rows=testing_rows
+                    ):
                         break
 
-        local_all()
+        self.local_all()
 
-
-    def test_dc_balance(filename: str, test_rows: List) -> bool:
+    def test_dc_balance(self, filename: str, test_rows: List) -> bool:
         """
         test_dc_balance
         Test the dc balance of each channel with no signal applied
@@ -181,7 +195,7 @@ class TestOscilloscope:
             test_rows (int): _description_
         """
 
-        global uut
+        global self.uut
         global current_test_text
 
         # no equipment required
@@ -197,11 +211,11 @@ class TestOscilloscope:
         if response == "Cancel":
             return False
 
-        uut.reset()
+        self.uut.reset()
 
-        uut.set_acquisition(32)
+        self.uut.set_acquisition(32)
 
-        uut.set_timebase(0.001)
+        self.uut.set_timebase(0.001)
 
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -220,27 +234,32 @@ class TestOscilloscope:
                 units = excel.get_units()
 
                 if settings.function == "BAL":
-                    uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
-                    uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
-                    uut.set_voltage_offset(chan=int(settings.channel), offset=0)
-                    uut.set_channel_coupling(
+                    self.uut.set_channel(
+                        chan=int(settings.channel), enabled=True, only=True
+                    )
+                    self.uut.set_voltage_scale(
+                        chan=int(settings.channel), scale=settings.scale
+                    )
+                    self.uut.set_voltage_offset(chan=int(settings.channel), offset=0)
+                    self.uut.set_channel_coupling(
                         chan=int(settings.channel), coupling=settings.coupling
                     )
 
-                    reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
+                    reading = self.uut.measure_voltage(
+                        chan=int(settings.channel), delay=2
+                    )
 
                     if units == "mV":
                         reading *= 1000
 
                     excel.write_result(reading, col=results_col)
-                    update_test_progress()
+                    self.update_test_progress()
 
-        uut.reset()
+        self.uut.reset()
 
         return True
 
-
-    def test_delta_time(filename: str, test_rows: List) -> bool:
+    def test_delta_time(self, filename: str, test_rows: List) -> bool:
         """
         test_delta_time
         Test delta time function
@@ -254,7 +273,7 @@ class TestOscilloscope:
             bool: _description_
         """
 
-        global uut
+        global self.uut
         global current_test_text
 
         current_test_text.update("Testing: Delta Time")
@@ -277,18 +296,18 @@ class TestOscilloscope:
             )
             return False
 
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
         # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
         # are required, put into driver
 
-        uut.set_acquisition(1)
+        self.uut.set_acquisition(1)
 
         last_channel = -1
         last_generator = 0
 
-        ks33250.set_output_z("50")
+        self.ks33250.set_output_z("50")
 
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -322,19 +341,21 @@ class TestOscilloscope:
 
                     last_channel = settings.channel
 
-                uut.set_channel(chan=settings.channel, enabled=True, only=True)
-                uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
-                uut.set_channel_coupling(chan=settings.channel, coupling=settings.coupling)
-                uut.set_channel_impedance(chan=settings.channel, impedance="50")
-                uut.set_trigger_level(chan=settings.channel, level=0)
+                self.uut.set_channel(chan=settings.channel, enabled=True, only=True)
+                self.uut.set_voltage_scale(chan=settings.channel, scale=settings.scale)
+                self.uut.set_channel_coupling(
+                    chan=settings.channel, coupling=settings.coupling
+                )
+                self.uut.set_channel_impedance(chan=settings.channel, impedance="50")
+                self.uut.set_trigger_level(chan=settings.channel, level=0)
 
-                uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
+                self.uut.write(f"HORIZONTAL:MODE:SAMPLERATE {settings.sample_rate}")
 
                 # Have to adjust the record length to get the right timebase setting
 
-                uut.write("HOR:MODE MANUAL")
+                self.uut.write("HOR:MODE MANUAL")
                 recordlength = 10 * settings.sample_rate * settings.timebase
-                uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
+                self.uut.write(f"HOR:MODE:RECORDLENGTH {recordlength}")
 
                 if settings.frequency > 250000:
                     if last_generator != "MXG":
@@ -346,9 +367,9 @@ class TestOscilloscope:
                         if response == "Cancel":
                             return False
 
-                    mxg.set_frequency(settings.frequency)
-                    mxg.set_level(settings.voltage / 2.82, units="V")
-                    mxg.set_output_state(True)
+                    self.mxg.set_frequency(settings.frequency)
+                    self.mxg.set_level(settings.voltage / 2.82, units="V")
+                    self.mxg.set_output_state(True)
 
                     last_generator = "MXG"
                 else:
@@ -361,31 +382,33 @@ class TestOscilloscope:
                         if response == "Cancel":
                             return False
                         last_generator = "33250A"
-                    ks33250.set_sin(
+                    self.ks33250.set_sin(
                         frequency=settings.frequency, amplitude=settings.voltage / 2.82
                     )
-                    ks33250.enable_output(True)
+                    self.ks33250.enable_output(True)
 
                 time.sleep(0.25)
 
-                uut.write("MEASU:MEAS1:TYPE DELAY")
-                uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
-                uut.write(f"MEASU:MEAS1:SOURCE2 CH{settings.channel}")
-                uut.write("MEASU:MEAS1:DELAY:EDGE1 RISE")
-                uut.write("MEASU:MEAS1:DELAY:EDGE2 FALL")
+                self.uut.write("MEASU:MEAS1:TYPE DELAY")
+                self.uut.write(f"MEASU:MEAS1:SOURCE CH{settings.channel}")
+                self.uut.write(f"MEASU:MEAS1:SOURCE2 CH{settings.channel}")
+                self.uut.write("MEASU:MEAS1:DELAY:EDGE1 RISE")
+                self.uut.write("MEASU:MEAS1:DELAY:EDGE2 FALL")
 
-                uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
-                uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
-                uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
+                self.uut.write("MEASURE:STATISTICS:MODE MEANSTDDEV")
+                self.uut.write("MEASURE:STATISTICS:WEIGHTING 1000")
+                self.uut.write("MEASUREMENT:STATISTICS:COUNT RESET")
 
-                uut.write("MEASU:MEAS1:STATE ON")
+                self.uut.write("MEASU:MEAS1:STATE ON")
 
-                uut.write("MEASU:MEAS1:DISPLAYSTAT:ENABLE ON")
+                self.uut.write("MEASU:MEAS1:DISPLAYSTAT:ENABLE ON")
 
                 time.sleep(10)
 
                 try:
-                    result = float(uut.query("MEASU:MEAS1:STDDEV?").strip())  # remove LF
+                    result = float(
+                        self.uut.query("MEASU:MEAS1:STDDEV?").strip()
+                    )  # remove LF
 
                     if units[0] == "p":
                         result *= 1_000_000_000_000
@@ -400,16 +423,15 @@ class TestOscilloscope:
 
                 update_test_progress()
 
-                mxg.set_output_state(False)
-                ks33250.enable_output(False)
+                self.mxg.set_output_state(False)
+                self.ks33250.enable_output(False)
 
             excel.save_sheet()
 
         return True
 
-
     def test_random_noise(
-        filename: str, test_rows: List, skip_completed: bool = False
+        self, filename: str, test_rows: List, skip_completed: bool = False
     ) -> bool:
         """
         test_random_noise
@@ -424,19 +446,19 @@ class TestOscilloscope:
             bool: _description_
         """
 
-        global uut
+        global self.uut
         global current_test_text
 
         current_test_text.update("Testing: Random noise sample acquisition")
 
         # No equipment required
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
-        if uut.model.startswith("MSO5"):
-            uut.set_sample_rate("6.25G")  # type: ignore
+        if self.uut.model.startswith("MSO5"):
+            self.uut.set_sample_rate("6.25G")  # type: ignore
 
-        uut.set_acquisition(16)
+        self.uut.set_acquisition(16)
 
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -461,7 +483,7 @@ class TestOscilloscope:
 
             row_count = 0
 
-            uut.set_horizontal_mode("MAN", 2000000)
+            self.uut.set_horizontal_mode("MAN", 2000000)
 
             for row in test_rows:
                 excel.row = row
@@ -479,34 +501,34 @@ class TestOscilloscope:
 
                 channel = int(settings.channel)
 
-                uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
-                uut.set_channel_impedance(
+                self.uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
+                self.uut.set_channel_impedance(
                     chan=channel, impedance=settings.impedance  # type: ignore
                 )
-                uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
+                self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
                 if settings.acq_mode:
                     if settings.acq_mode.upper() == "HIRES":
-                        uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)  # type: ignore
+                        self.uut.set_acquisition_mode(Tek_Acq_Mode.HIRES)  # type: ignore
                     elif settings.acq_mode.upper() == "SAMPLE":
-                        uut.set_acquisition(Tek_Acq_Mode.SAMPLE)  # type: ignore
+                        self.uut.set_acquisition(Tek_Acq_Mode.SAMPLE)  # type: ignore
                     else:
-                        uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
+                        self.uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
                 else:
-                    uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
+                    self.uut.set_acquisition_mode(Tek_Acq_Mode.AVERAGE)  # type: ignore
 
-                uut.set_voltage_position(
+                self.uut.set_voltage_position(
                     chan=channel, position=settings.scale * 0.34
                 )  # 340 mdiv
 
-                rnd = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
+                rnd = self.uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
-                uut.measure_clear()
-                uut.set_voltage_position(
+                self.uut.measure_clear()
+                self.uut.set_voltage_position(
                     chan=channel, position=settings.scale * 0.36
                 )  # 360 mdiv
 
-                avg = uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
+                avg = self.uut.measure_rms_noise(chan=settings.channel, delay=10)  # type: ignore
 
                 result = (rnd + avg) / 2
 
@@ -526,8 +548,7 @@ class TestOscilloscope:
 
         return True
 
-
-    def test_threshold(filename: str, test_rows: List) -> bool:
+    def test_threshold(self, filename: str, test_rows: List) -> bool:
         """
         test_threshold
         Test digital threshold
@@ -539,33 +560,35 @@ class TestOscilloscope:
         Returns:
             bool: _description_
         """
-        global uut
+        global self.uut
         global current_test_text
-        global calibrator
+        global self.calibrator
 
         current_test_text.update("Testing: Digital Threshold")
 
-        connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+        connections = test_connections(
+            check_3458=False
+        )  # Don't need 3458 for this test
 
-        # require calibrator
+        # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
             sg.popup_error(
-                "Cannot find calibrator",
+                "Cannot find self.calibrator",
                 background_color="blue",
                 icon=get_path("ui\\scope.ico"),
             )
             return False
 
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
-        uut.set_timebase(1e-3)
+        self.uut.set_timebase(1e-3)
 
-        uut.set_digital_channel_on(chan=0, all_channels=True)
+        self.uut.set_digital_channel_on(chan=0, all_channels=True)
 
         sg.popup(
-            "Connect Calibrator output to digital IO Pods",
+            "Connect self.calibrator output to digital IO Pods",
             background_color="blue",
             icon=get_path("ui\\scope.ico"),
         )
@@ -593,7 +616,7 @@ class TestOscilloscope:
                 delta = -0.01 if settings.polarity == "NEG" else 0.01
 
                 for _ in range(50):
-                    reading = uut.measure_digital_channels(pod=settings.pod)
+                    reading = self.uut.measure_digital_channels(pod=settings.pod)
                     if (
                         settings.polarity == "POS"
                         and reading == 1
@@ -606,8 +629,7 @@ class TestOscilloscope:
 
         return True
 
-
-    def test_impedance(filename: str, test_rows: List) -> bool:
+    def test_impedance(self, filename: str, test_rows: List) -> bool:
         """
         test_impedance
         Test the input impedance of the channels
@@ -620,9 +642,9 @@ class TestOscilloscope:
             bool: _description_
         """
 
-        global uut
+        global self.uut
         global current_test_text
-        global ks3458
+        global self.ks3458
 
         current_test_text.update("Testing: Input Impedance")
 
@@ -630,23 +652,25 @@ class TestOscilloscope:
 
         if not connections["3458"]:
             sg.popup_error(
-                "Cannot find 3458A", background_color="blue", icon=get_path("ui\\scope.ico")
+                "Cannot find 3458A",
+                background_color="blue",
+                icon=get_path("ui\\scope.ico"),
             )
             return False
 
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
-        ks3458.open_connection()
-        ks3458.reset()
+        self.ks3458.open_connection()
+        self.ks3458.reset()
 
         last_channel = -1
 
         # Turn off all channels but 1
-        for chan in range(uut.num_channels):
-            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+        for chan in range(self.uut.num_channels):
+            self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-        uut.set_acquisition(1)
+        self.uut.set_acquisition(1)
 
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -666,34 +690,34 @@ class TestOscilloscope:
                 channel = int(settings.channel)
                 units = excel.get_units()
 
-                if channel > uut.num_channels:
+                if channel > self.uut.num_channels:
                     continue
 
                 if channel != last_channel:
                     sg.popup(
-                        f"Connect 3458A Input to UUT Ch {channel}, and sense",
+                        f"Connect 3458A Input to self.uut Ch {channel}, and sense",
                         background_color="blue",
                     )
                     if last_channel > 0:
                         # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
-                        uut.set_voltage_scale(chan=last_channel, scale=1)
-                        uut.set_voltage_offset(chan=last_channel, offset=0)
-                        uut.set_channel(chan=last_channel, enabled=False)
-                        uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
-                        uut.set_channel(chan=channel, enabled=True)
-                        uut.set_channel_impedance(
+                        self.uut.set_voltage_scale(chan=last_channel, scale=1)
+                        self.uut.set_voltage_offset(chan=last_channel, offset=0)
+                        self.uut.set_channel(chan=last_channel, enabled=False)
+                        self.uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
+                        self.uut.set_channel(chan=channel, enabled=True)
+                        self.uut.set_channel_impedance(
                             chan=last_channel, impedance="1M"
                         )  # always
                     last_channel = channel
 
-                uut.set_voltage_scale(chan=channel, scale=settings.scale)
-                uut.set_voltage_offset(chan=channel, offset=settings.offset)
-                uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
-                uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+                self.uut.set_voltage_scale(chan=channel, scale=settings.scale)
+                self.uut.set_voltage_offset(chan=channel, offset=settings.offset)
+                self.uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+                self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
 
                 time.sleep(0.5)
 
-                reading = ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
+                reading = self.ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
                 if units.lower().startswith("k"):
                     reading /= 1000
                 if units.upper().startswith("M"):
@@ -704,17 +728,17 @@ class TestOscilloscope:
                 update_test_progress()
 
             # Turn off all channels but 1
-            for chan in range(uut.num_channels):
-                uut.set_channel(chan=chan + 1, enabled=chan == 0)
-                uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+            for chan in range(self.uut.num_channels):
+                self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
+                self.uut.set_channel_bw_limit(chan=chan, bw_limit=False)
 
-            uut.reset()
-            uut.close()
+            self.uut.reset()
+            self.uut.close()
 
         return True
 
-
     def test_dcv(
+        self,
         filename: str,
         test_rows: List,
         parallel_channels: bool = False,
@@ -724,12 +748,12 @@ class TestOscilloscope:
         """
         test_dcv
         Perform the basic DC V tests
-        Set the calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
+        Set the self.calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
         """
 
-        global calibrator
-        global uut
-        global simulating
+        global self.calibrator
+        global self.uut
+        global self.simulating
         global cursor_results
         global current_test_text
 
@@ -737,24 +761,26 @@ class TestOscilloscope:
 
         last_channel = -1
 
-        connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+        connections = test_connections(
+            check_3458=False
+        )  # Don't need 3458 for this test
 
         acquisitions = 32
 
-        # require calibrator
+        # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
             sg.popup_error(
-                "Cannot find calibrator",
+                "Cannot find self.calibrator",
                 background_color="blue",
                 icon=get_path("ui\\scope.ico"),
             )
             return False
 
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
-        uut.set_timebase(1e-3)
+        self.uut.set_timebase(1e-3)
 
         cursor_results = []  # save results for cursor tests
 
@@ -762,7 +788,7 @@ class TestOscilloscope:
 
         if parallel_channels:
             response = sg.popup_ok_cancel(
-                "Connect calibrator output to all channels in parallel",
+                "Connect self.calibrator output to all channels in parallel",
                 background_color="blue",
                 icon=get_path("ui\\scope.ico"),  # type: ignore
             )
@@ -771,10 +797,10 @@ class TestOscilloscope:
                 return False
 
         # Turn off all channels but 1
-        for chan in range(uut.num_channels):
-            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+        for chan in range(self.uut.num_channels):
+            self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-        uut.set_acquisition(acquisitions)
+        self.uut.set_acquisition(acquisitions)
 
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -798,33 +824,33 @@ class TestOscilloscope:
 
                 units = excel.get_units()
 
-                calibrator.set_voltage_dc(0)
+                self.calibrator.set_voltage_dc(0)
 
                 channel = int(settings.channel)
 
-                if channel > uut.num_channels:
+                if channel > self.uut.num_channels:
                     continue
 
                 if channel != last_channel:
                     if last_channel > 0:
                         # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
-                        uut.set_voltage_scale(chan=last_channel, scale=1)
-                        uut.set_voltage_offset(chan=last_channel, offset=0)
-                        uut.set_channel(chan=last_channel, enabled=False)
-                        uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
-                        uut.set_channel(chan=channel, enabled=True)
-                        uut.set_channel_impedance(
+                        self.uut.set_voltage_scale(chan=last_channel, scale=1)
+                        self.uut.set_voltage_offset(chan=last_channel, offset=0)
+                        self.uut.set_channel(chan=last_channel, enabled=False)
+                        self.uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
+                        self.uut.set_channel(chan=channel, enabled=True)
+                        self.uut.set_channel_impedance(
                             chan=last_channel, impedance="1M"
                         )  # always
 
-                    uut.set_voltage_scale(chan=channel, scale=5)
-                    uut.set_voltage_offset(chan=channel, offset=0)
+                    self.uut.set_voltage_scale(chan=channel, scale=5)
+                    self.uut.set_voltage_offset(chan=channel, offset=0)
 
-                    uut.set_cursor_xy_source(chan=1, cursor=1)
-                    uut.set_cursor_position(cursor="X1", pos=0)
+                    self.uut.set_cursor_xy_source(chan=1, cursor=1)
+                    self.uut.set_cursor_position(cursor="X1", pos=0)
                     if not parallel_channels:
                         response = sg.popup_ok_cancel(
-                            f"Connect calibrator output to channel {channel}",
+                            f"Connect self.calibrator output to channel {channel}",
                             background_color="blue",
                             icon=get_path("ui\\scope.ico"),  # type: ignore
                         )
@@ -832,33 +858,35 @@ class TestOscilloscope:
                             return False
                     last_channel = channel
 
-                uut.set_channel(chan=channel, enabled=True)
-                uut.set_voltage_scale(chan=channel, scale=settings.scale)
-                uut.set_voltage_offset(chan=channel, offset=settings.offset)
+                self.uut.set_channel(chan=channel, enabled=True)
+                self.uut.set_voltage_scale(chan=channel, scale=settings.scale)
+                self.uut.set_voltage_offset(chan=channel, offset=settings.offset)
 
                 if settings.impedance:
-                    uut.set_channel_impedance(chan=channel, impedance=settings.impedance)
+                    self.uut.set_channel_impedance(
+                        chan=channel, impedance=settings.impedance
+                    )
 
                 if settings.bandwidth:
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
+                    self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
                 else:
-                    uut.set_channel_bw_limit(chan=channel, bw_limit=False)
+                    self.uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
                 if settings.invert:
                     # already casted to a bool
-                    uut.set_channel_invert(chan=channel, inverted=settings.invert)
+                    self.uut.set_channel_invert(chan=channel, inverted=settings.invert)
                 else:
-                    uut.set_channel_invert(chan=channel, inverted=False)
+                    self.uut.set_channel_invert(chan=channel, inverted=False)
 
                 """
                 if not filter_connected and settings.voltage < 0.1:
-                    calibrator.standby()
+                    self.calibrator.standby()
                     sg.popup(
                         "Connect filter capacitor to input channel", background_color="blue"
                     )
                     filter_connected = True
                 elif filter_connected and settings.voltage >= 0.1:
-                    calibrator.standby()
+                    self.calibrator.standby()
                     sg.popup(
                         "Remove filter capacitor from input channel",
                         background_color="blue",
@@ -866,65 +894,65 @@ class TestOscilloscope:
                     filter_connected = False
                 """
 
-                if uut.keysight or settings.function == "DCV-BAL":
+                if self.uut.keysight or settings.function == "DCV-BAL":
                     if settings.function == "DCV-BAL":
                         # Non keysight, apply the half the voltage and the offset then do the reverse
 
-                        calibrator.set_voltage_dc(settings.voltage)
+                        self.calibrator.set_voltage_dc(settings.voltage)
 
                     # 0V test
-                    calibrator.operate()
+                    self.calibrator.operate()
 
-                    uut.set_acquisition(1)
+                    self.uut.set_acquisition(1)
 
-                    if not simulating:
+                    if not self.simulating:
                         time.sleep(0.2)
 
-                    uut.set_acquisition(acquisitions)
+                    self.uut.set_acquisition(acquisitions)
 
-                    if not simulating:
+                    if not self.simulating:
                         time.sleep(1)
 
                     if settings.scale <= 0.005:
-                        uut.set_acquisition(64)
+                        self.uut.set_acquisition(64)
                         time.sleep(5)  # little longer to average for sensitive scales
 
-                    if uut.keysight:
-                        voltage1 = uut.read_cursor_avg()
+                    if self.uut.keysight:
+                        voltage1 = self.uut.read_cursor_avg()
 
-                    uut.measure_clear()
-                    reading1 = uut.measure_voltage(chan=channel, delay=2)
+                    self.uut.measure_clear()
+                    reading1 = self.uut.measure_voltage(chan=channel, delay=2)
 
                 if settings.function == "DCV-BAL":
                     # still set up for the + voltage
 
-                    calibrator.set_voltage_dc(-settings.voltage)
-                    uut.set_voltage_offset(chan=channel, offset=-settings.offset)
+                    self.calibrator.set_voltage_dc(-settings.voltage)
+                    self.uut.set_voltage_offset(chan=channel, offset=-settings.offset)
                 else:
-                    calibrator.set_voltage_dc(settings.voltage)
+                    self.calibrator.set_voltage_dc(settings.voltage)
 
-                calibrator.operate()
+                self.calibrator.operate()
 
-                uut.set_acquisition(1)
+                self.uut.set_acquisition(1)
 
-                if not simulating:
+                if not self.simulating:
                     time.sleep(0.2)
 
-                uut.set_acquisition(acquisitions)
+                self.uut.set_acquisition(acquisitions)
 
-                if not simulating:
+                if not self.simulating:
                     time.sleep(1)
 
                 if settings.scale <= 0.005:
-                    uut.set_acquisition(64)
+                    self.uut.set_acquisition(64)
                     time.sleep(5)  # little longer to average for sensitive scales
 
-                uut.measure_clear()
+                self.uut.measure_clear()
 
-                reading = uut.measure_voltage(chan=channel, delay=3)
+                reading = self.uut.measure_voltage(chan=channel, delay=3)
 
-                if uut.keysight and uut.family != DSOX_FAMILY.DSO5000:
-                    voltage2 = uut.read_cursor_avg()
+                if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:
+                    voltage2 = self.uut.read_cursor_avg()
 
                     cursor_results.append(
                         {
@@ -934,7 +962,7 @@ class TestOscilloscope:
                         }
                     )
 
-                calibrator.standby()
+                self.calibrator.standby()
 
                 if units and units.startswith("m"):
                     reading *= 1000
@@ -950,21 +978,20 @@ class TestOscilloscope:
 
                 update_test_progress()
 
-            calibrator.reset()
-            calibrator.close()
+            self.calibrator.reset()
+            self.calibrator.close()
 
             # Turn off all channels but 1
             for chan in range(uut.num_channels):
-                uut.set_channel(chan=chan + 1, enabled=chan == 0)
-                uut.set_channel_bw_limit(chan=chan, bw_limit=False)
+                self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
+                self.uut.set_channel_bw_limit(chan=chan, bw_limit=False)
 
-            uut.reset()
-            uut.close()
+            self.uut.reset()
+            self.uut.close()
 
         return True
 
-
-    def test_cursor(filename: str, test_rows: List) -> bool:
+    def test_cursor(self, filename: str, test_rows: List) -> bool:
         """
         test_cursor
         Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
@@ -974,7 +1001,7 @@ class TestOscilloscope:
             filename (str): _description_
             test_rows (List): _description_
         """
-        global simulating
+        global self.simulating
         global cursor_results
         global current_test_text
 
@@ -1015,9 +1042,8 @@ class TestOscilloscope:
 
         return True
 
-
     def test_position(
-        filename: str, test_rows: List, parallel_channels: bool = False
+        self, filename: str, test_rows: List, parallel_channels: bool = False
     ) -> bool:
         """
         test_position
@@ -1031,27 +1057,29 @@ class TestOscilloscope:
             _type_: _description_
         """
 
-        global calibrator
-        global uut
+        global self.calibrator
+        global self.uut
         global current_test_text
 
         current_test_text.update("Testing: DC Position")
 
-        connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+        connections = test_connections(
+            check_3458=False
+        )  # Don't need 3458 for this test
 
-        # require calibrator
+        # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
             sg.popup_error(
-                "Cannot find calibrator",
+                "Cannot find self.calibrator",
                 background_color="blue",
                 icon=get_path("ui\\scope.ico"),
             )
             return False
 
-        uut.reset()
+        self.uut.reset()
 
-        uut.set_acquisition(32)
+        self.uut.set_acquisition(32)
 
         last_channel = -1
 
@@ -1072,7 +1100,7 @@ class TestOscilloscope:
 
                 if settings.channel != last_channel and not parallel_channels:
                     response = sg.popup_ok_cancel(
-                        f"Connect calibrator output to channel {settings.channel}",
+                        f"Connect self.calibrator output to channel {settings.channel}",
                         background_color="blue",
                         icon=get_path("ui\\scope.ico"),  # type: ignore
                     )
@@ -1081,25 +1109,27 @@ class TestOscilloscope:
 
                     last_channel = settings.channel
 
-                uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
-                uut.set_channel_bw_limit(chan=int(settings.channel), bw_limit=True)
-                uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
+                self.uut.set_channel(chan=int(settings.channel), enabled=True, only=True)
+                self.uut.set_channel_bw_limit(chan=int(settings.channel), bw_limit=True)
+                self.uut.set_voltage_scale(chan=int(settings.channel), scale=settings.scale)
                 pos = -4 if settings.offset > 0 else 4
-                uut.set_voltage_position(
+                self.uut.set_voltage_position(
                     chan=int(settings.channel), position=pos
                 )  # divisions
-                uut.set_voltage_offset(chan=int(settings.channel), offset=settings.offset)
+                self.uut.set_voltage_offset(
+                    chan=int(settings.channel), offset=settings.offset
+                )
 
-                uut.set_acquisition(1)  # Too slow to adjust otherwise
-                calibrator.set_voltage_dc(settings.voltage)
+                self.uut.set_acquisition(1)  # Too slow to adjust otherwise
+                self.calibrator.set_voltage_dc(settings.voltage)
 
-                calibrator.operate()
+                self.calibrator.operate()
 
-                uut.set_acquisition(32)
+                self.uut.set_acquisition(32)
 
-                # uut.measure_voltage_clear()
+                # self.uut.measure_voltage_clear()
 
-                # reading = uut.measure_voltage(chan=int(settings.channel), delay=2)
+                # reading = self.uut.measure_voltage(chan=int(settings.channel), delay=2)
 
                 response = sg.popup_yes_no(
                     "Trace within 0.2 div of center?",
@@ -1109,26 +1139,24 @@ class TestOscilloscope:
 
                 result = "Pass" if response == "Yes" else "Fail"
 
-                calibrator.standby()
+                self.calibrator.standby()
 
                 excel.write_result(result=result, col=results_col)
                 update_test_progress()
 
-        calibrator.reset()
-        calibrator.close()
+        self.calibrator.reset()
+        self.calibrator.close()
 
-        uut.reset()
-        uut.close()
+        self.uut.reset()
+        self.uut.close()
 
         return True
-
 
     # DELAY_PERIOD = 0.00099998  # 1 ms
     # DELAY_PERIOD = 0.00100002  # 1 ms
     DELAY_PERIOD = 0.001  # 1 ms
 
-
-    def test_timebase(filename: str, row: int) -> bool:
+    def test_timebase(self, filename: str, row: int) -> bool:
         # sourcery skip: low-code-quality
         """
         test_timebase
@@ -1142,7 +1170,9 @@ class TestOscilloscope:
 
         current_test_text.update("Testing: Timebase")
 
-        connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+        connections = test_connections(
+            check_3458=False
+        )  # Don't need 3458 for this test
 
         # require RF gen
 
@@ -1175,34 +1205,34 @@ class TestOscilloscope:
 
             setting = excel.get_tb_test_settings(row=row)
 
-            uut.reset()
+            self.uut.reset()
 
             with ExcelInterface(filename=filename) as excel:
                 excel.row = row
-                uut.set_channel(chan=1, enabled=True)
+                self.uut.set_channel(chan=1, enabled=True)
 
-                uut.set_voltage_scale(chan=1, scale=0.5)
-                uut.set_voltage_offset(chan=1, offset=0)
+                self.uut.set_voltage_scale(chan=1, scale=0.5)
+                self.uut.set_voltage_offset(chan=1, offset=0)
 
-                uut.set_acquisition(32)
+                self.uut.set_acquisition(32)
 
-                ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
-                ks33250.enable_output(True)
+                self.ks33250.set_pulse(period=DELAY_PERIOD, pulse_width=200e-6, amplitude=1)
+                self.ks33250.enable_output(True)
 
-                uut.set_trigger_level(chan=1, level=0)
+                self.uut.set_trigger_level(chan=1, level=0)
 
                 if setting.timebase:
-                    uut.set_timebase(setting.timebase / 1e9)
+                    self.uut.set_timebase(setting.timebase / 1e9)
                 else:
-                    uut.set_timebase(10e-9)
+                    self.uut.set_timebase(10e-9)
 
-                if uut.keysight:
+                if self.uut.keysight:
                     time.sleep(0.1)
-                    uut.cursors_on()
+                    self.uut.cursors_on()
                     time.sleep(1.5)
 
-                    ref_x = uut.read_cursor("X1")  # get the reference time
-                    ref = uut.read_cursor(
+                    ref_x = self.uut.read_cursor("X1")  # get the reference time
+                    ref = self.uut.read_cursor(
                         "Y1"
                     )  # get the voltage, so delayed can be adjusted to same
                 else:
@@ -1212,9 +1242,9 @@ class TestOscilloscope:
                         icon=get_path("ui\\scope.ico"),
                     )
 
-                uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+                self.uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
 
-                if not uut.keysight:
+                if not self.uut.keysight:
                     valid = False
                     while not valid:
                         result = sg.popup_get_text(
@@ -1231,21 +1261,21 @@ class TestOscilloscope:
                     excel.write_result(result=val, col=results_col)  # type: ignore
                 else:
                     # Keysight
-                    uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
+                    self.uut.set_cursor_position(cursor="X1", pos=DELAY_PERIOD)  # 1 ms delay
                     time.sleep(1)
 
-                    uut.adjust_cursor(
+                    self.uut.adjust_cursor(
                         target=ref  # type: ignore
                     )  # adjust the cursor until voltage is the same as measured from the reference pulse
 
-                    offset_x = uut.read_cursor("X1")
+                    offset_x = self.uut.read_cursor("X1")
 
                     error = ref_x - offset_x + 0.001  # type: ignore
                     print(f"TB Error {error}")
 
                     excel.row = row
 
-                    if uut.family != DSOX_FAMILY.DSO5000:
+                    if self.uut.family != DSOX_FAMILY.DSO5000:
                         code = sg.popup_get_text(
                             "Enter date code from serial label (0 if no code)",
                             background_color="blue",
@@ -1265,7 +1295,7 @@ class TestOscilloscope:
                             val = 0
 
                         if not val and len(uut.serial) >= 10:
-                            code = uut.serial[2:6]
+                            code = self.uut.serial[2:6]
 
                             try:
                                 val = int(code)
@@ -1285,15 +1315,14 @@ class TestOscilloscope:
 
                 update_test_progress()
 
-        ks33250.enable_output(False)
-        ks33250.close()
-        uut.reset()
-        uut.close()
+        self.ks33250.enable_output(False)
+        self.ks33250.close()
+        self.uut.reset()
+        self.uut.close()
 
         return True
 
-
-    def test_trigger_sensitivity(filename: str, test_rows: List) -> bool:
+    def test_trigger_sensitivity(self, filename: str, test_rows: List) -> bool:
         # sourcery skip: low-code-quality
         """
         test_trigger_sensitivity
@@ -1309,7 +1338,7 @@ class TestOscilloscope:
         """
 
         global mxg
-        global uut
+        global self.uut
         global current_test_text
 
         sg.popup(
@@ -1322,7 +1351,9 @@ class TestOscilloscope:
 
         current_test_text.update("Testing: Trigger sensitivity")
 
-        connections = test_connections(check_3458=False)  # Don't need 3458 for this test
+        connections = test_connections(
+            check_3458=False
+        )  # Don't need 3458 for this test
 
         # require RF gen
 
@@ -1334,13 +1365,13 @@ class TestOscilloscope:
             )
             return False
 
-        uut.reset()
+        self.uut.reset()
 
         # Turn off all channels but 1
         for chan in range(uut.num_channels):
-            uut.set_channel(chan=chan + 1, enabled=chan == 0)
+            self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
-        # Need to know if the UUT has 50 Ohm input or not
+        # Need to know if the self.uut has 50 Ohm input or not
 
         ext_termination = True
 
@@ -1392,26 +1423,28 @@ class TestOscilloscope:
                 mxg.set_output_state(True)
 
                 if str(settings.channel).upper() != "EXT":
-                    for chan in range(1, uut.num_channels + 1):
-                        uut.set_channel(chan=chan, enabled=chan == settings.channel)
-                    uut.set_channel(chan=int(settings.channel), enabled=True)
-                    uut.set_voltage_scale(chan=int(settings.channel), scale=0.5)
-                    uut.set_voltage_offset(chan=int(settings.channel), offset=0)
-                    uut.set_trigger_level(chan=int(settings.channel), level=0)
+                    for chan in range(1, self.uut.num_channels + 1):
+                        self.uut.set_channel(chan=chan, enabled=chan == settings.channel)
+                    self.uut.set_channel(chan=int(settings.channel), enabled=True)
+                    self.uut.set_voltage_scale(chan=int(settings.channel), scale=0.5)
+                    self.uut.set_voltage_offset(chan=int(settings.channel), offset=0)
+                    self.uut.set_trigger_level(chan=int(settings.channel), level=0)
 
                 else:
                     # external. use channel 1
-                    uut.set_channel(chan=1, enabled=True)
-                    uut.set_trigger_level(chan=0, level=0)
+                    self.uut.set_channel(chan=1, enabled=True)
+                    self.uut.set_trigger_level(chan=0, level=0)
 
                 period = 1 / settings.frequency / 1e6
                 # Round it off to a nice value of 1, 2, 5 or multiple
 
                 period = round_range(period)
 
-                uut.set_timebase(period * 2)
+                self.uut.set_timebase(period * 2)
 
-                triggered = uut.check_triggered(sweep_time=0.1)  # actual sweep time is ns
+                triggered = self.uut.check_triggered(
+                    sweep_time=0.1
+                )  # actual sweep time is ns
 
                 test_result = "Pass" if triggered else "Fail"
                 excel.write_result(result=test_result, save=True, col=results_col)
@@ -1420,13 +1453,12 @@ class TestOscilloscope:
         mxg.set_output_state(False)
         mxg.close()
 
-        uut.reset()
-        uut.close()
+        self.uut.reset()
+        self.uut.close()
 
         return True
 
-
-    def test_risetime(filename: str, test_rows: List) -> bool:
+    def test_risetime(self, filename: str, test_rows: List) -> bool:
         """
         test_risetime
         Use fast pulse generator to test rise time of each channel
@@ -1442,8 +1474,8 @@ class TestOscilloscope:
 
         # only pulse gen required
 
-        uut.open_connection()
-        uut.reset()
+        self.uut.open_connection()
+        self.uut.reset()
 
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -1460,7 +1492,7 @@ class TestOscilloscope:
 
                 settings = excel.get_tb_test_settings()
 
-                if settings.channel > uut.num_channels:
+                if settings.channel > self.uut.num_channels:
                     continue
 
                 message = f"Connect fast pulse generator to channel {settings.channel}"
@@ -1475,35 +1507,36 @@ class TestOscilloscope:
                     return False
 
                 for chan in range(uut.num_channels):
-                    uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
+                    self.uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
 
-                uut.set_voltage_scale(chan=settings.channel, scale=0.2)
+                self.uut.set_voltage_scale(chan=settings.channel, scale=0.2)
 
                 if settings.impedance == 50:
-                    uut.set_channel_impedance(chan=settings.channel, impedance="50")
+                    self.uut.set_channel_impedance(chan=settings.channel, impedance="50")
 
                 if settings.bandwidth:
-                    uut.set_channel_bw_limit(
+                    self.uut.set_channel_bw_limit(
                         chan=settings.channel, bw_limit=settings.bandwidth
                     )
 
-                uut.set_timebase(settings.timebase * 1e-9)
-                uut.set_trigger_level(chan=settings.channel, level=0)
+                self.uut.set_timebase(settings.timebase * 1e-9)
+                self.uut.set_trigger_level(chan=settings.channel, level=0)
 
-                risetime = uut.measure_risetime(chan=settings.channel, num_readings=1) * 1e9
+                risetime = (
+                    self.uut.measure_risetime(chan=settings.channel, num_readings=1) * 1e9
+                )
 
                 # save in ns
 
                 excel.write_result(risetime, save=True, col=results_col)
                 update_test_progress()
 
-        uut.reset()
-        uut.close()
+        self.uut.reset()
+        self.uut.close()
 
         return True
 
-
-    def round_range(val: float) -> float:
+    def round_range(self, val: float) -> float:
         """
         round_range
         Round the setting (voltage or time) to the closest 1, 2, 5 multiple

@@ -3,12 +3,9 @@ Test Oscilloscopes
 # DK Jan 23
 """
 
-import math
 import os
 import sys
-import time
-from datetime import datetime
-from pathlib import Path
+
 from pprint import pformat, pprint
 from typing import Dict, List, Tuple
 from zipfile import BadZipFile
