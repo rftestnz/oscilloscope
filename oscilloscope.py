@@ -2266,8 +2266,6 @@ if __name__ == "__main__":
         sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
         sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
         sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
-        sg.user_settings_set_entry("-RFGEN_GPIB_IFC-", values["GPIB_IFC_RFGEN"])
-        sg.user_settings_set_entry("-RFGEN_GPIB_ADDR-", values["GPIB_ADDR_RFGEN"])
         sg.user_settings_set_entry("-3458_GPIB_IFC-", values["GPIB_IFC_3458"])
         sg.user_settings_set_entry("-3458_GPIB_ADDR-", values["GPIB_ADDR_3458"])
         sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
@@ -2286,9 +2284,6 @@ if __name__ == "__main__":
         ks33250_address = (
             f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
         )
-
-        mxg.simulating = simulating
-        mxg_address = f"{values['GPIB_IFC_RFGEN']}::{values['GPIB_ADDR_RFGEN']}::INSTR"
 
         uut.simulating = simulating
         uut.visa_address = values["-UUT_ADDRESS-"]
@@ -2353,7 +2348,6 @@ if __name__ == "__main__":
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
-            mxg.visa_address = mxg_address
             ks3458.visa_address = ks3458_address
 
             if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
@@ -2400,7 +2394,6 @@ if __name__ == "__main__":
                 calibrator = Fluke5700A(simulate=simulating)
             calibrator.visa_address = calibrator_address
             ks33250.visa_address = ks33250_address
-            mxg.visa_address = mxg_address
             ks3458.visa_address = ks3458_address
 
             # Check if the 3458A is needed
