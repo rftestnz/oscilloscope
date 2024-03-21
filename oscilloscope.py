@@ -122,6 +122,8 @@ class UI(QMainWindow):
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
 
+        self.initialize_controls()
+
         self.create_connections()
 
     def create_connections(self) -> None:
