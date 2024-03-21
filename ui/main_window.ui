@@ -271,7 +271,7 @@
     <widget class="QLabel" name="lblCalibratorConnection">
      <property name="geometry">
       <rect>
-       <x>360</x>
+       <x>350</x>
        <y>60</y>
        <width>47</width>
        <height>13</height>
@@ -333,8 +333,21 @@
       <string>Test Connections</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="cbSimulation">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>60</y>
+       <width>101</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Simulation</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QCheckBox" name="checkBox">
+   <widget class="QCheckBox" name="cbSkipRows">
     <property name="geometry">
      <rect>
       <x>20</x>
