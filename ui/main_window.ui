@@ -39,7 +39,7 @@
      <string>Results File</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit">
+   <widget class="QLineEdit" name="txtResultsFile">
     <property name="geometry">
      <rect>
       <x>100</x>
@@ -268,7 +268,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="txtCalibratorConnection">
+    <widget class="QLabel" name="lblCalibratorConnection">
      <property name="geometry">
       <rect>
        <x>360</x>
@@ -281,7 +281,7 @@
       <string>   </string>
      </property>
     </widget>
-    <widget class="QLabel" name="txt33250Connection">
+    <widget class="QLabel" name="lbl33250Connection">
      <property name="geometry">
       <rect>
        <x>350</x>
@@ -294,7 +294,7 @@
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="txt3458Connection">
+    <widget class="QLabel" name="lbl3458Connection">
      <property name="geometry">
       <rect>
        <x>350</x>
@@ -307,7 +307,7 @@
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="txtUUTConnection">
+    <widget class="QLabel" name="lblUUTConnection">
      <property name="geometry">
       <rect>
        <x>570</x>
