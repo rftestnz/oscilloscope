@@ -196,9 +196,9 @@ class UI(QMainWindow):
         self.txt_uut_addr.setText(self.settings.value("uut addr"))
 
     def test_connections(self) -> None:
-        connected_pix = get_path("diagrams\\tick.png")
-        unconnected_pix = get_path("diagrams\\cross.png")
-        simulating = False
+        connected_pix = get_path("ui\\tick.png")
+        unconnected_pix = get_path("ui\\cross.png")
+        simulating = self.cb_simulating.isChecked()
 
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
