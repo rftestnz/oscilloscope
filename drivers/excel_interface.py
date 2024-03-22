@@ -3,7 +3,6 @@
 # DK Jan 2023
 """
 
-
 from typing import Tuple, List, Any
 import openpyxl
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
@@ -362,7 +361,7 @@ class ExcelInterface:
 
         return valid
 
-    def get_test_name(self, row: int):
+    def get_test_name(self, row: int) -> tuple[str, int]:
         """
         get_test_name
         Read the test name for the specified row
@@ -374,8 +373,8 @@ class ExcelInterface:
             str: _description_
         """
 
-        test_name = self.ws.cell(column=self.__data_col, row=row).value
-        channel = self.ws.cell(column=self.__data_col + 1, row=row).value
+        test_name = str(self.ws.cell(column=self.__data_col, row=row).value)
+        channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
 
         return test_name, channel
 
