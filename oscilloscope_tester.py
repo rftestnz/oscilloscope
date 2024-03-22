@@ -93,10 +93,8 @@ class TestOscilloscope (QDialog,object):
             num_channels = scpi_uut.get_number_channels()
 
         if manufacturer == "":
-            sg.popup_error(
-                "Unable to contact UUT. Is address correct?",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Unable to contact UUT. Is address correct?"
             )
             return False
         elif manufacturer == "KEYSIGHT":
@@ -112,10 +110,9 @@ class TestOscilloscope (QDialog,object):
             self.uut = RohdeSchwarz_Oscilloscope(simulate=False)
             num_channels = 4
         else:
-            sg.popup_error(
-                f"No driver for {manufacturer}. Using Tektronix driver",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                f"No driver for {manufacturer}. Using Tektronix driver"
+
             )
             self.uut = Tektronix_Oscilloscope(simulate=False)
 
@@ -272,9 +269,6 @@ class TestOscilloscope (QDialog,object):
             test_rows (int): _description_
         """
 
-        global self.uut
-        global current_test_text
-
         # no equipment required
 
         current_test_text.update("Testing: DCV Balance")
@@ -297,10 +291,9 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
+
                 )
                 return False
 
@@ -350,26 +343,20 @@ class TestOscilloscope (QDialog,object):
             bool: _description_
         """
 
-        global self.uut
-        global current_test_text
 
         current_test_text.update("Testing: Delta Time")
 
         connections = test_connections(check_3458=False)  # Always required
 
         if not connections["RFGEN"]:
-            sg.popup_error(
-                "Cannot find RF Generator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find RF Generator"
             )
             return False
 
         if not connections["33250A"]:
-            sg.popup_error(
-                "Cannot find 33250A",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find 33250A"
             )
             return False
 
@@ -389,10 +376,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -523,8 +508,6 @@ class TestOscilloscope (QDialog,object):
             bool: _description_
         """
 
-        global self.uut
-        global current_test_text
 
         current_test_text.update("Testing: Random noise sample acquisition")
 
@@ -540,10 +523,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
 
@@ -637,9 +618,7 @@ class TestOscilloscope (QDialog,object):
         Returns:
             bool: _description_
         """
-        global self.uut
-        global current_test_text
-        global self.calibrator
+
 
         current_test_text.update("Testing: Digital Threshold")
 
@@ -650,10 +629,8 @@ class TestOscilloscope (QDialog,object):
         # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
-            sg.popup_error(
-                "Cannot find self.calibrator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find self.calibrator"
             )
             return False
 
@@ -673,10 +650,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -719,19 +694,15 @@ class TestOscilloscope (QDialog,object):
             bool: _description_
         """
 
-        global self.uut
-        global current_test_text
-        global self.ks3458
+
 
         current_test_text.update("Testing: Input Impedance")
 
         connections = test_connections(check_3458=True)  # Always required
 
         if not connections["3458"]:
-            sg.popup_error(
-                "Cannot find 3458A",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find 3458A"
             )
             return False
 
@@ -752,10 +723,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -828,11 +797,7 @@ class TestOscilloscope (QDialog,object):
         Set the self.calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
         """
 
-        global self.calibrator
-        global self.uut
-        global self.simulating
-        global cursor_results
-        global current_test_text
+
 
         current_test_text.update("Testing: DC Voltage")
 
@@ -847,10 +812,8 @@ class TestOscilloscope (QDialog,object):
         # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
-            sg.popup_error(
-                "Cannot find self.calibrator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find self.calibrator"
             )
             return False
 
@@ -882,10 +845,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -1090,10 +1051,8 @@ class TestOscilloscope (QDialog,object):
             excel.find_units_col(test_rows[0])
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
             for row in test_rows:
@@ -1134,9 +1093,6 @@ class TestOscilloscope (QDialog,object):
             _type_: _description_
         """
 
-        global self.calibrator
-        global self.uut
-        global current_test_text
 
         current_test_text.update("Testing: DC Position")
 
@@ -1147,10 +1103,8 @@ class TestOscilloscope (QDialog,object):
         # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
-            sg.popup_error(
-                "Cannot find self.calibrator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find self.calibrator"
             )
             return False
 
@@ -1163,10 +1117,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
 
@@ -1254,10 +1206,8 @@ class TestOscilloscope (QDialog,object):
         # require RF gen
 
         if not connections["33250A"]:
-            sg.popup_error(
-                "Cannot find 33250A Generator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
+            QMessageBox.critical(self, "Error",
+                "Cannot find 33250A Generator"
             )
             return False
 
@@ -1273,10 +1223,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(row)
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
 
@@ -1414,9 +1362,7 @@ class TestOscilloscope (QDialog,object):
             test_rows (list): _description_
         """
 
-        global mxg
-        global self.uut
-        global current_test_text
+
 
         sg.popup(
             "Not yet debugged, test manually",
@@ -1545,7 +1491,6 @@ class TestOscilloscope (QDialog,object):
             test_rows (List): _description_
         """
 
-        global current_test_text
 
         current_test_text.update("Testing: Rise time")
 
@@ -1557,10 +1502,8 @@ class TestOscilloscope (QDialog,object):
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                QMessageBox.critical(self, "Error",
+                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured"
                 )
                 return False
 
@@ -1583,7 +1526,7 @@ class TestOscilloscope (QDialog,object):
                 if response == "Cancel":
                     return False
 
-                for chan in range(uut.num_channels):
+                for chan in range(self.uut.num_channels):
                     self.uut.set_channel(chan=chan + 1, enabled=settings.channel == chan + 1)
 
                 self.uut.set_voltage_scale(chan=settings.channel, scale=0.2)
