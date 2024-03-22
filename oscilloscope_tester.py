@@ -21,7 +21,26 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 from utilities import get_path
 
-class TestOscilloscope:
+from PyQt6 import uic
+from PyQt6.QtCore import QObject, QSettings
+from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtWidgets import (
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMenuBar,
+    QMessageBox,
+    QPushButton,
+    QStatusBar,
+    QDialog
+)
+
+class TestOscilloscope (QDialog,object):
 
     def __init__(
         self,
@@ -31,6 +50,9 @@ class TestOscilloscope:
         uut: Keysight_Oscilloscope | RohdeSchwarz_Oscilloscope | Tektronix_Oscilloscope,
         simulating: bool,
     ) -> None:
+
+        super().__init__(self)
+
         self.calibrator = calibrator
         self.ks33250 = ks33250
         self.ks3458 = ks3458
