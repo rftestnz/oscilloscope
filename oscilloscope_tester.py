@@ -19,7 +19,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
-
+from utilities import get_path
 
 class TestOscilloscope:
 

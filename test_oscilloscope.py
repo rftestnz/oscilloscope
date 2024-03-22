@@ -10,6 +10,8 @@ from pprint import pformat, pprint
 from typing import Dict, List, Tuple
 from zipfile import BadZipFile
 
+from utilities import get_path
+
 import PySimpleGUI as sg
 from PyQt6 import uic
 from PyQt6.QtCore import QObject, QSettings
@@ -54,23 +56,6 @@ cursor_results: List = []
 test_progress: sg.ProgressBar
 test_number: int = 0
 current_test_text: sg.Text
-
-
-def get_path(filename: str) -> str:
-    """
-    get_path
-    The location of the diagram is different if run through interpreter or compiled.
-
-    Args:
-        filename ([str]): filename with relative path
-
-    Returns:
-        [str]: Full path to the file
-    """
-    if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, filename)  # type: ignore
-    else:
-        return filename
 
 
 class UI(QMainWindow):
