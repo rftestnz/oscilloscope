@@ -275,6 +275,8 @@ class UI(QMainWindow):
         selector = IndividualTestSelector(test_names=list(test_names))
         selector.show()
 
+        print(selector.selected_tests)
+
     def hide_excel_rows(self) -> None:
         pass
 
