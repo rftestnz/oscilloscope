@@ -99,7 +99,7 @@ class UI(QMainWindow):
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
-        self.btn_select_u_u_t_addr = self.findChild(QPushButton, "btnSelectUUTAddr")
+        self.btn_select_uut_addr = self.findChild(QPushButton, "btnSelectUUTAddr")
         self.btn_test_connections = self.findChild(QPushButton, "btnTestConnections")
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
@@ -111,7 +111,7 @@ class UI(QMainWindow):
     def create_connections(self) -> None:
         self.btn_browse_results.clicked.connect(self.browse_results)
         self.btn_view_results.clicked.connect(self.view_results)
-        self.btn_select_u_u_t_addr.clicked.connect(self.select_u_u_t_addr)
+        self.btn_select_uut_addr.clicked.connect(self.select_uut_addr)
         self.btn_test_connections.clicked.connect(self.test_connections)
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
@@ -256,7 +256,7 @@ class UI(QMainWindow):
         except FileNotFoundError:
             QMessageBox.critical(self, "Error", "Results file not found")
 
-    def select_u_u_t_addr(self) -> None:
+    def select_uut_addr(self) -> None:
         pass
 
     def perform_tests(self) -> None:
