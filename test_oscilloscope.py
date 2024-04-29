@@ -42,6 +42,8 @@ from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.scpi_id import SCPI_ID
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
+from individual_test_selector import IndividualTestSelector
+
 VERSION = "A.01.09"
 
 
@@ -260,7 +262,18 @@ class UI(QMainWindow):
         pass
 
     def perform_tests(self) -> None:
-        pass
+        """
+        perform_tests
+        This just presents list of available tests to perform
+        """
+
+        # Have to read the results sheet to find what tests are performed, then present as a series of checkboxes
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            test_names = excel.get_test_types()
+
+        selector = IndividualTestSelector(test_names=list(test_names))
+        selector.show()
 
     def hide_excel_rows(self) -> None:
         pass
