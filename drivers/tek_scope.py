@@ -314,7 +314,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             imedance (str): _description_
         """
 
-        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+        if self.model.startswith("MSO"):
             if type(impedance) is str and impedance.find("k") > 0:
                 imp = int(impedance.strip()[:-1]) * 1000
             elif type(impedance) is str and impedance.find("M") > 0:
