@@ -3,7 +3,6 @@
 # DK Jun 22
 """
 
-
 import contextlib
 import pyvisa
 from pyvisa import InvalidSession, VisaIOError
@@ -106,7 +105,9 @@ class Ks33250A:
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception:
+        except Exception as ex:
+            print(ex)
+            print(self.visa_address)
             self.connected = False
 
         return self.connected
