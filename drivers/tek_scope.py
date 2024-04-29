@@ -381,6 +381,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
         """
 
         self.write(f"CH{chan}:PRO:GAIN 1")
+        # self.write(f"CH{chan}:PRO 1")
         self.write(f"CH{chan}:VOL {scale}")
 
     def set_voltage_offset(self, chan: int, offset: float) -> None:
