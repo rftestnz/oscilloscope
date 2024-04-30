@@ -274,8 +274,11 @@ class UI(QMainWindow):
                     model = scpi.get_id()[1]
                 visa_instruments.append((addr, model))
 
-        selector = AddressSelector(visa_instruments)
-        selector.show()
+        if not len(visa_instruments):
+            QMessageBox.critical(self, "Error", "No USB Visa instruments found")
+        else:
+            selector = AddressSelector(visa_instruments)
+            selector.show()
 
     def perform_tests(self) -> None:
         """
