@@ -218,16 +218,17 @@ class UI(QMainWindow):
         self.lbl33250_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
-        self.ks3458.simulating = simulating
-        self.ks3458.open_connection()
-        self.lbl3458_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.ks3458.is_connected()
-            else QPixmap(unconnected_pix)
-        )
-        self.lbl3458_connection.resize(QPixmap(connected_pix).size())
-        QApplication.processEvents()
+        if impedance_tests:
+            self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
+            self.ks3458.simulating = simulating
+            self.ks3458.open_connection()
+            self.lbl3458_connection.setPixmap(
+                QPixmap(connected_pix)
+                if self.ks3458.is_connected()
+                else QPixmap(unconnected_pix)
+            )
+            self.lbl3458_connection.resize(QPixmap(connected_pix).size())
+            QApplication.processEvents()
 
         self.uut.visa_address = self.txt_uut_addr.text()
         self.uut.simulating = simulating
