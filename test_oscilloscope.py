@@ -349,6 +349,45 @@ class UI(QMainWindow):
             skip_completed=self.cb_skip_rows.isChecked(),
         )
 
+    def result_sheet_check(self) -> bool:
+        """
+        result_sheet_check
+
+        Make sure the result sheet has the correct named cells
+
+        Returns:
+            bool: _description_
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            nr = excel.get_named_cell("StartCell")
+            if not nr:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "No cell named StartCell. Name the first cell with function data StartCell",
+                )
+                return False
+
+            valid_tests = excel.get_test_types()
+
+            QMessageBox.information(
+                self,
+                "Tests",
+                f"The following tests are found: {pformat( list(valid_tests))}",
+            )
+
+            invalid_tests = excel.get_invalid_tests()
+
+            if len(invalid_tests):
+                QMessageBox.critical(
+                    self,
+                    "Untested",
+                    f"The following rows will not be tested: {pformat(invalid_tests)}",
+                )
+
+            return True
+
 
 if __name__ == "__main__":
     app = QApplication([])
