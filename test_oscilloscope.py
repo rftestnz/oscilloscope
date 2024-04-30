@@ -43,6 +43,7 @@ from drivers.scpi_id import SCPI_ID
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
 from individual_test_selector import IndividualTestSelector
+from oscilloscope_tester import TestOscilloscope
 
 VERSION = "A.01.09"
 
@@ -297,10 +298,38 @@ class UI(QMainWindow):
 
             test_rows = sorted(test_steps)
 
-            print(test_rows)
+            self.perform_oscilloscope_tests(test_rows=test_rows)
 
     def hide_excel_rows(self) -> None:
         pass
+
+    def perform_oscilloscope_tests(self, test_rows: list) -> None:
+        """
+        perform_tests
+        Perform the actual oscilloscope tests
+
+        Args:
+            test_rows (list): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        tester = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=self.cb_simulating.isChecked(),
+        )
+
+        tester.run_tests(
+            filename=self.txt_results_file.text(),
+            test_rows=test_rows,
+            uut_address=self.txt_uut_addr.text(),
+            parallel_channels=self.do_parallel,
+            skip_completed=self.cb_skip_rows.isChecked(),
+        )
 
 
 if __name__ == "__main__":
