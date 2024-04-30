@@ -112,6 +112,7 @@ class UI(QMainWindow):
         self.btn_test_connections.clicked.connect(self.test_connections)
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
+        self.txt_results_file.textChanged.connect(self.check_excel_button)
 
     def initialize_controls(self) -> None:
         self.txt_results_file.setText(self.settings.value("filename"))
