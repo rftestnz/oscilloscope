@@ -436,6 +436,16 @@ class UI(QMainWindow):
                     channel=int(self.cmb_number_channels.currentText())
                 )
 
+    def check_excel_button(self) -> None:
+        """
+        Results file has chenged, enable or disable the hide excel rows button
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            check = excel.check_channel_rows()
+
+            self.btn_hide_excel_rows.setEnabled(check)
+
 
 if __name__ == "__main__":
     app = QApplication([])
