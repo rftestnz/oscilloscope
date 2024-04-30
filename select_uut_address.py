@@ -42,8 +42,13 @@ class AddressSelector(QDialog):
 
         self.layout1.addWidget(QLabel("Select UUT Address"))
 
+        selected = False  # highlight the first
+
         for addr in address_list:
             rb = QRadioButton(f"{addr[0]} ({addr[1]})")
+            if not selected:
+                rb.setChecked(True)
+                selected = True
             self.radio_buttons.append(rb)
             self.layout1.addWidget(rb)
 
