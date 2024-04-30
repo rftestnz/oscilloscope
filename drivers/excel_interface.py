@@ -836,6 +836,24 @@ class ExcelInterface:
 
         self.save_sheet()
 
+    def check_channel_rows(self) -> bool:
+        """
+        check_channel_rows
+        Some results sheets have a channel column in Col A, as the same model can have different channel counts (eg Tek MSO)
+
+        Returns:
+            bool: _description_
+        """
+
+        mdl = self.get_named_cell("Model")
+
+        if not mdl:
+            # Model cell hasn't been set
+            return False
+        # check the col A in the same row
+
+        return self.ws[f"A{mdl.row}"].value is None
+
 
 if __name__ == "__main__":
     with ExcelInterface("c:\\Temp\\666_Tektronix_MSO44.xlsx") as excel:
