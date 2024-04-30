@@ -172,6 +172,7 @@ class TestOscilloscope(QDialog, object):
         self,
         filename: str,
         test_rows: List,
+        uut_address: str,
         parallel_channels: bool = False,
         skip_completed: bool = False,
     ) -> None:
@@ -193,6 +194,8 @@ class TestOscilloscope(QDialog, object):
         global test_number
 
         test_number = 0
+
+        self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
         with ExcelInterface(filename=filename) as excel:
             excel.backup()
