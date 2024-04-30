@@ -388,6 +388,24 @@ class UI(QMainWindow):
 
             return True
 
+    def check_impedance(self) -> bool:
+        """
+        check_impedance
+        Check the results sheet to see if there are any impedance tests.
+        If not, no requirement to check 3458A
+
+        Returns:
+            bool: _description_
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            if not self.result_sheet_check():
+                return False
+
+            valid_tests = excel.get_test_types()
+
+        return "IMP" in valid_tests
+
 
 if __name__ == "__main__":
     app = QApplication([])
