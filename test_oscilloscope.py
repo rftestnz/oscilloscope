@@ -838,28 +838,6 @@ if __name__ == "_main_":
 
             window["-VIEW-"].update(disabled=False)
 
-        if event == "-TEST_CONNECTIONS-":
-            if values["-CALIBRATOR-"] == "M-142":
-                calibrator = M142(simulate=simulating)
-            else:
-                calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address
-            ks33250.visa_address = ks33250_address
-            ks3458.visa_address = ks3458_address
-
-            # Check if the 3458A is needed
-
-            impedance_tests = check_impedance(values["-FILE-"])
-
-            window["GPIB_IFC_3458"].update(disabled=not impedance_tests)
-            window["GPIB_ADDR_3458"].update(disabled=not impedance_tests)
-
-            load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
-            uut.visa_address = values["-UUT_ADDRESS-"]
-
-            connections_check_form(impedance_tests)
-            continue
-
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
 
