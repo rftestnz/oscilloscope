@@ -190,6 +190,12 @@ class UI(QMainWindow):
         unconnected_pix = get_path("ui\\cross.png")
         simulating = self.cb_simulating.isChecked()
 
+        # Check impedance first calls the check result sheet
+        impedance_tests = self.check_impedance()
+        self.cmb3458_addr.setEnabled(impedance_tests)
+        self.cmb3458_gpib.setEnabled(impedance_tests)
+        self.lbl3458_connection.setVisible(impedance_tests)
+
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
