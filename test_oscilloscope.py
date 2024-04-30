@@ -409,63 +409,6 @@ def update_test_progress() -> None:
     test_progress.update(test_number)
 
 
-def select_visa_address() -> str:
-    """
-    select_visa_address _summary_
-
-    Show a form with all of the found visa resource strings
-
-    Returns:
-        str: _description_
-    """
-
-    addresses = SCPI_ID.get_all_attached()
-
-    visa_instruments = []
-
-    for addr in addresses:
-        if addr.startswith("USB"):
-            with SCPI_ID(address=addr) as scpi:
-                idn = scpi.get_id()[0]
-                visa_instruments.append(addr)
-
-    radio_buttons = [
-        [
-            sg.Radio(
-                addr,
-                1,
-                background_color="blue",
-                default=bool(addr[0].startswith("USB")),
-            )
-        ]
-        for addr in visa_instruments
-    ]
-
-    layout = [
-        [sg.Text("Select item", background_color="blue")],
-        [radio_buttons],
-        [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
-    ]
-
-    window = sg.Window(
-        "Addresses selection",
-        layout=layout,
-        icon=get_path("ui\\scope.ico"),
-        background_color="blue",
-    )
-
-    event, values = window.read()  # type: ignore
-
-    window.close()
-
-    if event in ["Cancel", sg.WIN_CLOSED]:
-        return ""
-
-    return next(
-        (addr for index, addr in enumerate(visa_instruments) if values[index]), ""
-    )
-
-
 def template_help() -> None:
     """
     template_help _summary_
@@ -530,39 +473,6 @@ Don't mix tables with different types of tests. The above column headers are not
     window.read()
 
     window.close()
-
-
-def results_sheet_check(filename: str) -> None:
-    """
-    results_sheet_check
-    Do a check of the results sheet to make sure valid
-    """
-
-    with ExcelInterface(filename=filename) as excel:
-        nr = excel.get_named_cell("StartCell")
-        if not nr:
-            sg.popup_error(
-                "No cell named StartCell. Name the first cell with function data StartCell",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
-            )
-
-        valid_tests = excel.get_test_types()
-
-        sg.popup(
-            f"The following tests are found: {pformat( list(valid_tests))}",
-            background_color="blue",
-            icon=get_path("ui\\scope.ico"),
-        )
-
-        invalid_tests = excel.get_invalid_tests()
-
-        if len(invalid_tests):
-            sg.popup(
-                f"The following rows will not be tested: {pformat(invalid_tests)}",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
-            )
 
 
 def check_impedance(filename: str) -> bool:
