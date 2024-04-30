@@ -4,47 +4,38 @@ Test Oscilloscopes
 """
 
 import os
-import sys
-
-from pprint import pformat, pprint
-from typing import Dict, List, Tuple
+from pprint import pformat
+from typing import List
 from zipfile import BadZipFile
-
-from utilities import get_path
 
 import PySimpleGUI as sg
 from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtCore import QSettings
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QFileDialog,
-    QGroupBox,
     QLabel,
     QLineEdit,
     QMainWindow,
-    QMenuBar,
     QMessageBox,
     QPushButton,
-    QStatusBar,
 )
 
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
-from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
-from drivers.Ks3458A import Ks3458A, Ks3458A_Function
+from drivers.keysight_scope import Keysight_Oscilloscope
+from drivers.Ks3458A import Ks3458A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.rf_signal_generator import RF_Signal_Generator
-from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.scpi_id import SCPI_ID
-from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
-
 from individual_test_selector import IndividualTestSelector
-from select_uut_address import AddressSelector
 from oscilloscope_tester import TestOscilloscope
+from select_uut_address import AddressSelector
+from utilities import get_path
 
 VERSION = "A.01.09"
 
@@ -78,7 +69,7 @@ class UI(QMainWindow):
 
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
 
-        self.settings = QSettings("RFTS", "Oscilloscope")  # TODO set name
+        self.settings = QSettings("RFTS", "Oscilloscope")
         self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
@@ -235,7 +226,7 @@ class UI(QMainWindow):
             self.lbl3458_connection.resize(QPixmap(connected_pix).size())
             QApplication.processEvents()
 
-        # The uut is more complex, as we need to load the correct driver.
+        # The uut is more complex, as we need to load the correct driver temporarily.
 
         check = TestOscilloscope(
             calibrator=self.calibrator,
