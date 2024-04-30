@@ -43,6 +43,7 @@ from drivers.scpi_id import SCPI_ID
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
 from individual_test_selector import IndividualTestSelector
+from select_uut_address import AddressSelector
 from oscilloscope_tester import TestOscilloscope
 
 VERSION = "A.01.09"
@@ -262,7 +263,19 @@ class UI(QMainWindow):
             QMessageBox.critical(self, "Error", "Results file not found")
 
     def select_uut_addr(self) -> None:
-        pass
+
+        addresses = SCPI_ID.get_all_attached()
+
+        visa_instruments = []
+
+        for addr in addresses:
+            if addr.startswith("USB"):
+                # with SCPI_ID(address=addr) as scpi:
+                #    idn = scpi.get_id()[0]
+                visa_instruments.append(addr)
+
+        selector = AddressSelector(visa_instruments)
+        selector.show()
 
     def perform_tests(self) -> None:
         """
