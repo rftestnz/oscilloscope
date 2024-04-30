@@ -309,9 +309,23 @@ class UI(QMainWindow):
         This just presents list of available tests to perform
         """
 
+        if not os.path.isfile(self.txt_results_file.text()):
+            QMessageBox.critical(self, "Error", "Cannot find results file")
+            return
+
         # Have to read the results sheet to find what tests are performed, then present as a series of checkboxes
 
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            # check excel first
+
+            if not excel.check_excel_available():
+                QMessageBox.critical(
+                    self, "Error", "Unable to write to results sheet, is it open?"
+                )
+                return
+
+            self.test_connections()
+
             test_names = excel.get_test_types()
 
             selector = IndividualTestSelector(test_names=list(test_names))
