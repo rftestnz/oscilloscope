@@ -406,7 +406,14 @@ class UI(QMainWindow):
         """
 
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            if not self.result_sheet_check():
+            # Repeat the part of the check from result_sheet_check, but we don't want it messaging the tests to be performed
+            nr = excel.get_named_cell("StartCell")
+            if not nr:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "No cell named StartCell. Name the first cell with function data StartCell",
+                )
                 return False
 
             valid_tests = excel.get_test_types()
