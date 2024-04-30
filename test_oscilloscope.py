@@ -336,9 +336,6 @@ class UI(QMainWindow):
 
             self.perform_oscilloscope_tests(test_rows=test_rows)
 
-    def hide_excel_rows(self) -> None:
-        pass
-
     def perform_oscilloscope_tests(self, test_rows: list) -> None:
         """
         perform_tests
@@ -430,6 +427,10 @@ class UI(QMainWindow):
             valid_tests = excel.get_test_types()
 
         return "IMP" in valid_tests
+
+    def hide_excel_rows(self) -> None:
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            excel.hide_excel_rows(channel=int(self.cmb_number_channels.currentText()))
 
 
 if __name__ == "__main__":
