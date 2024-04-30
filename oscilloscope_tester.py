@@ -52,7 +52,7 @@ class TestOscilloscope(QDialog, object):
         simulating: bool,
     ) -> None:
 
-        super().__init__(self)
+        super().__init__()
 
         self.calibrator = calibrator
         self.ks33250 = ks33250
