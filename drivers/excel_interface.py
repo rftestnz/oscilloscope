@@ -808,7 +808,7 @@ class ExcelInterface:
 
         val = self.ws.cell(column=col, row=self.row).value
 
-        return val == None
+        return val is None
 
     def hide_excel_rows(self, channel: int) -> None:
         """
