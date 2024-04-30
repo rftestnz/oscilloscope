@@ -196,6 +196,11 @@ class UI(QMainWindow):
         self.cmb3458_gpib.setEnabled(impedance_tests)
         self.lbl3458_connection.setVisible(impedance_tests)
 
+        if self.cmb_calibrator.currentText() == "M142":
+            self.calibrator = self.m142
+        else:
+            self.calibrator = self.fl5700
+
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
