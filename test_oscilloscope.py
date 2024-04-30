@@ -279,6 +279,8 @@ class UI(QMainWindow):
         else:
             selector = AddressSelector(visa_instruments)
             selector.show()
+            if selector.uut_address:
+                self.txt_uut_addr.setText(selector.uut_address)
 
     def perform_tests(self) -> None:
         """
