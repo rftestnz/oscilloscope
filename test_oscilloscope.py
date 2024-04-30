@@ -230,13 +230,28 @@ class UI(QMainWindow):
             self.lbl3458_connection.resize(QPixmap(connected_pix).size())
             QApplication.processEvents()
 
+        # The uut is more complex, as we need to load the correct driver.
+
+        check = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=self.cb_simulating.isChecked(),
+        )
+
+        uut_connected = check.load_uut_driver(self.txt_uut_addr.text())
+
+        if uut_connected:
+            self.cmb_number_channels.setCurrentIndex(
+                self.cmb_number_channels.findText(str(check.uut.num_channels))
+            )
+
         self.uut.visa_address = self.txt_uut_addr.text()
         self.uut.simulating = simulating
-        self.uut.open_connection()
+
         self.lbl_uut_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.uut.is_connected()
-            else QPixmap(unconnected_pix)
+            QPixmap(connected_pix) if uut_connected else QPixmap(unconnected_pix)
         )
         self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
