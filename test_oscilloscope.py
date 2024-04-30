@@ -177,6 +177,8 @@ class UI(QMainWindow):
         )
         self.txt_uut_addr.setText(self.settings.value("uut addr"))
 
+        self.check_excel_button()
+
     def test_connections(self) -> None:
         connected_pix = get_path("ui\\tick.png")
         unconnected_pix = get_path("ui\\cross.png")
