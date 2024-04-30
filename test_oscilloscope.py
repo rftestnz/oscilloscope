@@ -112,6 +112,7 @@ class UI(QMainWindow):
         self.btn_test_connections.clicked.connect(self.test_connections)
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
+        self.txt_results_file.textChanged.connect(self.check_excel_button)
 
     def initialize_controls(self) -> None:
         self.txt_results_file.setText(self.settings.value("filename"))
@@ -175,6 +176,8 @@ class UI(QMainWindow):
             )
         )
         self.txt_uut_addr.setText(self.settings.value("uut addr"))
+
+        self.check_excel_button()
 
     def test_connections(self) -> None:
         connected_pix = get_path("ui\\tick.png")
@@ -430,7 +433,21 @@ class UI(QMainWindow):
 
     def hide_excel_rows(self) -> None:
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            excel.hide_excel_rows(channel=int(self.cmb_number_channels.currentText()))
+            check = excel.check_channel_rows()
+            if check:
+                excel.hide_excel_rows(
+                    channel=int(self.cmb_number_channels.currentText())
+                )
+
+    def check_excel_button(self) -> None:
+        """
+        Results file has chenged, enable or disable the hide excel rows button
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            check = excel.check_channel_rows()
+
+            self.btn_hide_excel_rows.setEnabled(check)
 
 
 if __name__ == "__main__":
