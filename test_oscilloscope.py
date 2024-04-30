@@ -709,48 +709,6 @@ if __name__ == "_main_":
     while True:
         event, values = window.read(200)  # type: ignore
 
-        if event in ["Exit", sg.WIN_CLOSED]:
-            break
-
-        # Get the default text color in case changing simulate
-        txt_clr = sg.theme_element_text_color()
-
-        # read the simulate setting
-        if values["-SIMULATE-"]:
-            window["-SIMULATE-"].update(text_color="red")
-        else:
-            window["-SIMULATE-"].update(text_color=txt_clr)
-
-        sg.user_settings_set_entry("-SIMULATE-", values["-SIMULATE-"])
-        sg.user_settings_set_entry("-CALIBRATOR-", values["-CALIBRATOR-"])
-        sg.user_settings_set_entry("-FLUKE_5700A_GPIB_IFC-", values["GPIB_FLUKE_5700A"])
-        sg.user_settings_set_entry("-33250_GPIB_IFC-", values["GPIB_IFC_33250"])
-        sg.user_settings_set_entry("-33250_GPIB_ADDR-", values["GPIB_ADDR_33250"])
-        sg.user_settings_set_entry("-3458_GPIB_IFC-", values["GPIB_IFC_3458"])
-        sg.user_settings_set_entry("-3458_GPIB_ADDR-", values["GPIB_ADDR_3458"])
-        sg.user_settings_set_entry("-UUT_ADDRESS-", values["-UUT_ADDRESS-"])
-        sg.user_settings_set_entry("-FILENAME-", values["-FILE-"])
-
-        sg.user_settings_save()
-
-        simulating = values["-SIMULATE-"]
-
-        calibrator.simulating = simulating
-        calibrator_address = (
-            f"{values['GPIB_FLUKE_5700A']}::{values['GPIB_ADDR_FLUKE_5700A']}::INSTR"
-        )
-
-        ks33250.simulating = simulating
-        ks33250_address = (
-            f"{values['GPIB_IFC_33250']}::{values['GPIB_ADDR_33250']}::INSTR"
-        )
-
-        uut.simulating = simulating
-        uut.visa_address = values["-UUT_ADDRESS-"]
-
-        ks3458.simulating = simulating
-        ks3458_address = f"{values['GPIB_IFC_3458']}::{values['GPIB_ADDR_3458']}::INSTR"
-
         if event in ["-INDIVIDUAL-", "-TEST_CONNECTIONS-"]:
             # make sure the file is valid, we have to read it to check impedance tests
 
@@ -847,24 +805,10 @@ if __name__ == "_main_":
 
             window["-VIEW-"].update(disabled=False)
 
-        if event == "-VIEW-":
-            os.startfile(f'"{values["-FILE-"]}"')
-
-        if event == "-SELECT_ADDRESS-":
-            address = select_visa_address()
-            if address:
-                window["-UUT_ADDRESS-"].update(address)  # type: ignore
-
         if event == "-TEMPLATE_HELP-":
             template_help()
-
-        if event == "-RESULTS_CHECK-":
-            results_sheet_check(filename=values["-FILE-"])
 
         if event == "-CALIBRATOR-":
             window["GPIB_ADDR_FLUKE_5700A"].update(
                 value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
             )
-
-        if event == "-HIDE_EXCEL_ROWS-":
-            hide_excel_rows(filename=values["-FILE-"], channel=values["-UUT_CHANNELS-"])
