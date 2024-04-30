@@ -4,43 +4,38 @@ Test Oscilloscopes
 """
 
 import os
-import sys
-
-from pprint import pformat, pprint
-from typing import Dict, List, Tuple
+from pprint import pformat
+from typing import List
 from zipfile import BadZipFile
-
-from utilities import get_path
 
 import PySimpleGUI as sg
 from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings
-from PyQt6.QtGui import QAction, QIcon, QPixmap
+from PyQt6.QtCore import QSettings
+from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QFileDialog,
-    QGroupBox,
     QLabel,
     QLineEdit,
     QMainWindow,
-    QMenuBar,
     QMessageBox,
     QPushButton,
-    QStatusBar,
 )
 
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
-from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
-from drivers.Ks3458A import Ks3458A, Ks3458A_Function
+from drivers.keysight_scope import Keysight_Oscilloscope
+from drivers.Ks3458A import Ks3458A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.rf_signal_generator import RF_Signal_Generator
-from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.scpi_id import SCPI_ID
-from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
+from individual_test_selector import IndividualTestSelector
+from oscilloscope_tester import TestOscilloscope
+from select_uut_address import AddressSelector
+from utilities import get_path
 
 VERSION = "A.01.09"
 
@@ -70,9 +65,11 @@ class UI(QMainWindow):
 
         self.calibrator = self.m142
 
+        self.do_parallel = False
+
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
 
-        self.settings = QSettings("RFTS", "Oscilloscope")  # TODO set name
+        self.settings = QSettings("RFTS", "Oscilloscope")
         self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
@@ -99,7 +96,7 @@ class UI(QMainWindow):
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
-        self.btn_select_u_u_t_addr = self.findChild(QPushButton, "btnSelectUUTAddr")
+        self.btn_select_uut_addr = self.findChild(QPushButton, "btnSelectUUTAddr")
         self.btn_test_connections = self.findChild(QPushButton, "btnTestConnections")
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
@@ -111,7 +108,7 @@ class UI(QMainWindow):
     def create_connections(self) -> None:
         self.btn_browse_results.clicked.connect(self.browse_results)
         self.btn_view_results.clicked.connect(self.view_results)
-        self.btn_select_u_u_t_addr.clicked.connect(self.select_u_u_t_addr)
+        self.btn_select_uut_addr.clicked.connect(self.select_uut_addr)
         self.btn_test_connections.clicked.connect(self.test_connections)
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
@@ -184,6 +181,17 @@ class UI(QMainWindow):
         unconnected_pix = get_path("ui\\cross.png")
         simulating = self.cb_simulating.isChecked()
 
+        # Check impedance first calls the check result sheet
+        impedance_tests = self.check_impedance()
+        self.cmb3458_addr.setEnabled(impedance_tests)
+        self.cmb3458_gpib.setEnabled(impedance_tests)
+        self.lbl3458_connection.setVisible(impedance_tests)
+
+        if self.cmb_calibrator.currentText() == "M142":
+            self.calibrator = self.m142
+        else:
+            self.calibrator = self.fl5700
+
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
@@ -206,24 +214,40 @@ class UI(QMainWindow):
         self.lbl33250_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
-        self.ks3458.simulating = simulating
-        self.ks3458.open_connection()
-        self.lbl3458_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.ks3458.is_connected()
-            else QPixmap(unconnected_pix)
+        if impedance_tests:
+            self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
+            self.ks3458.simulating = simulating
+            self.ks3458.open_connection()
+            self.lbl3458_connection.setPixmap(
+                QPixmap(connected_pix)
+                if self.ks3458.is_connected()
+                else QPixmap(unconnected_pix)
+            )
+            self.lbl3458_connection.resize(QPixmap(connected_pix).size())
+            QApplication.processEvents()
+
+        # The uut is more complex, as we need to load the correct driver temporarily.
+
+        check = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=self.cb_simulating.isChecked(),
         )
-        self.lbl3458_connection.resize(QPixmap(connected_pix).size())
-        QApplication.processEvents()
+
+        uut_connected = check.load_uut_driver(self.txt_uut_addr.text())
+
+        if uut_connected:
+            self.cmb_number_channels.setCurrentIndex(
+                self.cmb_number_channels.findText(str(check.uut.num_channels))
+            )
 
         self.uut.visa_address = self.txt_uut_addr.text()
         self.uut.simulating = simulating
-        self.uut.open_connection()
+
         self.lbl_uut_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.uut.is_connected()
-            else QPixmap(unconnected_pix)
+            QPixmap(connected_pix) if uut_connected else QPixmap(unconnected_pix)
         )
         self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
@@ -256,14 +280,157 @@ class UI(QMainWindow):
         except FileNotFoundError:
             QMessageBox.critical(self, "Error", "Results file not found")
 
-    def select_u_u_t_addr(self) -> None:
-        pass
+    def select_uut_addr(self) -> None:
+
+        addresses = SCPI_ID.get_all_attached()
+
+        visa_instruments = []
+
+        for addr in addresses:
+            if addr.startswith("USB"):
+                with SCPI_ID(address=addr) as scpi:
+                    model = scpi.get_id()[1]
+                visa_instruments.append((addr, model))
+
+        if not len(visa_instruments):
+            QMessageBox.critical(self, "Error", "No USB Visa instruments found")
+        else:
+            selector = AddressSelector(visa_instruments)
+            selector.show()
+            if selector.uut_address:
+                self.txt_uut_addr.setText(selector.uut_address)
 
     def perform_tests(self) -> None:
-        pass
+        """
+        perform_tests
+        This just presents list of available tests to perform
+        """
+
+        # Have to read the results sheet to find what tests are performed, then present as a series of checkboxes
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            test_names = excel.get_test_types()
+
+            selector = IndividualTestSelector(test_names=list(test_names))
+            selector.show()
+
+            print(selector.selected_tests)
+
+            # Now we have the list of test names, we need to get the associated test rows
+
+            test_steps = []
+
+            for name in selector.selected_tests:
+                rows = excel.get_test_rows(name)
+                test_steps.extend(iter(rows))
+
+            self.do_parallel = False
+            if "DCV" in selector.selected_tests:
+                self.do_parallel = True
+            if "DCV-BAL" in selector.selected_tests:
+                self.do_parallel = True
+            if "CURS" in selector.selected_tests:
+                self.do_parallel = True
+
+            test_rows = sorted(test_steps)
+
+            self.perform_oscilloscope_tests(test_rows=test_rows)
+
+    def perform_oscilloscope_tests(self, test_rows: list) -> None:
+        """
+        perform_tests
+        Perform the actual oscilloscope tests
+
+        Args:
+            test_rows (list): _description_
+
+        Returns:
+            _type_: _description_
+        """
+
+        tester = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=self.cb_simulating.isChecked(),
+        )
+
+        tester.run_tests(
+            filename=self.txt_results_file.text(),
+            test_rows=test_rows,
+            uut_address=self.txt_uut_addr.text(),
+            parallel_channels=self.do_parallel,
+            skip_completed=self.cb_skip_rows.isChecked(),
+        )
+
+    def result_sheet_check(self) -> bool:
+        """
+        result_sheet_check
+
+        Make sure the result sheet has the correct named cells
+
+        Returns:
+            bool: _description_
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            nr = excel.get_named_cell("StartCell")
+            if not nr:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "No cell named StartCell. Name the first cell with function data StartCell",
+                )
+                return False
+
+            valid_tests = excel.get_test_types()
+
+            QMessageBox.information(
+                self,
+                "Tests",
+                f"The following tests are found: {pformat( list(valid_tests))}",
+            )
+
+            invalid_tests = excel.get_invalid_tests()
+
+            if len(invalid_tests):
+                QMessageBox.critical(
+                    self,
+                    "Untested",
+                    f"The following rows will not be tested: {pformat(invalid_tests)}",
+                )
+
+            return True
+
+    def check_impedance(self) -> bool:
+        """
+        check_impedance
+        Check the results sheet to see if there are any impedance tests.
+        If not, no requirement to check 3458A
+
+        Returns:
+            bool: _description_
+        """
+
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            # Repeat the part of the check from result_sheet_check, but we don't want it messaging the tests to be performed
+            nr = excel.get_named_cell("StartCell")
+            if not nr:
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    "No cell named StartCell. Name the first cell with function data StartCell",
+                )
+                return False
+
+            valid_tests = excel.get_test_types()
+
+        return "IMP" in valid_tests
 
     def hide_excel_rows(self) -> None:
-        pass
+        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+            excel.hide_excel_rows(channel=int(self.cmb_number_channels.currentText()))
 
 
 if __name__ == "__main__":
@@ -284,132 +451,6 @@ def update_test_progress() -> None:
 
     test_number += 1
     test_progress.update(test_number)
-
-
-def individual_tests(filename: str) -> Tuple:  # sourcery skip: extract-method
-    """
-    individual_tests
-    show form for selecting individual tests
-
-    Returns:
-        List: _description_
-    """
-
-    with ExcelInterface(filename=filename) as excel:
-        test_names = excel.get_test_types()
-
-    layout = [
-        [
-            sg.Text(
-                "Select tests to perform:", background_color="blue", text_color="white"
-            )
-        ],
-        [
-            [sg.Checkbox(name, key=name, background_color="blue", default=False)]
-            for name in test_names
-        ],
-        [sg.Button("Test", size=(10, 1)), sg.Cancel(size=(10, 1))],
-    ]
-
-    window = sg.Window(
-        "Test individual tests",
-        layout=layout,
-        finalize=True,
-        background_color="blue",
-        icon=get_path("ui\\scope.ico"),
-    )
-
-    event, values = window.read()  # type: ignore
-
-    test_steps = []
-
-    do_parallel = False
-
-    if event not in [sg.WIN_CLOSED, "Cancel"]:
-        # Now work out which are checked
-        # There must be a pythonic way to get the list of values in one line, but couldn't work it out using lambdas and filters
-
-        checked_list = [val for val in values if values[val]]
-
-        print(checked_list)
-
-        # we actually need the list of rows for all of the steps
-
-        for row in checked_list:
-            rows = excel.get_test_rows(row)
-            test_steps.extend(iter(rows))
-        print(test_steps)
-
-        do_parallel = False
-        if "DCV" in checked_list:
-            do_parallel = True
-        if "DCV-BAL" in checked_list:
-            do_parallel = True
-        if "CURS" in checked_list:
-            do_parallel = True
-
-    window.close()
-
-    excel.close()
-
-    return (sorted(test_steps), do_parallel)
-
-
-def select_visa_address() -> str:
-    """
-    select_visa_address _summary_
-
-    Show a form with all of the found visa resource strings
-
-    Returns:
-        str: _description_
-    """
-
-    addresses = SCPI_ID.get_all_attached()
-
-    visa_instruments = []
-
-    for addr in addresses:
-        if addr.startswith("USB"):
-            with SCPI_ID(address=addr) as scpi:
-                idn = scpi.get_id()[0]
-                visa_instruments.append(addr)
-
-    radio_buttons = [
-        [
-            sg.Radio(
-                addr,
-                1,
-                background_color="blue",
-                default=bool(addr[0].startswith("USB")),
-            )
-        ]
-        for addr in visa_instruments
-    ]
-
-    layout = [
-        [sg.Text("Select item", background_color="blue")],
-        [radio_buttons],
-        [sg.Ok(size=(12, 1)), sg.Cancel(size=(12, 1))],
-    ]
-
-    window = sg.Window(
-        "Addresses selection",
-        layout=layout,
-        icon=get_path("ui\\scope.ico"),
-        background_color="blue",
-    )
-
-    event, values = window.read()  # type: ignore
-
-    window.close()
-
-    if event in ["Cancel", sg.WIN_CLOSED]:
-        return ""
-
-    return next(
-        (addr for index, addr in enumerate(visa_instruments) if values[index]), ""
-    )
 
 
 def template_help() -> None:
@@ -476,63 +517,6 @@ Don't mix tables with different types of tests. The above column headers are not
     window.read()
 
     window.close()
-
-
-def results_sheet_check(filename: str) -> None:
-    """
-    results_sheet_check
-    Do a check of the results sheet to make sure valid
-    """
-
-    with ExcelInterface(filename=filename) as excel:
-        nr = excel.get_named_cell("StartCell")
-        if not nr:
-            sg.popup_error(
-                "No cell named StartCell. Name the first cell with function data StartCell",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
-            )
-
-        valid_tests = excel.get_test_types()
-
-        sg.popup(
-            f"The following tests are found: {pformat( list(valid_tests))}",
-            background_color="blue",
-            icon=get_path("ui\\scope.ico"),
-        )
-
-        invalid_tests = excel.get_invalid_tests()
-
-        if len(invalid_tests):
-            sg.popup(
-                f"The following rows will not be tested: {pformat(invalid_tests)}",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
-            )
-
-
-def check_impedance(filename: str) -> bool:
-    """
-    check_impedance
-    Check the results sheet to see if there are any impedance tests.
-    If not, no requirement to check 3458A
-
-    Returns:
-        bool: _description_
-    """
-
-    with ExcelInterface(filename=filename) as excel:
-        nr = excel.get_named_cell("StartCell")
-        if not nr:
-            sg.popup_error(
-                "No cell named StartCell. Name the first cell with function data StartCell",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
-            )
-
-        valid_tests = excel.get_test_types()
-
-    return "IMP" in valid_tests
 
 
 def hide_excel_rows(filename: str, channel: int) -> None:
@@ -845,28 +829,6 @@ if __name__ == "_main_":
                     )
 
             window["-VIEW-"].update(disabled=False)
-
-        if event == "-TEST_CONNECTIONS-":
-            if values["-CALIBRATOR-"] == "M-142":
-                calibrator = M142(simulate=simulating)
-            else:
-                calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address
-            ks33250.visa_address = ks33250_address
-            ks3458.visa_address = ks3458_address
-
-            # Check if the 3458A is needed
-
-            impedance_tests = check_impedance(values["-FILE-"])
-
-            window["GPIB_IFC_3458"].update(disabled=not impedance_tests)
-            window["GPIB_ADDR_3458"].update(disabled=not impedance_tests)
-
-            load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating)
-            uut.visa_address = values["-UUT_ADDRESS-"]
-
-            connections_check_form(impedance_tests)
-            continue
 
         if event == "-VIEW-":
             os.startfile(f'"{values["-FILE-"]}"')
