@@ -430,7 +430,11 @@ class UI(QMainWindow):
 
     def hide_excel_rows(self) -> None:
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            excel.hide_excel_rows(channel=int(self.cmb_number_channels.currentText()))
+            check = excel.check_channel_rows()
+            if check:
+                excel.hide_excel_rows(
+                    channel=int(self.cmb_number_channels.currentText())
+                )
 
 
 if __name__ == "__main__":
