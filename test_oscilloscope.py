@@ -270,9 +270,9 @@ class UI(QMainWindow):
 
         for addr in addresses:
             if addr.startswith("USB"):
-                # with SCPI_ID(address=addr) as scpi:
-                #    idn = scpi.get_id()[0]
-                visa_instruments.append(addr)
+                with SCPI_ID(address=addr) as scpi:
+                    model = scpi.get_id()[1]
+                visa_instruments.append((addr, model))
 
         selector = AddressSelector(visa_instruments)
         selector.show()

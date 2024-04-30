@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (
 
 class AddressSelector(QDialog):
 
-    def __init__(self, address_list: list) -> None:
+    def __init__(self, address_list: list[tuple]) -> None:
         super().__init__()
 
         self.radio_buttons: list[QRadioButton] = []
@@ -43,7 +43,7 @@ class AddressSelector(QDialog):
         self.layout1.addWidget(QLabel("Select UUT Address"))
 
         for addr in address_list:
-            rb = QRadioButton(addr)
+            rb = QRadioButton(f"{addr[0]} ({addr[1]})")
             self.radio_buttons.append(rb)
             self.layout1.addWidget(rb)
 
