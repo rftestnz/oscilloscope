@@ -32,7 +32,7 @@ class AddressSelector(QDialog):
         super().__init__()
 
         self.radio_buttons: list[QRadioButton] = []
-        self.uut_address = ""
+        self.uut_address: str = ""
 
         self.selector = QDialog()
 
@@ -75,7 +75,9 @@ class AddressSelector(QDialog):
             # Get the selected radio button
             for rb in self.radio_buttons:
                 if rb.isChecked():
-                    self.uut_address = rb.text()
+                    # We added the model number, strip it off
+                    addr = rb.text().split("(")
+                    self.uut_address = addr[0].strip()
                     break
 
         self.selector.close()
