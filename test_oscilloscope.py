@@ -72,6 +72,8 @@ class UI(QMainWindow):
 
         self.calibrator = self.m142
 
+        self.do_parallel = False
+
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
 
         self.settings = QSettings("RFTS", "Oscilloscope")  # TODO set name
@@ -272,10 +274,30 @@ class UI(QMainWindow):
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
             test_names = excel.get_test_types()
 
-        selector = IndividualTestSelector(test_names=list(test_names))
-        selector.show()
+            selector = IndividualTestSelector(test_names=list(test_names))
+            selector.show()
 
-        print(selector.selected_tests)
+            print(selector.selected_tests)
+
+            # Now we have the list of test names, we need to get the associated test rows
+
+            test_steps = []
+
+            for name in selector.selected_tests:
+                rows = excel.get_test_rows(name)
+                test_steps.extend(iter(rows))
+
+            self.do_parallel = False
+            if "DCV" in selector.selected_tests:
+                self.do_parallel = True
+            if "DCV-BAL" in selector.selected_tests:
+                self.do_parallel = True
+            if "CURS" in selector.selected_tests:
+                self.do_parallel = True
+
+            test_rows = sorted(test_steps)
+
+            print(test_rows)
 
     def hide_excel_rows(self) -> None:
         pass
