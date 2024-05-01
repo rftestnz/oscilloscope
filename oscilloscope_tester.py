@@ -325,6 +325,20 @@ class TestOscilloscope(QDialog, object):
         self.test_number += 1
         self.test_progress.emit(100 * self.test_number / self.number_tests)
 
+    def test_connections(self, check_3458: bool) -> bool:
+        """
+        test_connections
+        Check all of the instruments are connected
+
+        Args:
+            check_3458 (bool): 3458 is only used for impedance, which few oscilloscopes require measurement
+
+        Returns:
+            bool: _description_
+        """
+
+        return True
+
     def test_dc_balance(self, filename: str, test_rows: List) -> bool:
         """
         test_dc_balance
