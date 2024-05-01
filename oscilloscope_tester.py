@@ -4,6 +4,14 @@
   Tests vary by manufacturer
 """
 
+import math
+import time
+from datetime import datetime
+from typing import Dict, List
+
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QDialog, QMessageBox
+
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import DSOX_FAMILY, Keysight_Oscilloscope
@@ -12,33 +20,8 @@ from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
 from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
-from drivers.scpi_id import SCPI_ID
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
-import math
-import time
-from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Tuple
 from utilities import get_path
-
-from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QPixmap
-from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QComboBox,
-    QFileDialog,
-    QGroupBox,
-    QLabel,
-    QLineEdit,
-    QMainWindow,
-    QMenuBar,
-    QMessageBox,
-    QPushButton,
-    QStatusBar,
-    QDialog,
-)
 
 
 class TestOscilloscope(QDialog, object):
