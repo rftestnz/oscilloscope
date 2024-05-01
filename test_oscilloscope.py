@@ -378,6 +378,9 @@ class UI(QMainWindow):
             _type_: _description_
         """
 
+        self.progress_test.setVisible(True)
+        self.progress_test.setValue(0)
+
         if self.do_parallel:
             button = QMessageBox.question(
                 parent=self,
@@ -397,6 +400,8 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
+        tester.test_progress.connect(self.update_progress)
+
         tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
@@ -404,6 +409,12 @@ class UI(QMainWindow):
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
         )
+
+        self.progress_test.setVisible(False)
+
+    def update_progress(self, progress: float) -> None:
+        self.progress_test.setValue(int(progress))
+        QApplication.processEvents()
 
     def result_sheet_check(self) -> bool:
         """
