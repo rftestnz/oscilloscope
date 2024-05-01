@@ -38,19 +38,7 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-
-
-calibrator = Fluke5700A()
-ks33250 = Ks33250A()
-uut = Keysight_Oscilloscope()
-mxg = RF_Signal_Generator()
-ks3458 = Ks3458A()
-simulating: bool = False
-
-cursor_results: List = []
-test_progress: sg.ProgressBar
-test_number: int = 0
-current_test_text: sg.Text
+VERSION = "A.02.00"
 
 
 class UI(QMainWindow):
