@@ -8,7 +8,6 @@ from pprint import pformat
 from typing import List
 from zipfile import BadZipFile
 
-import PySimpleGUI as sg
 from PyQt6 import uic
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QPixmap
@@ -21,8 +20,8 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QProgressBar,
+    QPushButton,
     QStatusBar,
 )
 
