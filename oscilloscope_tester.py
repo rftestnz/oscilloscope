@@ -53,6 +53,8 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
+        self.abort_test=False
+
     def local_all(self) -> None:
         """
         local_all
@@ -188,6 +190,8 @@ class TestOscilloscope(QDialog, object):
 
         self.test_number = 0
         self.number_tests = len(test_rows)
+
+        self.abort_test=False
 
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
