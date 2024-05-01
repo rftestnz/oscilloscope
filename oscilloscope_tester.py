@@ -22,7 +22,7 @@ from typing import Dict, List, Tuple
 from utilities import get_path
 
 from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings
+from PyQt6.QtCore import QObject, QSettings, pyqtSignal
 from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -42,6 +42,9 @@ from PyQt6.QtWidgets import (
 
 
 class TestOscilloscope(QDialog, object):
+
+    current_test = pyqtSignal(object)
+    test_progress = pyqtSignal(object)
 
     def __init__(
         self,
