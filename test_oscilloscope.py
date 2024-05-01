@@ -120,6 +120,7 @@ class UI(QMainWindow):
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
         self.txt_results_file.textChanged.connect(self.check_excel_button)
+        self.btn_abort.clicked.connect(self.abort_test)
 
     def initialize_controls(self) -> None:
 
@@ -535,6 +536,16 @@ class UI(QMainWindow):
             self.btn_hide_excel_rows.setEnabled(False)
         else:
             self.check_excel_button()
+
+    def abort_test(self) -> None:
+        """
+        abort_test
+        Abort buton pressed.
+        The test is running in a subclass, so need to send the signal to that class
+        """
+
+        # Set the flag in the class, the test loops check for abort
+        self.tester.abort_test = True
 
 
 if __name__ == "__main__":
