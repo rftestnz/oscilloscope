@@ -315,43 +315,50 @@ class UI(QMainWindow):
 
         # Have to read the results sheet to find what tests are performed, then present as a series of checkboxes
 
-        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            # check excel first
+        try:
+            with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+                # check excel first
 
-            if not excel.check_excel_available():
-                QMessageBox.critical(
-                    self, "Error", "Unable to write to results sheet, is it open?"
-                )
-                return
+                if not excel.check_excel_available():
+                    QMessageBox.critical(
+                        self, "Error", "Unable to write to results sheet, is it open?"
+                    )
+                    return
 
-            self.test_connections()
+                self.test_connections()
 
-            test_names = excel.get_test_types()
+                test_names = excel.get_test_types()
 
-            selector = IndividualTestSelector(test_names=list(test_names))
-            selector.show()
+                selector = IndividualTestSelector(test_names=list(test_names))
+                selector.show()
 
-            print(selector.selected_tests)
+                print(selector.selected_tests)
 
-            # Now we have the list of test names, we need to get the associated test rows
+                # Now we have the list of test names, we need to get the associated test rows
 
-            test_steps = []
+                test_steps = []
 
-            for name in selector.selected_tests:
-                rows = excel.get_test_rows(name)
-                test_steps.extend(iter(rows))
+                for name in selector.selected_tests:
+                    rows = excel.get_test_rows(name)
+                    test_steps.extend(iter(rows))
 
-            self.do_parallel = False
-            if "DCV" in selector.selected_tests:
-                self.do_parallel = True
-            if "DCV-BAL" in selector.selected_tests:
-                self.do_parallel = True
-            if "CURS" in selector.selected_tests:
-                self.do_parallel = True
+                self.do_parallel = False
+                if "DCV" in selector.selected_tests:
+                    self.do_parallel = True
+                if "DCV-BAL" in selector.selected_tests:
+                    self.do_parallel = True
+                if "CURS" in selector.selected_tests:
+                    self.do_parallel = True
 
-            test_rows = sorted(test_steps)
+                test_rows = sorted(test_steps)
 
-            self.perform_oscilloscope_tests(test_rows=test_rows)
+                self.perform_oscilloscope_tests(test_rows=test_rows)
+        except BadZipFile:
+            QMessageBox.critical(
+                self,
+                "Error",
+                "Results file is corrupted. Copy from previous version in backups folder (subfolder of current results folder)",
+            )
 
     def perform_oscilloscope_tests(self, test_rows: list) -> None:
         """
