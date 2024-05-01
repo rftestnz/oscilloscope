@@ -22,6 +22,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QProgressBar,
 )
 
 from drivers.excel_interface import ExcelInterface
@@ -101,6 +102,8 @@ class UI(QMainWindow):
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
 
+        self.progress_test = self.findChild(QProgressBar, "progressTest")
+
         self.initialize_controls()
 
         self.create_connections()
@@ -115,6 +118,9 @@ class UI(QMainWindow):
         self.txt_results_file.textChanged.connect(self.check_excel_button)
 
     def initialize_controls(self) -> None:
+
+        self.progress_test.setVisible(False)
+
         self.txt_results_file.setText(self.settings.value("filename"))
 
         self.cmb_number_channels.addItems(["2", "4", "6", "8"])
