@@ -54,6 +54,14 @@ class UI(QMainWindow):
 
         self.calibrator = self.m142
 
+        self.tester = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=True,
+        )
+
         self.do_parallel = False
 
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
@@ -394,7 +402,7 @@ class UI(QMainWindow):
             else:
                 self.do_parallel = False
 
-        tester = TestOscilloscope(
+        self.tester = TestOscilloscope(
             calibrator=self.calibrator,
             ks33250=self.ks33250,
             ks3458=self.ks3458,
@@ -402,10 +410,10 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
-        tester.test_progress.connect(self.update_progress)
-        tester.current_test.connect(self.current_test_message)
+        self.tester.test_progress.connect(self.update_progress)
+        self.tester.current_test.connect(self.current_test_message)
 
-        tester.run_tests(
+        self.tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
             uut_address=self.txt_uut_addr.text(),
