@@ -325,7 +325,7 @@ class TestOscilloscope(QDialog, object):
         self.test_number += 1
         self.test_progress.emit(100 * self.test_number / self.number_tests)
 
-    def test_connections(self, check_3458: bool) -> bool:
+    def test_connections(self, check_3458: bool) -> Dict:
         """
         test_connections
         Check all of the instruments are connected
@@ -337,7 +337,17 @@ class TestOscilloscope(QDialog, object):
             bool: _description_
         """
 
-        return True
+        fluke_5700a_conn = self.calibrator.is_connected()
+        ks33250_conn = self.ks33250.is_connected()
+        uut_conn = self.uut.is_connected()
+        ks3458_conn = self.ks3458.is_connected() if check_3458 else False
+
+        return {
+            "FLUKE_5700A": fluke_5700a_conn,
+            "33250A": ks33250_conn,
+            "DSO": uut_conn,
+            "3458": ks3458_conn,
+        }
 
     def test_dc_balance(self, filename: str, test_rows: List) -> bool:
         """
