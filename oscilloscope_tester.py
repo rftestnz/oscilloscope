@@ -1339,7 +1339,7 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {row}.\nEnsure col headed with results or measured",
                 )
                 return False
 
