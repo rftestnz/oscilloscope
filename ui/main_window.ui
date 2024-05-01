@@ -278,7 +278,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>   </string>
+      <string/>
      </property>
     </widget>
     <widget class="QLabel" name="lbl33250Connection">
@@ -366,8 +366,8 @@
    <widget class="QPushButton" name="btnPerformTests">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>370</y>
+      <x>360</x>
+      <y>320</y>
       <width>121</width>
       <height>23</height>
      </rect>
@@ -379,8 +379,8 @@
    <widget class="QPushButton" name="btnHideExcelRows">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>370</y>
+      <x>500</x>
+      <y>320</y>
       <width>121</width>
       <height>23</height>
      </rect>
