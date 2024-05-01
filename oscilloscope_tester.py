@@ -986,12 +986,14 @@ class TestOscilloscope(QDialog, object):
                     self.uut.set_cursor_xy_source(chan=1, cursor=1)
                     self.uut.set_cursor_position(cursor="X1", pos=0)
                     if not parallel_channels:
-                        response = sg.popup_ok_cancel(
-                            f"Connect self.calibrator output to channel {channel}",
-                            background_color="blue",
-                            icon=get_path("ui\\scope.ico"),  # type: ignore
+                        response = QMessageBox.information(
+                            parent=self,
+                            title="Connections",
+                            text=f"Connect self.calibrator output to channel {channel}",
+                            buttons=QMessageBox.StandardButton.Ok
+                            | QMessageBox.StandardButton.Cancel,
                         )
-                        if response == "Cancel":
+                        if response == QMessageBox.StandardButton.Cancel:
                             return False
                     last_channel = channel
 
