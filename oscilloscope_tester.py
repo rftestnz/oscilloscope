@@ -60,6 +60,7 @@ class TestOscilloscope(QDialog, object):
         self.calibrator = calibrator
         self.ks33250 = ks33250
         self.ks3458 = ks3458
+        self.mxg = RF_Signal_Generator()
         self.uut = uut
         self.simulating = simulating
 
@@ -437,7 +438,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: Delta Time")
 
-        connections = test_connections(check_3458=False)  # Always required
+        connections = self.test_connections(check_3458=False)  # Always required
 
         if not connections["RFGEN"]:
             QMessageBox.critical(self, "Error", "Cannot find RF Generator")
@@ -725,7 +726,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: Digital Threshold")
 
-        connections = test_connections(
+        connections = self.test_connections(
             check_3458=False
         )  # Don't need 3458 for this test
 
@@ -803,7 +804,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: Input Impedance")
 
-        connections = test_connections(check_3458=True)  # Always required
+        connections = self.test_connections(check_3458=True)  # Always required
 
         if not connections["3458"]:
             QMessageBox.critical(self, "Error", "Cannot find 3458A")
@@ -915,7 +916,7 @@ class TestOscilloscope(QDialog, object):
 
         last_channel = -1
 
-        connections = test_connections(
+        connections = self.test_connections(
             check_3458=False
         )  # Don't need 3458 for this test
 
@@ -1176,8 +1177,8 @@ class TestOscilloscope(QDialog, object):
 
                 settings = excel.get_volt_settings()
 
-                if len(cursor_results):
-                    for res in cursor_results:
+                if len(self.cursor_results):
+                    for res in self.cursor_results:
                         if (
                             res["chan"] == settings.channel
                             and res["scale"] == settings.scale
@@ -1211,7 +1212,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: DC Position")
 
-        connections = test_connections(
+        connections = self.test_connections(
             check_3458=False
         )  # Don't need 3458 for this test
 
@@ -1321,7 +1322,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: Timebase")
 
-        connections = test_connections(
+        connections = self.test_connections(
             check_3458=False
         )  # Don't need 3458 for this test
 
@@ -1446,7 +1447,7 @@ class TestOscilloscope(QDialog, object):
                         except ValueError:
                             val = 0
 
-                        if not val and len(uut.serial) >= 10:
+                        if not val and len(self.uut.serial) >= 10:
                             code = self.uut.serial[2:6]
 
                             try:
@@ -1497,7 +1498,7 @@ class TestOscilloscope(QDialog, object):
 
         self.current_test.emit("Testing: Trigger sensitivity")
 
-        connections = test_connections(
+        connections = self.test_connections(
             check_3458=False
         )  # Don't need 3458 for this test
 
@@ -1514,7 +1515,7 @@ class TestOscilloscope(QDialog, object):
         self.uut.reset()
 
         # Turn off all channels but 1
-        for chan in range(uut.num_channels):
+        for chan in range(self.uut.num_channels):
             self.uut.set_channel(chan=chan + 1, enabled=chan == 0)
 
         # Need to know if the self.uut has 50 Ohm input or not
@@ -1564,9 +1565,9 @@ class TestOscilloscope(QDialog, object):
 
                     last_channel = settings.channel
 
-                mxg.set_frequency_MHz(settings.frequency)
-                mxg.set_level(settings.voltage, units="mV")
-                mxg.set_output_state(True)
+                self.mxg.set_frequency_MHz(settings.frequency)
+                self.mxg.set_level(settings.voltage, units="mV")
+                self.mxg.set_output_state(True)
 
                 if str(settings.channel).upper() != "EXT":
                     for chan in range(1, self.uut.num_channels + 1):
@@ -1586,7 +1587,7 @@ class TestOscilloscope(QDialog, object):
                 period = 1 / settings.frequency / 1e6
                 # Round it off to a nice value of 1, 2, 5 or multiple
 
-                period = round_range(period)
+                period = self.round_range(period)
 
                 self.uut.set_timebase(period * 2)
 
@@ -1598,8 +1599,8 @@ class TestOscilloscope(QDialog, object):
                 excel.write_result(result=test_result, save=True, col=results_col)
                 self.update_test_progress()
 
-        mxg.set_output_state(False)
-        mxg.close()
+        self.mxg.set_output_state(False)
+        self.mxg.close()
 
         self.uut.reset()
         self.uut.close()
