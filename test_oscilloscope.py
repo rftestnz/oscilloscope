@@ -375,7 +375,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
 
-        self.set_button_state(False)
+        self.set_control_state(False)
 
         if self.do_parallel:
             button = QMessageBox.question(
@@ -410,7 +410,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(False)
         self.statusbar.showMessage("Finished")
 
-        self.set_button_state(True)
+        self.set_control_state(True)
 
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))
@@ -501,7 +501,7 @@ class UI(QMainWindow):
 
             self.btn_hide_excel_rows.setEnabled(check)
 
-    def set_button_state(self, state: bool) -> None:
+    def set_control_state(self, state: bool) -> None:
         """
         Many of the buttons need to be disabled during test, and reenabled after
         """
