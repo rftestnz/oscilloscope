@@ -24,8 +24,8 @@ from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
 DELAY_PERIOD = 0.001  # 1 ms
 
-class TestOscilloscope(QDialog, object):
 
+class TestOscilloscope(QDialog, object):
 
     current_test = pyqtSignal(object)
     test_progress = pyqtSignal(object)
@@ -50,6 +50,8 @@ class TestOscilloscope(QDialog, object):
 
         self.number_tests = 0
         self.test_number = 0  # current test
+
+        self.cursor_results: list = []
 
     def local_all(self) -> None:
         """
