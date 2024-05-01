@@ -509,6 +509,11 @@ class UI(QMainWindow):
         self.btn_perform_tests.setEnabled(state)
         self.btn_view_results.setEnabled(state)
         self.btn_browse_results.setEnabled(state)
+        self.btn_select_uut_addr.setEnabled(state)
+        self.btn_test_connections.setEnabled(state)
+        self.cb_simulating.setEnabled(state)
+        self.txt_results_file.setEnabled(state)
+        self.txt_uut_addr.setEnabled(state)
 
         # Hide excel rows is different
 
