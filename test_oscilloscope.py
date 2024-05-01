@@ -407,6 +407,7 @@ class UI(QMainWindow):
         )
 
         tester.test_progress.connect(self.update_progress)
+        tester.current_test.connect(self.current_test_message)
 
         tester.run_tests(
             filename=self.txt_results_file.text(),
