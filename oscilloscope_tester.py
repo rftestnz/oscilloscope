@@ -63,6 +63,9 @@ class TestOscilloscope(QDialog, object):
         self.uut = uut
         self.simulating = simulating
 
+        self.number_tests = 0
+        self.test_number = 0  # current test
+
     def local_all(self) -> None:
         """
         local_all
