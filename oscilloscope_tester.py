@@ -22,10 +22,10 @@ from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.rohde_shwarz_scope import RohdeSchwarz_Oscilloscope
 from drivers.tek_scope import Tek_Acq_Mode, Tektronix_Oscilloscope
 
+DELAY_PERIOD = 0.001  # 1 ms
 
 class TestOscilloscope(QDialog, object):
 
-    DELAY_PERIOD = 0.001  # 1 ms
 
     current_test = pyqtSignal(object)
     test_progress = pyqtSignal(object)
