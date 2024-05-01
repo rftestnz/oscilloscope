@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QStatusBar,
+    QGroupBox,
 )
 
 from drivers.excel_interface import ExcelInterface
@@ -95,6 +96,8 @@ class UI(QMainWindow):
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
 
         self.progress_test = self.findChild(QProgressBar, "progressTest")
+
+        self.group_hardware = self.findChild(QGroupBox, "groupHardware")
 
         self.initialize_controls()
 
@@ -510,10 +513,8 @@ class UI(QMainWindow):
         self.btn_view_results.setEnabled(state)
         self.btn_browse_results.setEnabled(state)
         self.btn_select_uut_addr.setEnabled(state)
-        self.btn_test_connections.setEnabled(state)
-        self.cb_simulating.setEnabled(state)
         self.txt_results_file.setEnabled(state)
-        self.txt_uut_addr.setEnabled(state)
+        self.group_hardware.setEnabled(state)
 
         # Hide excel rows is different
 
