@@ -515,6 +515,7 @@ class UI(QMainWindow):
         self.btn_select_uut_addr.setEnabled(state)
         self.txt_results_file.setEnabled(state)
         self.group_hardware.setEnabled(state)
+        self.cb_skip_rows.setEnabled(state)
 
         # Hide excel rows is different
 
