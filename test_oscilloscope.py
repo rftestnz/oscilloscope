@@ -374,6 +374,8 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
+        self.btn_perform_tests.setEnabled(False)
+        self.btn_hide_excel_rows.setEnabled(False)
 
         if self.do_parallel:
             button = QMessageBox.question(
@@ -407,6 +409,8 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(False)
         self.statusbar.showMessage("Finished")
+        self.btn_perform_tests.setEnabled(True)
+        self.check_excel_button()
 
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))
