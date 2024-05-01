@@ -316,6 +316,15 @@ class TestOscilloscope(QDialog, object):
 
         self.local_all()
 
+    def update_test_progress(self) -> None:
+        """
+        update_progress
+        Increment the test count and emit signal for main ui to update progress bar
+        """
+
+        self.test_number += 1
+        self.test_progress.emit(100 * self.test_number / self.number_tests)
+
     def test_dc_balance(self, filename: str, test_rows: List) -> bool:
         """
         test_dc_balance
