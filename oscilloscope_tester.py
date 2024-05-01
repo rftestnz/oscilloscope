@@ -199,7 +199,8 @@ class TestOscilloscope(QDialog, object):
 
         global test_number
 
-        test_number = 0
+        self.test_number = 0
+        self.number_tests = len(test_rows)
 
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
