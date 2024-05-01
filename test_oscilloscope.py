@@ -391,9 +391,9 @@ class UI(QMainWindow):
 
         if self.do_parallel:
             button = QMessageBox.question(
-                parent=self,
-                title="Connect channels in parallel",
-                text="Would you like to connect all channels in parallel for voltage tests",
+                self,
+                "Connect channels in parallel",
+                "Would you like to connect all channels in parallel for voltage tests",
             )
             if button == QMessageBox.StandardButton.Yes:
                 self.do_parallel = True
