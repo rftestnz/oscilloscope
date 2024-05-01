@@ -22,6 +22,8 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QProgressBar,
+    QStatusBar,
 )
 
 from drivers.excel_interface import ExcelInterface
@@ -70,7 +72,12 @@ class UI(QMainWindow):
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
 
         self.settings = QSettings("RFTS", "Oscilloscope")
-        self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
+
+        self.statusbar = self.findChild(QStatusBar, "statusbar")
+
+        self.statusbar.addPermanentWidget(
+            QLabel(f"  Version: {VERSION}   ")
+        )  # shows on the right
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
         self.txt_uut_addr = self.findChild(QLineEdit, "txtUUTAddr")
@@ -101,6 +108,8 @@ class UI(QMainWindow):
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
 
+        self.progress_test = self.findChild(QProgressBar, "progressTest")
+
         self.initialize_controls()
 
         self.create_connections()
@@ -115,6 +124,9 @@ class UI(QMainWindow):
         self.txt_results_file.textChanged.connect(self.check_excel_button)
 
     def initialize_controls(self) -> None:
+
+        self.progress_test.setVisible(False)
+
         self.txt_results_file.setText(self.settings.value("filename"))
 
         self.cmb_number_channels.addItems(["2", "4", "6", "8"])
@@ -239,7 +251,9 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
-        uut_connected = check.load_uut_driver(self.txt_uut_addr.text())
+        uut_connected = check.load_uut_driver(
+            self.txt_uut_addr.text(), simulating=simulating
+        )
 
         if uut_connected:
             self.cmb_number_channels.setCurrentIndex(
@@ -372,11 +386,14 @@ class UI(QMainWindow):
             _type_: _description_
         """
 
+        self.progress_test.setVisible(True)
+        self.progress_test.setValue(0)
+
         if self.do_parallel:
             button = QMessageBox.question(
-                parent=self,
-                title="Connect channels in parallel",
-                text="Would you like to connect all channels in parallel for voltage tests",
+                self,
+                "Connect channels in parallel",
+                "Would you like to connect all channels in parallel for voltage tests",
             )
             if button == QMessageBox.StandardButton.Yes:
                 self.do_parallel = True
@@ -391,6 +408,9 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
+        tester.test_progress.connect(self.update_progress)
+        tester.current_test.connect(self.current_test_message)
+
         tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
@@ -398,6 +418,16 @@ class UI(QMainWindow):
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
         )
+
+        self.progress_test.setVisible(False)
+        self.statusbar.showMessage("Finished")
+
+    def update_progress(self, progress: float) -> None:
+        self.progress_test.setValue(int(progress))
+        QApplication.processEvents()
+
+    def current_test_message(self, message: str) -> None:
+        self.statusbar.showMessage(message)
 
     def result_sheet_check(self) -> bool:
         """
