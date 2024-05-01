@@ -251,7 +251,9 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
-        uut_connected = check.load_uut_driver(self.txt_uut_addr.text())
+        uut_connected = check.load_uut_driver(
+            self.txt_uut_addr.text(), simulating=simulating
+        )
 
         if uut_connected:
             self.cmb_number_channels.setCurrentIndex(
