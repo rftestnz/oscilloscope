@@ -1267,14 +1267,17 @@ class TestOscilloscope(QDialog, object):
                 # self.uut.measure_voltage_clear()
 
                 # reading = self.uut.measure_voltage(chan=int(settings.channel), delay=2)
-
-                response = sg.popup_yes_no(
-                    "Trace within 0.2 div of center?",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
+                response = QMessageBox.question(
+                    parent=self,
+                    title="Check cursor",
+                    text="Trace within 0.2 div of center?",
+                    buttons=QMessageBox.StandardButton.Yes
+                    | QMessageBox.StandardButton.No,
                 )
 
-                result = "Pass" if response == "Yes" else "Fail"
+                result = (
+                    "Pass" if response == QMessageBox.StandardButton.Yes else "Fail"
+                )
 
                 self.calibrator.standby()
 
