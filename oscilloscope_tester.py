@@ -1497,10 +1497,10 @@ class TestOscilloscope(QDialog, object):
         # require RF gen
 
         if not connections["RFGEN"]:
-            sg.popup_error(
+            QMessageBox.critical(
+                self,
+                "Error",
                 "Cannot find RF Signal Generator",
-                background_color="blue",
-                icon=get_path("ui\\scope.ico"),
             )
             return False
 
@@ -1517,10 +1517,10 @@ class TestOscilloscope(QDialog, object):
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
-                sg.popup_error(
+                QMessageBox.critical(
+                    self,
+                    "Error",
                     f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
                 )
                 return False
 
@@ -1549,8 +1549,6 @@ class TestOscilloscope(QDialog, object):
                 if settings.channel != last_channel:
                     response = sg.popup_ok_cancel(
                         f"Connect signal generator output to channel {settings.channel} {feedthru_msg}",
-                        background_color="blue",
-                        icon=get_path("ui\\scope.ico"),
                     )
                     if response == "Cancel":
                         return False
