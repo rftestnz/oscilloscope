@@ -8,7 +8,6 @@ from pprint import pformat
 from typing import List
 from zipfile import BadZipFile
 
-import PySimpleGUI as sg
 from PyQt6 import uic
 from PyQt6.QtCore import QSettings
 from PyQt6.QtGui import QPixmap
@@ -21,9 +20,10 @@ from PyQt6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QProgressBar,
+    QPushButton,
     QStatusBar,
+    QGroupBox,
 )
 
 from drivers.excel_interface import ExcelInterface
@@ -39,20 +39,7 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.01.09"
-
-
-calibrator = Fluke5700A()
-ks33250 = Ks33250A()
-uut = Keysight_Oscilloscope()
-mxg = RF_Signal_Generator()
-ks3458 = Ks3458A()
-simulating: bool = False
-
-cursor_results: List = []
-test_progress: sg.ProgressBar
-test_number: int = 0
-current_test_text: sg.Text
+VERSION = "A.02.00"
 
 
 class UI(QMainWindow):
@@ -66,6 +53,14 @@ class UI(QMainWindow):
         self.uut = Keysight_Oscilloscope()
 
         self.calibrator = self.m142
+
+        self.tester = TestOscilloscope(
+            calibrator=self.calibrator,
+            ks33250=self.ks33250,
+            ks3458=self.ks3458,
+            uut=self.uut,
+            simulating=True,
+        )
 
         self.do_parallel = False
 
@@ -107,8 +102,11 @@ class UI(QMainWindow):
         self.btn_test_connections = self.findChild(QPushButton, "btnTestConnections")
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
+        self.btn_abort = self.findChild(QPushButton, "btnAbort")
 
         self.progress_test = self.findChild(QProgressBar, "progressTest")
+
+        self.group_hardware = self.findChild(QGroupBox, "groupHardware")
 
         self.initialize_controls()
 
@@ -122,10 +120,12 @@ class UI(QMainWindow):
         self.btn_perform_tests.clicked.connect(self.perform_tests)
         self.btn_hide_excel_rows.clicked.connect(self.hide_excel_rows)
         self.txt_results_file.textChanged.connect(self.check_excel_button)
+        self.btn_abort.clicked.connect(self.abort_test)
 
     def initialize_controls(self) -> None:
 
         self.progress_test.setVisible(False)
+        self.btn_abort.setVisible(False)
 
         self.txt_results_file.setText(self.settings.value("filename"))
 
@@ -388,6 +388,9 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
+        self.btn_abort.setVisible(True)
+
+        self.set_control_state(False)
 
         if self.do_parallel:
             button = QMessageBox.question(
@@ -400,7 +403,7 @@ class UI(QMainWindow):
             else:
                 self.do_parallel = False
 
-        tester = TestOscilloscope(
+        self.tester = TestOscilloscope(
             calibrator=self.calibrator,
             ks33250=self.ks33250,
             ks3458=self.ks3458,
@@ -408,10 +411,10 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
-        tester.test_progress.connect(self.update_progress)
-        tester.current_test.connect(self.current_test_message)
+        self.tester.test_progress.connect(self.update_progress)
+        self.tester.current_test.connect(self.current_test_message)
 
-        tester.run_tests(
+        self.tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
             uut_address=self.txt_uut_addr.text(),
@@ -421,6 +424,9 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(False)
         self.statusbar.showMessage("Finished")
+        self.btn_abort.setVisible(False)
+
+        self.set_control_state(True)
 
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))
@@ -511,25 +517,42 @@ class UI(QMainWindow):
 
             self.btn_hide_excel_rows.setEnabled(check)
 
+    def set_control_state(self, state: bool) -> None:
+        """
+        Many of the buttons need to be disabled during test, and reenabled after
+        """
+
+        self.btn_perform_tests.setEnabled(state)
+        self.btn_view_results.setEnabled(state)
+        self.btn_browse_results.setEnabled(state)
+        self.btn_select_uut_addr.setEnabled(state)
+        self.txt_results_file.setEnabled(state)
+        self.group_hardware.setEnabled(state)
+        self.cb_skip_rows.setEnabled(state)
+
+        # Hide excel rows is different
+
+        if not state:
+            self.btn_hide_excel_rows.setEnabled(False)
+        else:
+            self.check_excel_button()
+
+    def abort_test(self) -> None:
+        """
+        abort_test
+        Abort buton pressed.
+        The test is running in a subclass, so need to send the signal to that class
+        """
+
+        # Set the flag in the class, the test loops check for abort
+        self.tester.abort_test = True
+
 
 if __name__ == "__main__":
     app = QApplication([])
     window = UI()
     window.show()
     app.exec()
-
-
-def update_test_progress() -> None:
-    """
-    update_test_progress
-    Test step complted, increment progress
-    """
-
-    global test_number
-    global test_progress
-
-    test_number += 1
-    test_progress.update(test_number)
 
 
 def template_help() -> None:
@@ -596,281 +619,3 @@ Don't mix tables with different types of tests. The above column headers are not
     window.read()
 
     window.close()
-
-
-def hide_excel_rows(filename: str, channel: int) -> None:
-    """
-    hide_excel_rows
-    Hide the template rows for sheets which have different number of channels
-    Channl filter must be in column A
-
-    Args:
-        channel (int): _description_
-    """
-
-    with ExcelInterface(filename=filename) as excel:
-        excel.hide_excel_rows(channel=channel)
-
-
-if __name__ == "_main_":
-    sg.theme("black")
-
-    gpib_ifc_list = [f"GPIB{x}" for x in range(5)]
-    gpib_addresses = list(range(1, 32))
-
-    layout = [
-        [sg.Text("Oscilloscope Test")],
-        [sg.Text(f"DK Apr 23 VERSION {VERSION}")],
-        [sg.Text()],
-        [
-            sg.Text("Create Excel sheet from template first", text_color="red"),
-            sg.Text(" " * 70),
-            sg.Button("Template Help", key="-TEMPLATE_HELP-"),
-            sg.Button(
-                "Check",
-                size=(12, 1),
-                key="-RESULTS_CHECK-",
-                tooltip="Check results sheet for conformance",
-            ),
-        ],
-        [
-            sg.Text("Results file", size=(10, 1)),
-            sg.Input(
-                default_text=sg.user_settings_get_entry("-FILENAME-"),  # type: ignore
-                size=(60, 1),
-                key="-FILE-",
-            ),
-            sg.FileBrowse(
-                "...",
-                target="-FILE-",
-                file_types=(("Excel Files", "*.xlsx"), ("All Files", "*.*")),
-                initial_folder=sg.user_settings_get_entry("-RESULTS_FOLDER-"),
-            ),
-            sg.Button("View", size=(15, 1), key="-VIEW-", disabled=False),
-        ],
-        [sg.Text()],
-        [
-            sg.Check(
-                "Simulate",
-                default=sg.user_settings_get_entry("-SIMULATE-"),  # type: ignore
-                key="-SIMULATE-",
-                disabled=False,
-            )
-        ],
-        [sg.Text("Instrument Config:")],
-        [
-            sg.Text("Main Calibrator", size=(15, 1)),
-            sg.Combo(
-                ["5700A", "5730A", "M-142"],
-                size=(10, 1),
-                default_value=sg.user_settings_get_entry("-CALIBRATOR-"),
-                key="-CALIBRATOR-",
-                enable_events=True,
-            ),
-        ],
-        [
-            sg.Text("Calibrator", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_FLUKE_5700A",
-                default_value=sg.user_settings_get_entry("-FLUKE_5700A_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value=(
-                    "4"
-                    if sg.user_settings_get_entry("-CALIBRATOR-") == "M-142"
-                    else "6"
-                ),
-                size=(6, 1),
-                key="GPIB_ADDR_FLUKE_5700A",
-            ),
-        ],
-        [
-            sg.Text("33250A", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_IFC_33250",
-                default_value=sg.user_settings_get_entry("-33250_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value=sg.user_settings_get_entry("-33250_GPIB_ADDR-"),
-                size=(6, 1),
-                key="GPIB_ADDR_33250",
-            ),
-        ],
-        [
-            sg.Text("3458A", size=(15, 1)),
-            sg.Combo(
-                gpib_ifc_list,
-                size=(10, 1),
-                key="GPIB_IFC_3458",
-                default_value=sg.user_settings_get_entry("-3458_GPIB_IFC-"),
-            ),
-            sg.Combo(
-                gpib_addresses,
-                default_value=sg.user_settings_get_entry("-3458_GPIB_ADDR-"),
-                size=(6, 1),
-                key="GPIB_ADDR_3458",
-            ),
-            sg.Text("(Only for impedance measurements)"),
-        ],
-        [
-            sg.Text("UUT", size=(15, 1)),
-            sg.Input(
-                default_text=sg.user_settings_get_entry("-UUT_ADDRESS-"),  # type: ignore
-                size=(60, 1),
-                key="-UUT_ADDRESS-",
-            ),
-            sg.Button("Select", size=(12, 1), key="-SELECT_ADDRESS-"),
-        ],
-        [
-            sg.Text("Number Channels", size=(15, 1)),
-            sg.Combo([2, 4, 6, 8], size=(10, 1), key="-UUT_CHANNELS-", default_value=4),
-        ],
-        [sg.Text()],
-        [
-            sg.ProgressBar(
-                max_value=100, size=(35, 10), visible=False, key="-PROGRESS-"
-            ),
-            sg.Text("Progress", visible=False, key="-PROG_TEXT-"),
-        ],
-        [sg.Text(key="-CURRENT_TEST-")],
-        [sg.Text()],
-        [sg.Check("Skip already tested", default=True, key="-SKIP_TESTED-")],
-        [
-            sg.Button("Test Connections", size=(15, 1), key="-TEST_CONNECTIONS-"),
-            sg.Button("Perform Tests", size=(12, 1), key="-INDIVIDUAL-"),
-            sg.Button(
-                "Hide Excel Rows",
-                size=(12, 1),
-                key="-HIDE_EXCEL_ROWS-",
-                tooltip="For templates with more channels than present in UUT",
-            ),
-            sg.Exit(size=(12, 1)),
-        ],
-    ]
-
-    window = sg.Window(
-        "Oscilloscope Test",
-        layout=layout,
-        finalize=True,
-        icon=get_path("ui\\scope.ico"),
-        titlebar_icon=get_path("ui\\scope.ico"),
-    )
-
-    back_color = window["-FILE-"].BackgroundColor
-    test_progress = window["-PROGRESS-"]  # type:ignore
-    current_test_text = window["-CURRENT_TEST-"]  # type:ignore
-
-    simulating = False
-
-    while True:
-        event, values = window.read(200)  # type: ignore
-
-        if event in ["-INDIVIDUAL-", "-TEST_CONNECTIONS-"]:
-            # make sure the file is valid, we have to read it to check impedance tests
-
-            # Common check to make sure everything is in order
-
-            valid = True
-
-            # reset the back colors instead of else statements after checking
-
-            window["-FILE-"].update(background_color=back_color)
-
-            if not values["-FILE-"]:
-                window["-FILE-"].update(background_color="Red")
-                valid = False
-
-            if not os.path.isfile(values["-FILE-"]):
-                sg.popup_error(
-                    "Filenname does not exist",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
-                )
-                window["-FILE-"].update(
-                    background_color="Red",
-                )
-                continue
-
-            try:
-                with ExcelInterface(filename=values["-FILE-"]) as excel:
-                    if not excel.check_valid_results():
-                        sg.popup_error(
-                            "No Named range for StartCell in results",
-                            background_color="blue",
-                            icon=get_path("ui\\scope.ico"),
-                        )
-                        valid = False
-            except BadZipFile:
-                sg.popup_error(
-                    "Result sheet appears corrupted. Check backups folder for most recent, or generate new from template",
-                    background_color="blue",
-                    icon=get_path("ui\\scope.ico"),
-                )
-                valid = False
-
-            if not valid:
-                continue
-
-        if event in [
-            "-INDIVIDUAL-",
-        ]:
-            window["-VIEW-"].update(disabled=True)  # Disable while testing
-
-            if values["-CALIBRATOR-"] == "M-142":
-                calibrator = M142(simulate=simulating)
-            else:
-                calibrator = Fluke5700A(simulate=simulating)
-            calibrator.visa_address = calibrator_address
-            ks33250.visa_address = ks33250_address
-            ks3458.visa_address = ks3458_address
-
-            if load_uut_driver(address=values["-UUT_ADDRESS-"], simulating=simulating):
-                uut.visa_address = values["-UUT_ADDRESS-"]
-                uut.open_connection()
-                window["-UUT_CHANNELS-"].update(value=f"{uut.num_channels}")
-
-                test_rows, do_parallel = individual_tests(filename=values["-FILE-"])
-                if len(test_rows):
-                    test_progress.update(0, max=len(test_rows))
-                    test_progress.update(visible=True)
-                    window["-PROG_TEXT-"].update(visible=True)
-                    parallel = "NO"
-
-                    if do_parallel:
-                        parallel = sg.popup_yes_no(
-                            "Will you connect all channels in parallel for DCV tests?",
-                            title="Parallel Channels",
-                            background_color="blue",
-                            icon=get_path("ui\\scope.ico"),
-                        )
-                    run_tests(
-                        filename=values["-FILE-"],
-                        test_rows=test_rows,
-                        parallel_channels=parallel == "Yes",
-                        skip_completed=values["-SKIP_TESTED-"],
-                    )
-
-                    test_progress.update(visible=False)
-                    window["-PROG_TEXT-"].update(visible=False)
-                    current_test_text.update("")
-                    sg.popup(
-                        "Finished",
-                        background_color="blue",
-                        icon=get_path("ui\\scope.ico"),
-                    )
-
-            window["-VIEW-"].update(disabled=False)
-
-        if event == "-TEMPLATE_HELP-":
-            template_help()
-
-        if event == "-CALIBRATOR-":
-            window["GPIB_ADDR_FLUKE_5700A"].update(
-                value="4" if values["-CALIBRATOR-"] == "M-142" else "6"
-            )

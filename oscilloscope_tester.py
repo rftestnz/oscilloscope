@@ -53,6 +53,8 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
+        self.abort_test=False
+
     def local_all(self) -> None:
         """
         local_all
@@ -188,6 +190,8 @@ class TestOscilloscope(QDialog, object):
 
         self.test_number = 0
         self.number_tests = len(test_rows)
+
+        self.abort_test=False
 
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
@@ -377,6 +381,9 @@ class TestOscilloscope(QDialog, object):
                 return False
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_volt_settings()
@@ -459,6 +466,9 @@ class TestOscilloscope(QDialog, object):
             excel.find_units_col(test_rows[0])
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 units = excel.get_units()
@@ -635,6 +645,9 @@ class TestOscilloscope(QDialog, object):
             self.uut.set_horizontal_mode("MAN", 2000000)  # type: ignore
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 if skip_completed:
@@ -750,6 +763,9 @@ class TestOscilloscope(QDialog, object):
                 return False
             excel.find_units_col(test_rows[0])
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_threshold_settings()
@@ -821,6 +837,9 @@ class TestOscilloscope(QDialog, object):
                 return False
             excel.find_units_col(test_rows[0])
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_volt_settings()
@@ -954,6 +973,9 @@ class TestOscilloscope(QDialog, object):
             excel.find_units_col(test_rows[0])
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 if skip_completed:
@@ -1161,6 +1183,9 @@ class TestOscilloscope(QDialog, object):
                 )
                 return False
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_volt_settings()
@@ -1227,6 +1252,9 @@ class TestOscilloscope(QDialog, object):
                 return False
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_volt_settings()
@@ -1625,6 +1653,9 @@ class TestOscilloscope(QDialog, object):
                 return False
 
             for row in test_rows:
+                if self.abort_test:
+                    return False
+
                 excel.row = row
 
                 settings = excel.get_tb_test_settings()
