@@ -559,7 +559,7 @@ class TestOscilloscope(QDialog, object):
                 except ValueError:
                     pass
 
-                update_test_progress()
+                self.update_test_progress()
 
                 self.mxg.set_output_state(False)
                 self.ks33250.enable_output(False)
@@ -675,7 +675,7 @@ class TestOscilloscope(QDialog, object):
 
                 excel.write_result(result=result, col=results_col, save=True)
 
-                update_test_progress()
+                self.update_test_progress()
 
                 row_count += 1
                 print(row)
@@ -861,7 +861,7 @@ class TestOscilloscope(QDialog, object):
 
                 excel.write_result(reading, col=results_col)
 
-                update_test_progress()
+                self.update_test_progress()
 
             # Turn off all channels but 1
             for chan in range(self.uut.num_channels):
@@ -1107,7 +1107,7 @@ class TestOscilloscope(QDialog, object):
                     # DCV (offset) test. 0V is measured for the cursors only
                     excel.write_result(reading, col=results_col)
 
-                update_test_progress()
+                self.update_test_progress()
 
             self.calibrator.reset()
             self.calibrator.close()
@@ -1163,7 +1163,7 @@ class TestOscilloscope(QDialog, object):
                             if units.startswith("m"):
                                 result *= 1000
                             excel.write_result(result, save=False, col=results_col)
-                            update_test_progress()
+                            self.update_test_progress()
                             break
 
             excel.save_sheet()
@@ -1269,7 +1269,7 @@ class TestOscilloscope(QDialog, object):
                 self.calibrator.standby()
 
                 excel.write_result(result=result, col=results_col)
-                update_test_progress()
+                self.update_test_progress()
 
         self.calibrator.reset()
         self.calibrator.close()
@@ -1441,7 +1441,7 @@ class TestOscilloscope(QDialog, object):
 
                     excel.write_result(ppm, save=True, col=results_col)
 
-                update_test_progress()
+                self.update_test_progress()
 
         self.ks33250.enable_output(False)
         self.ks33250.close()
@@ -1572,7 +1572,7 @@ class TestOscilloscope(QDialog, object):
 
                 test_result = "Pass" if triggered else "Fail"
                 excel.write_result(result=test_result, save=True, col=results_col)
-                update_test_progress()
+                self.update_test_progress()
 
         mxg.set_output_state(False)
         mxg.close()
@@ -1661,7 +1661,7 @@ class TestOscilloscope(QDialog, object):
                 # save in ns
 
                 excel.write_result(risetime, save=True, col=results_col)
-                update_test_progress()
+                self.update_test_progress()
 
         self.uut.reset()
         self.uut.close()
