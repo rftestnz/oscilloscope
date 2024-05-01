@@ -646,7 +646,7 @@ class TestOscilloscope(QDialog, object):
 
             row_count = 0
 
-            self.uut.set_horizontal_mode("MAN", 2000000)
+            self.uut.set_horizontal_mode("MAN", 2000000)  # type: ignore
 
             for row in test_rows:
                 excel.row = row
@@ -741,7 +741,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_timebase(1e-3)
 
-        self.uut.set_digital_channel_on(chan=0, all_channels=True)
+        self.uut.set_digital_channel_on(chan=0, all_channels=True)  # type: ignore
 
         response = QMessageBox.information(
             self,
@@ -776,7 +776,7 @@ class TestOscilloscope(QDialog, object):
                 delta = -0.01 if settings.polarity == "NEG" else 0.01
 
                 for _ in range(50):
-                    reading = self.uut.measure_digital_channels(pod=settings.pod)
+                    reading = self.uut.measure_digital_channels(pod=settings.pod)  # type: ignore
                     if (
                         settings.polarity == "POS"
                         and reading == 1
@@ -1107,7 +1107,7 @@ class TestOscilloscope(QDialog, object):
 
                 reading = self.uut.measure_voltage(chan=channel, delay=3)
 
-                if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:
+                if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                     voltage2 = self.uut.read_cursor_avg()
 
                     cursor_results.append(
@@ -1428,7 +1428,7 @@ class TestOscilloscope(QDialog, object):
 
                     excel.row = row
 
-                    if self.uut.family != DSOX_FAMILY.DSO5000:
+                    if self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                         code = sg.popup_get_text(
                             "Enter date code from serial label (0 if no code)",
                             background_color="blue",
