@@ -94,6 +94,7 @@ class UI(QMainWindow):
         self.btn_test_connections = self.findChild(QPushButton, "btnTestConnections")
         self.btn_perform_tests = self.findChild(QPushButton, "btnPerformTests")
         self.btn_hide_excel_rows = self.findChild(QPushButton, "btnHideExcelRows")
+        self.btn_abort = self.findChild(QPushButton, "btnAbort")
 
         self.progress_test = self.findChild(QProgressBar, "progressTest")
 
@@ -115,6 +116,7 @@ class UI(QMainWindow):
     def initialize_controls(self) -> None:
 
         self.progress_test.setVisible(False)
+        self.btn_abort.setVisible(False)
 
         self.txt_results_file.setText(self.settings.value("filename"))
 
@@ -377,6 +379,7 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
+        self.btn_abort.setVisible(True)
 
         self.set_control_state(False)
 
@@ -412,6 +415,7 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(False)
         self.statusbar.showMessage("Finished")
+        self.btn_abort.setVisible(False)
 
         self.set_control_state(True)
 
