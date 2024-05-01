@@ -38,7 +38,6 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.01.09"
 
 
 calibrator = Fluke5700A()
