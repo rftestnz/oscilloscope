@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QDialog, QMessageBox
+from PyQt6.QtWidgets import QDialog, QMessageBox, QInputDialog
 
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
@@ -1386,11 +1386,12 @@ class TestOscilloscope(QDialog, object):
                 if not self.uut.keysight:
                     valid = False
                     while not valid:
-                        result = sg.popup_get_text(
+                        result = QInputDialog.getDouble(
+                            self,
+                            "Difference",
                             "Enter difference in div of waveform crossing from center?",
-                            background_color="blue",
-                            icon=get_path("ui\\scope.ico"),
                         )
+
                         try:
                             val = float(result)  # type: ignore
                             valid = True
@@ -1417,10 +1418,10 @@ class TestOscilloscope(QDialog, object):
                     excel.row = row
 
                     if self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
-                        code = sg.popup_get_text(
+                        code = QInputDialog.getText(
+                            self,
+                            "Date code",
                             "Enter date code from serial label (0 if no code)",
-                            background_color="blue",
-                            icon=get_path("ui\\scope.ico"),
                         )
 
                         age = 10
