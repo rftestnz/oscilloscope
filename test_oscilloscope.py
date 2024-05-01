@@ -72,8 +72,12 @@ class UI(QMainWindow):
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
 
         self.settings = QSettings("RFTS", "Oscilloscope")
-        self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
+
         self.statusbar = self.findChild(QStatusBar, "statusbar")
+
+        self.statusbar.addPermanentWidget(
+            QLabel(f"  Version: {VERSION}   ")
+        )  # shows on the right
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
         self.txt_uut_addr = self.findChild(QLineEdit, "txtUUTAddr")
