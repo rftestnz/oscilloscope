@@ -23,6 +23,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QProgressBar,
+    QStatusBar,
 )
 
 from drivers.excel_interface import ExcelInterface
@@ -72,6 +73,7 @@ class UI(QMainWindow):
 
         self.settings = QSettings("RFTS", "Oscilloscope")
         self.statusbar.addWidget(QLabel(f"   {VERSION}   "))  # type: ignore
+        self.statusbar = self.findChild(QStatusBar, "statusbar")
 
         self.txt_results_file = self.findChild(QLineEdit, "txtResultsFile")
         self.txt_uut_addr = self.findChild(QLineEdit, "txtUUTAddr")
