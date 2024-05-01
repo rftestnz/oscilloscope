@@ -337,7 +337,7 @@ class TestOscilloscope(QDialog, object):
 
         # no equipment required
 
-        current_test_text.update("Testing: DCV Balance")
+        self.current_test.emit("Testing: DCV Balance")
 
         response = QMessageBox.information(
             self,
@@ -411,7 +411,7 @@ class TestOscilloscope(QDialog, object):
             bool: _description_
         """
 
-        current_test_text.update("Testing: Delta Time")
+        self.current_test.emit("Testing: Delta Time")
 
         connections = test_connections(check_3458=False)  # Always required
 
@@ -584,7 +584,7 @@ class TestOscilloscope(QDialog, object):
             bool: _description_
         """
 
-        current_test_text.update("Testing: Random noise sample acquisition")
+        self.current_test.emit("Testing: Random noise sample acquisition")
 
         # No equipment required
         self.uut.open_connection()
@@ -699,7 +699,7 @@ class TestOscilloscope(QDialog, object):
             bool: _description_
         """
 
-        current_test_text.update("Testing: Digital Threshold")
+        self.current_test.emit("Testing: Digital Threshold")
 
         connections = test_connections(
             check_3458=False
@@ -777,7 +777,7 @@ class TestOscilloscope(QDialog, object):
             bool: _description_
         """
 
-        current_test_text.update("Testing: Input Impedance")
+        self.current_test.emit("Testing: Input Impedance")
 
         connections = test_connections(check_3458=True)  # Always required
 
@@ -887,7 +887,7 @@ class TestOscilloscope(QDialog, object):
         Set the self.calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
         """
 
-        current_test_text.update("Testing: DC Voltage")
+        self.current_test.emit("Testing: DC Voltage")
 
         last_channel = -1
 
@@ -1133,7 +1133,7 @@ class TestOscilloscope(QDialog, object):
             test_rows (List): _description_
         """
 
-        current_test_text.update("Testing: Cursor position")
+        self.current_test.emit("Testing: Cursor position")
 
         # no equipment as using buffered results
 
@@ -1185,7 +1185,7 @@ class TestOscilloscope(QDialog, object):
             _type_: _description_
         """
 
-        current_test_text.update("Testing: DC Position")
+        self.current_test.emit("Testing: DC Position")
 
         connections = test_connections(
             check_3458=False
@@ -1295,7 +1295,7 @@ class TestOscilloscope(QDialog, object):
 
         global current_test_text
 
-        current_test_text.update("Testing: Timebase")
+        self.current_test.emit("Testing: Timebase")
 
         connections = test_connections(
             check_3458=False
@@ -1471,7 +1471,7 @@ class TestOscilloscope(QDialog, object):
 
         return True
 
-        current_test_text.update("Testing: Trigger sensitivity")
+        self.current_test.emit("Testing: Trigger sensitivity")
 
         connections = test_connections(
             check_3458=False
@@ -1592,7 +1592,7 @@ class TestOscilloscope(QDialog, object):
             test_rows (List): _description_
         """
 
-        current_test_text.update("Testing: Rise time")
+        self.current_test.emit("Testing: Rise time")
 
         # only pulse gen required
 
