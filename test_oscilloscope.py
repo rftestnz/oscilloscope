@@ -422,6 +422,9 @@ class UI(QMainWindow):
         self.progress_test.setValue(int(progress))
         QApplication.processEvents()
 
+    def current_test_message(self, message: str) -> None:
+        self.statusbar.showMessage(message)
+
     def result_sheet_check(self) -> bool:
         """
         result_sheet_check
