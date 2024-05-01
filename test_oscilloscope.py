@@ -418,6 +418,7 @@ class UI(QMainWindow):
         )
 
         self.progress_test.setVisible(False)
+        self.statusbar.showMessage("Finished")
 
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))
