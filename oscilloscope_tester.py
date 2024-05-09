@@ -53,7 +53,7 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
-        self.abort_test=False
+        self.abort_test = False
 
     def local_all(self) -> None:
         """
@@ -191,7 +191,7 @@ class TestOscilloscope(QDialog, object):
         self.test_number = 0
         self.number_tests = len(test_rows)
 
-        self.abort_test=False
+        self.abort_test = False
 
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
@@ -946,7 +946,7 @@ class TestOscilloscope(QDialog, object):
             response = QMessageBox.information(
                 self,
                 "Connections",
-                "Connect self.calibrator output to all channels in parallel",
+                "Connect Calibrator output to all channels in parallel",
                 buttons=QMessageBox.StandardButton.Ok
                 | QMessageBox.StandardButton.Cancel,
             )
@@ -1012,9 +1012,9 @@ class TestOscilloscope(QDialog, object):
                     self.uut.set_cursor_position(cursor="X1", pos=0)
                     if not parallel_channels:
                         response = QMessageBox.information(
-                            parent=self,
-                            title="Connections",
-                            text=f"Connect self.calibrator output to channel {channel}",
+                            self,
+                            "Connections",
+                            f"Connect Calibrator output to channel {channel}",
                             buttons=QMessageBox.StandardButton.Ok
                             | QMessageBox.StandardButton.Cancel,
                         )
@@ -1263,7 +1263,7 @@ class TestOscilloscope(QDialog, object):
                     response = QMessageBox.information(
                         self,
                         "Connections",
-                        f"Connect self.calibrator output to channel {settings.channel}",
+                        f"Connect Calibrator output to channel {settings.channel}",
                         buttons=QMessageBox.StandardButton.Ok
                         | QMessageBox.StandardButton.Cancel,
                     )
