@@ -938,7 +938,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_timebase(1e-3)
 
-        cursor_results = []  # save results for cursor tests
+        self.cursor_results = []  # save results for cursor tests
 
         filter_connected = False  # noqa: F841
 
@@ -1120,7 +1120,7 @@ class TestOscilloscope(QDialog, object):
                 if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                     voltage2 = self.uut.read_cursor_avg()
 
-                    cursor_results.append(
+                    self.cursor_results.append(
                         {
                             "chan": channel,
                             "scale": settings.scale,
