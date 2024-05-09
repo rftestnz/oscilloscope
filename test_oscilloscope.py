@@ -389,6 +389,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
         self.btn_abort.setVisible(True)
+        self.statusbar.showMessage("")
 
         self.set_control_state(False)
 
