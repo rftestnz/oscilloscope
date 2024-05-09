@@ -512,10 +512,13 @@ class UI(QMainWindow):
         Results file has chenged, enable or disable the hide excel rows button
         """
 
-        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            check = excel.check_channel_rows()
+        if os.path.isfile(self.txt_results_file.text()):
+            with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+                check = excel.check_channel_rows()
 
-            self.btn_hide_excel_rows.setEnabled(check)
+                self.btn_hide_excel_rows.setEnabled(check)
+        else:
+            self.btn_hide_excel_rows.setEnabled(False)
 
     def set_control_state(self, state: bool) -> None:
         """
