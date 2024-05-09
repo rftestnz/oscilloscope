@@ -147,21 +147,21 @@ class TestOscilloscope(QDialog, object):
 
             # and make a new list with just the row numbers
 
-            sorted_steps = []
+            sorted_steps = set()
 
             for step in new_list:
-                sorted_steps.append(step[1])
+                sorted_steps.add(step[1])
 
             # And the rest of the steps
 
             for step in test_steps:
                 test_name, channel = excel.get_test_name(step)
-                if not test_name.startswith("DCV"):
-                    sorted_steps.append(step)
+                if test_name.startswith("DCV"):
+                    sorted_steps.add(step)
 
-        print(sorted_steps)
+        print(list(sorted_steps))
 
-        return sorted_steps
+        return list(sorted_steps)
 
     def run_tests(
         self,
