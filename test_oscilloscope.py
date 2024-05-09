@@ -350,10 +350,32 @@ class UI(QMainWindow):
 
                 # Now we have the list of test names, we need to get the associated test rows
 
+                # Have to trap CURS tests, as the results come from the DCV tests. If DCV selected automatically select CURS, if CURS only display message
+
+                add_cursor = False
+
+                if "CURS" in list(test_names):
+                    dcv = "DCV" in selector.selected_tests
+                    curs = "CURS" in selector.selected_tests
+
+                    if curs and not dcv:
+                        QMessageBox.critical(
+                            self, "Error", "Cursor tests rely on results from DCV"
+                        )
+                        return
+
+                    if dcv and not curs:
+                        add_cursor = True
+                        self.cb_skip_rows.setChecked(False)
+
                 test_steps = []
 
                 for name in selector.selected_tests:
                     rows = excel.get_test_rows(name)
+                    test_steps.extend(iter(rows))
+
+                if add_cursor:
+                    rows = excel.get_test_rows("CURS")
                     test_steps.extend(iter(rows))
 
                 self.do_parallel = False
@@ -389,6 +411,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(True)
         self.progress_test.setValue(0)
         self.btn_abort.setVisible(True)
+        self.statusbar.showMessage("")
 
         self.set_control_state(False)
 
@@ -512,10 +535,13 @@ class UI(QMainWindow):
         Results file has chenged, enable or disable the hide excel rows button
         """
 
-        with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-            check = excel.check_channel_rows()
+        if os.path.isfile(self.txt_results_file.text()):
+            with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+                check = excel.check_channel_rows()
 
-            self.btn_hide_excel_rows.setEnabled(check)
+                self.btn_hide_excel_rows.setEnabled(check)
+        else:
+            self.btn_hide_excel_rows.setEnabled(False)
 
     def set_control_state(self, state: bool) -> None:
         """

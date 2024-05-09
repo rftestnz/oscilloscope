@@ -103,7 +103,7 @@
     <widget class="QComboBox" name="cmbCalibrator">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>30</y>
        <width>101</width>
        <height>22</height>
@@ -126,7 +126,7 @@
     <widget class="QComboBox" name="cmbCalibratorGPIB">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>60</y>
        <width>101</width>
        <height>22</height>
@@ -159,7 +159,7 @@
     <widget class="QComboBox" name="cmb33250GPIB">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>90</y>
        <width>101</width>
        <height>22</height>
@@ -179,7 +179,7 @@
     <widget class="QComboBox" name="cmb3458GPIB">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>120</y>
        <width>101</width>
        <height>22</height>
@@ -225,7 +225,7 @@
     <widget class="QLineEdit" name="txtUUTAddr">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>150</y>
        <width>361</width>
        <height>20</height>
@@ -250,7 +250,7 @@
       <rect>
        <x>10</x>
        <y>180</y>
-       <width>91</width>
+       <width>100</width>
        <height>16</height>
       </rect>
      </property>
@@ -261,7 +261,7 @@
     <widget class="QComboBox" name="cmbNumberChannels">
      <property name="geometry">
       <rect>
-       <x>110</x>
+       <x>115</x>
        <y>180</y>
        <width>101</width>
        <height>22</height>

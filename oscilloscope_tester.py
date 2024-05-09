@@ -53,7 +53,7 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
-        self.abort_test=False
+        self.abort_test = False
 
     def local_all(self) -> None:
         """
@@ -147,21 +147,21 @@ class TestOscilloscope(QDialog, object):
 
             # and make a new list with just the row numbers
 
-            sorted_steps = []
+            sorted_steps = set()
 
             for step in new_list:
-                sorted_steps.append(step[1])
+                sorted_steps.add(step[1])
 
             # And the rest of the steps
 
             for step in test_steps:
                 test_name, channel = excel.get_test_name(step)
-                if not test_name.startswith("DCV"):
-                    sorted_steps.append(step)
+                if test_name.startswith("DCV"):
+                    sorted_steps.add(step)
 
-        print(sorted_steps)
+        print(list(sorted_steps))
 
-        return sorted_steps
+        return list(sorted_steps)
 
     def run_tests(
         self,
@@ -191,7 +191,7 @@ class TestOscilloscope(QDialog, object):
         self.test_number = 0
         self.number_tests = len(test_rows)
 
-        self.abort_test=False
+        self.abort_test = False
 
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
 
@@ -938,7 +938,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_timebase(1e-3)
 
-        cursor_results = []  # save results for cursor tests
+        self.cursor_results = []  # save results for cursor tests
 
         filter_connected = False  # noqa: F841
 
@@ -946,7 +946,7 @@ class TestOscilloscope(QDialog, object):
             response = QMessageBox.information(
                 self,
                 "Connections",
-                "Connect self.calibrator output to all channels in parallel",
+                "Connect Calibrator output to all channels in parallel",
                 buttons=QMessageBox.StandardButton.Ok
                 | QMessageBox.StandardButton.Cancel,
             )
@@ -1012,9 +1012,9 @@ class TestOscilloscope(QDialog, object):
                     self.uut.set_cursor_position(cursor="X1", pos=0)
                     if not parallel_channels:
                         response = QMessageBox.information(
-                            parent=self,
-                            title="Connections",
-                            text=f"Connect self.calibrator output to channel {channel}",
+                            self,
+                            "Connections",
+                            f"Connect Calibrator output to channel {channel}",
                             buttons=QMessageBox.StandardButton.Ok
                             | QMessageBox.StandardButton.Cancel,
                         )
@@ -1120,7 +1120,7 @@ class TestOscilloscope(QDialog, object):
                 if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                     voltage2 = self.uut.read_cursor_avg()
 
-                    cursor_results.append(
+                    self.cursor_results.append(
                         {
                             "chan": channel,
                             "scale": settings.scale,
@@ -1263,7 +1263,7 @@ class TestOscilloscope(QDialog, object):
                     response = QMessageBox.information(
                         self,
                         "Connections",
-                        f"Connect self.calibrator output to channel {settings.channel}",
+                        f"Connect Calibrator output to channel {settings.channel}",
                         buttons=QMessageBox.StandardButton.Ok
                         | QMessageBox.StandardButton.Cancel,
                     )
