@@ -10,7 +10,7 @@ from zipfile import BadZipFile
 
 from PyQt6 import uic
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -65,6 +65,7 @@ class UI(QMainWindow):
         self.do_parallel = False
 
         uic.loadUi(get_path("ui\\main_window.ui"), self)  # type: ignore
+        self.setWindowIcon(QIcon(get_path("ui\\scope.ico")))
 
         self.settings = QSettings("RFTS", "Oscilloscope")
 

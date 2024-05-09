@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['oscilloscope.py'],
+    ['test_oscilloscope.py'],
     pathex=[],
     binaries=[],
     datas=[('.\\ui\\*.ico', '.\\ui')],
@@ -28,7 +28,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='oscilloscope',
+    name='oscilloscope_test',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
