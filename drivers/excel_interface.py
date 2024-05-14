@@ -690,7 +690,8 @@ class ExcelInterface:
     def find_units_col(self, row: int = -1) -> int:
         """
         find_results_col
-        Read the row one above current row and look for the column which has results or measured in it
+        Read the row one above current row and look for the column which
+        has results or measured in it
 
         Args:
             row (int, optional): _description_. Defaults to -1.
@@ -724,7 +725,8 @@ class ExcelInterface:
     def find_results_col(self, row: int = -1) -> int:
         """
         find_results_col
-        Read the row one above current row and look for the column which has results or measured in it
+        Read the row one above current row and look for the column
+        which has results or measured in it
 
         Args:
             row (int, optional): _description_. Defaults to -1.
@@ -839,7 +841,8 @@ class ExcelInterface:
     def check_channel_rows(self) -> bool:
         """
         check_channel_rows
-        Some results sheets have a channel column in Col A, as the same model can have different channel counts (eg Tek MSO)
+        Some results sheets have a channel column in Col A, as the same model
+        can have different channel counts (eg Tek MSO)
 
         Returns:
             bool: _description_
