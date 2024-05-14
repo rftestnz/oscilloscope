@@ -115,7 +115,8 @@ class TestOscilloscope(QDialog, object):
     def consolidate_dcv_tests(self, test_steps: List, filename: str) -> List:
         """
         consolidate_dcv_tests
-        Go through the test steps and all of the DCV and DCV-BAL tests group by channel to minimize channel swapping
+        Go through the test steps and all of the DCV and DCV-BAL tests group
+        by channel to minimize channel swapping
 
         Args:
             test_steps (List): _description_
@@ -212,7 +213,8 @@ class TestOscilloscope(QDialog, object):
                 settings = excel.get_volt_settings(row=row)
                 test_names.add(settings.function)
 
-            # Get all the tests. If there are cursor tests, then automatically select them if dcv selected as they cannot be done in isolation
+            # Get all the tests. If there are cursor tests, then automatically select
+            # them if dcv selected as they cannot be done in isolation
             all_tests = excel.get_test_types()
 
             if "CURS" in all_tests and "DCV" in test_names:
@@ -220,7 +222,8 @@ class TestOscilloscope(QDialog, object):
                     "CURS"
                 )  # It is a set, so doesn't matter if it was already in
 
-            # python sets are unordered, and not deterministic. We need the set to be in a specific order for the sequencer
+            # python sets are unordered, and not deterministic. We need the set to
+            # be in a specific order for the sequencer
             # eg can't do cursor tests before dcv
 
             ordered_test_names = [
@@ -231,7 +234,8 @@ class TestOscilloscope(QDialog, object):
 
             for test_name in ordered_test_names:
                 testing_rows = excel.get_test_rows(test_name)
-                # At the moment we only do full tests, so we can get the test rows from the excel sheet
+                # At the moment we only do full tests, so we can get the
+                # test rows from the excel sheet
 
                 # TODO use functional method
 
@@ -322,7 +326,8 @@ class TestOscilloscope(QDialog, object):
         Check all of the instruments are connected
 
         Args:
-            check_3458 (bool): 3458 is only used for impedance, which few oscilloscopes require measurement
+            check_3458 (bool): 3458 is only used for impedance,
+            which few oscilloscopes require measurement
 
         Returns:
             bool: _description_
@@ -376,7 +381,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -444,7 +450,8 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
-        # For the moment, this is a Tek MSO5000  special test, so commands written directly here. If any more
+        # For the moment, this is a Tek MSO5000  special test,
+        # so commands written directly here. If any more
         # are required, put into driver
 
         self.uut.set_acquisition(1)
@@ -460,7 +467,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -622,7 +630,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -758,7 +767,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -832,7 +842,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -863,7 +874,8 @@ class TestOscilloscope(QDialog, object):
                         return False
 
                     if last_channel > 0:
-                        # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
+                        # changed channel to another, but not channel 1.
+                        # Reset all of the settings on the channel just measured
                         self.uut.set_voltage_scale(chan=last_channel, scale=1)
                         self.uut.set_voltage_offset(chan=last_channel, offset=0)
                         self.uut.set_channel(chan=last_channel, enabled=False)
@@ -914,7 +926,8 @@ class TestOscilloscope(QDialog, object):
         """
         test_dcv
         Perform the basic DC V tests
-        Set the self.calibrator to the voltage, allow the scope to stabilizee, then read the cursors or measurement values
+        Set the self.calibrator to the voltage, allow the scope to stabilize,
+        then read the cursors or measurement values
         """
 
         self.current_test.emit("Testing: DC Voltage")
@@ -967,7 +980,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
             excel.find_units_col(test_rows[0])
@@ -995,7 +1009,8 @@ class TestOscilloscope(QDialog, object):
 
                 if channel != last_channel:
                     if last_channel > 0:
-                        # changed channel to another, but not channel 1. reset all of the settings on the channel just measured
+                        # changed channel to another, but not channel 1.
+                        # Reset all of the settings on the channel just measured
                         self.uut.set_voltage_scale(chan=last_channel, scale=1)
                         self.uut.set_voltage_offset(chan=last_channel, offset=0)
                         self.uut.set_channel(chan=last_channel, enabled=False)
@@ -1062,7 +1077,8 @@ class TestOscilloscope(QDialog, object):
 
                 if self.uut.keysight or settings.function == "DCV-BAL":
                     if settings.function == "DCV-BAL":
-                        # Non keysight, apply the half the voltage and the offset then do the reverse
+                        # Non keysight, apply the half the voltage
+                        # and the offset then do the reverse
 
                         self.calibrator.set_voltage_dc(settings.voltage)
 
@@ -1160,7 +1176,8 @@ class TestOscilloscope(QDialog, object):
     def test_cursor(self, filename: str, test_rows: List) -> bool:
         """
         test_cursor
-        Dual cursor test. Measure voltage with no voltage applied, apply voltage, measure again, record the difference
+        Dual cursor test. Measure voltage with no voltage applied,
+        apply voltage, measure again, record the difference.
         Measurements are taken during the DCV test, and recalled here
 
         Args:
@@ -1179,7 +1196,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
             for row in test_rows:
@@ -1247,7 +1265,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -1367,7 +1386,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {row}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {row}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -1437,9 +1457,9 @@ class TestOscilloscope(QDialog, object):
                     )  # 1 ms delay
                     time.sleep(1)
 
-                    self.uut.adjust_cursor(
-                        target=ref  # type: ignore
-                    )  # adjust the cursor until voltage is the same as measured from the reference pulse
+                    # adjust the cursor until voltage is the same as measured
+                    # from the reference pulse
+                    self.uut.adjust_cursor(target=ref)  # type: ignore
 
                     offset_x = self.uut.read_cursor("X1")
 
@@ -1459,7 +1479,7 @@ class TestOscilloscope(QDialog, object):
 
                         try:
                             val = int(code)  # type: ignore
-                            print(f"{val/100}, {datetime.now().year-2000}")
+                            print(f"{val / 100}, {datetime.now().year - 2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
                             age = datetime.now().year - (val / 100) - 2000
@@ -1548,7 +1568,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -1648,7 +1669,8 @@ class TestOscilloscope(QDialog, object):
                 QMessageBox.critical(
                     self,
                     "Error",
-                    f"Unable to find results col from row {test_rows[0]}.\nEnsure col headed with results or measured",
+                    f"Unable to find results col from row {test_rows[0]}.\n"
+                    "Ensure col headed with results or measured",
                 )
                 return False
 
@@ -1735,7 +1757,8 @@ class TestOscilloscope(QDialog, object):
         if val < 1:
             decade -= 1
 
-        # normalize. Anything greater than 1 will work fine here, but less than 1 need to multiply, hence the -decade
+        # normalize. Anything greater than 1 will work fine here,
+        # but less than 1 need to multiply, hence the -decade
         normalized = val * math.pow(10, -decade)
         first_digit = int(str(normalized)[0])
 
