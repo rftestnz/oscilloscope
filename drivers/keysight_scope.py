@@ -9,7 +9,6 @@ import contextlib
 from enum import Enum
 import pyvisa
 import time
-from random import random
 from typing import List
 
 try:

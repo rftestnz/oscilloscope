@@ -5,7 +5,6 @@ Test Oscilloscopes
 
 import os
 from pprint import pformat
-from typing import List
 from zipfile import BadZipFile
 
 from PyQt6 import uic
@@ -32,7 +31,6 @@ from drivers.keysight_scope import Keysight_Oscilloscope
 from drivers.Ks3458A import Ks3458A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
 from individual_test_selector import IndividualTestSelector
 from oscilloscope_tester import TestOscilloscope
