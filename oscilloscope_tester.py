@@ -1506,7 +1506,7 @@ class TestOscilloscope(QDialog, object):
         """
 
         QMessageBox.information(
-            self, "Not IMplemented", "Not yet debugged, test manually"
+            self, "Not Implemented", "Not yet debugged, test manually"
         )
 
         return True
