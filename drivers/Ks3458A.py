@@ -7,6 +7,7 @@ Raises:
 Returns:
     _type_: _description_
 """
+
 import contextlib
 import pyvisa
 from enum import Enum
