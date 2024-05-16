@@ -938,7 +938,7 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
-        self.uut.set_timebase(1e-3)
+        self.uut.set_timebase(200e-6)
 
         self.cursor_results = []  # save results for cursor tests
 
