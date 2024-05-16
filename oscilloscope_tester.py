@@ -1453,7 +1453,7 @@ class TestOscilloscope(QDialog, object):
                         age = 10
 
                         try:
-                            val = int(code)  # type: ignore
+                            val = int(code[0])  # type: ignore
                             print(f"{val/100}, {datetime.now().year-2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
