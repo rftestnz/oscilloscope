@@ -101,7 +101,8 @@ class ExcelInterface:
         "IMP",
         "NOISE",
         "DELTAT",
-        "THR",
+        # "THR",
+        # TRIG
     ]  # In order of test sequence preference - need list instead of set
 
     def __init__(self, filename, sheetindex=0) -> None:
