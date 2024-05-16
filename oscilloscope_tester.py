@@ -1073,18 +1073,19 @@ class TestOscilloscope(QDialog, object):
 
                     self.uut.set_acquisition(acquisitions)
 
+                    # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
                     if not self.simulating:
-                        time.sleep(1)
+                        time.sleep(0.1)
 
                     if settings.scale <= 0.005:
                         self.uut.set_acquisition(64)
-                        time.sleep(5)  # little longer to average for sensitive scales
+                        time.sleep(1)  # little longer to average for sensitive scales
 
                     if self.uut.keysight:
                         voltage1 = self.uut.read_cursor_avg()
 
                     self.uut.measure_clear()
-                    reading1 = self.uut.measure_voltage(chan=channel, delay=2)
+                    reading1 = self.uut.measure_voltage(chan=channel, delay=0.1)
 
                 if settings.function == "DCV-BAL":
                     # still set up for the + voltage
@@ -1099,15 +1100,15 @@ class TestOscilloscope(QDialog, object):
                 self.uut.set_acquisition(acquisitions)
 
                 if not self.simulating:
-                    time.sleep(1)
+                    time.sleep(0.1)
 
                 if settings.scale <= 0.005:
                     self.uut.set_acquisition(64)
-                    time.sleep(5)  # little longer to average for sensitive scales
+                    time.sleep(1)  # little longer to average for sensitive scales
 
                 self.uut.measure_clear()
 
-                reading = self.uut.measure_voltage(chan=channel, delay=3)
+                reading = self.uut.measure_voltage(chan=channel, delay=0.5)
 
                 if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                     voltage2 = self.uut.read_cursor_avg()
