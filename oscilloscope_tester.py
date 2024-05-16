@@ -370,7 +370,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_acquisition(32)
 
-        self.uut.set_timebase(0.001)
+        self.uut.set_timebase(200e-6)
 
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -1238,6 +1238,8 @@ class TestOscilloscope(QDialog, object):
             return False
 
         self.uut.reset()
+
+        self.uut.set_timebase(200e-6)
 
         self.uut.set_acquisition(32)
 
