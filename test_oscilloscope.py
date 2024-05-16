@@ -46,11 +46,13 @@ class UI(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.m142 = M142()
-        self.fl5700 = Fluke5700A()
-        self.ks33250 = Ks33250A()
-        self.ks3458 = Ks3458A()
-        self.uut = Keysight_Oscilloscope()
+        # Create all as simulated, else it will scan the instruments
+        # instruments may not be present or wrong address, which has the effect of a very long startup
+        self.m142 = M142(simulate=True)
+        self.fl5700 = Fluke5700A(simulate=True)
+        self.ks33250 = Ks33250A(simulate=True)
+        self.ks3458 = Ks3458A(simulate=True)
+        self.uut = Keysight_Oscilloscope(simulate=True)
 
         self.calibrator = self.m142
 
