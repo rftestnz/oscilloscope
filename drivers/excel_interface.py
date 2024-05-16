@@ -375,7 +375,12 @@ class ExcelInterface:
         """
 
         test_name = str(self.ws.cell(column=self.__data_col, row=row).value)
-        channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
+        try:
+            # Not all tests have a channel, such as TIME. In the readahead for DCV test consolidation,
+            # if all tests have been selected then it will read seettings for everything
+            channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
+        except Exception as ex:
+            channel = 1
 
         return test_name, channel
 
