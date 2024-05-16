@@ -8,7 +8,7 @@ a = Analysis(
     ['test_oscilloscope.py'],
     pathex=[],
     binaries=[],
-    datas=[('.\\ui\\*.ico', '.\\ui')],
+    datas=[('.\\ui\\*.*', '.\\ui')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

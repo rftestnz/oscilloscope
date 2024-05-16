@@ -208,6 +208,9 @@ class TestOscilloscope(QDialog, object):
             excel.write_data(data=self.uut.model, named_range="Model")
             excel.write_data(data=self.uut.serial, named_range="Serial")
 
+            # Cal date is the cell above Model
+            excel.write_cal_date()
+
             test_names = set()
 
             for row in test_rows:
