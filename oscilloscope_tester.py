@@ -108,6 +108,8 @@ class TestOscilloscope(QDialog, object):
             )
             self.uut = Tektronix_Oscilloscope(simulate=False)
 
+        # Make sure the address is set correctly
+        self.uut.visa_address = address
         self.uut.num_channels = num_channels
 
         return True
