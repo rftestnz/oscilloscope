@@ -42,6 +42,7 @@ class IndividualTestSelector(QDialog):
 
         for name in test_names:
             cb = QCheckBox(name)
+            cb.setChecked(True)
             self.checkboxes.append(cb)
             self.layout1.addWidget(cb)
 
