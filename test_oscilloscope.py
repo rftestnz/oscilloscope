@@ -452,6 +452,8 @@ class UI(QMainWindow):
 
         self.set_control_state(True)
 
+        QMessageBox.information(self, "Finished", "Completed, check results")
+
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))
         QApplication.processEvents()
