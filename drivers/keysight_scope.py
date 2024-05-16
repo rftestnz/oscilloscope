@@ -5,7 +5,6 @@
 # DK Jan 23
 """
 
-
 import contextlib
 from enum import Enum
 import pyvisa
@@ -558,7 +557,7 @@ class Keysight_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
-    def measure_voltage(self, chan: int, delay: float = 2) -> float:
+    def measure_voltage(self, chan: int, delay: float = 0.2) -> float:
         """
         measure_voltage
         Return the average voltage
