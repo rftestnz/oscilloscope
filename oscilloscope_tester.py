@@ -1071,11 +1071,6 @@ class TestOscilloscope(QDialog, object):
                     # 0V test
                     self.calibrator.operate()
 
-                    self.uut.set_acquisition(1)
-
-                    if not self.simulating:
-                        time.sleep(0.2)
-
                     self.uut.set_acquisition(acquisitions)
 
                     if not self.simulating:
@@ -1100,11 +1095,6 @@ class TestOscilloscope(QDialog, object):
                     self.calibrator.set_voltage_dc(settings.voltage)
 
                 self.calibrator.operate()
-
-                self.uut.set_acquisition(1)
-
-                if not self.simulating:
-                    time.sleep(0.2)
 
                 self.uut.set_acquisition(acquisitions)
 
