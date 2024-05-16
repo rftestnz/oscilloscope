@@ -77,8 +77,9 @@ class M142:
 
     def __init__(self, simulate=False) -> None:
         self.simulating = simulate
+        self.rm = pyvisa.ResourceManager()
         if not simulate:
-            self.rm = pyvisa.ResourceManager()
+
             self.open_connection()
 
     def __enter__(self):

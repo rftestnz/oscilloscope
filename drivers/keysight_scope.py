@@ -5,7 +5,6 @@
 # DK Jan 23
 """
 
-
 import contextlib
 from enum import Enum
 import pyvisa
@@ -519,8 +518,11 @@ class Keysight_Oscilloscope(ScopeDriver):
             num_samples (int): _description_
         """
 
-        self.write("ACQ:TYPE AVER")
-        self.write(f"ACQ:COUNT {num_samples}")
+        if num_samples == 1:
+            # Turn off
+            self.write("ACQ:TYPE NORM")
+        else:
+            self.write(f"ACQ:TYPE AVER; COUNT {num_samples}")
         self.write("*OPC")
 
     def set_trigger_type(self, mode: str) -> None:
@@ -555,7 +557,7 @@ class Keysight_Oscilloscope(ScopeDriver):
         self.write(f"TRIG:EDGE:LEV {level}")
         self.write("*OPC")
 
-    def measure_voltage(self, chan: int, delay: float = 2) -> float:
+    def measure_voltage(self, chan: int, delay: float = 0.2) -> float:
         """
         measure_voltage
         Return the average voltage

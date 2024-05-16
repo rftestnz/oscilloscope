@@ -108,6 +108,8 @@ class TestOscilloscope(QDialog, object):
             )
             self.uut = Tektronix_Oscilloscope(simulate=False)
 
+        # Make sure the address is set correctly
+        self.uut.visa_address = address
         self.uut.num_channels = num_channels
 
         return True
@@ -368,7 +370,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_acquisition(32)
 
-        self.uut.set_timebase(0.001)
+        self.uut.set_timebase(200e-6)
 
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -936,7 +938,7 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
-        self.uut.set_timebase(1e-3)
+        self.uut.set_timebase(200e-6)
 
         self.cursor_results = []  # save results for cursor tests
 
@@ -1069,25 +1071,21 @@ class TestOscilloscope(QDialog, object):
                     # 0V test
                     self.calibrator.operate()
 
-                    self.uut.set_acquisition(1)
-
-                    if not self.simulating:
-                        time.sleep(0.2)
-
                     self.uut.set_acquisition(acquisitions)
 
+                    # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
                     if not self.simulating:
-                        time.sleep(1)
+                        time.sleep(0.1)
 
                     if settings.scale <= 0.005:
                         self.uut.set_acquisition(64)
-                        time.sleep(5)  # little longer to average for sensitive scales
+                        time.sleep(1)  # little longer to average for sensitive scales
 
                     if self.uut.keysight:
                         voltage1 = self.uut.read_cursor_avg()
 
                     self.uut.measure_clear()
-                    reading1 = self.uut.measure_voltage(chan=channel, delay=2)
+                    reading1 = self.uut.measure_voltage(chan=channel, delay=0.1)
 
                 if settings.function == "DCV-BAL":
                     # still set up for the + voltage
@@ -1099,23 +1097,18 @@ class TestOscilloscope(QDialog, object):
 
                 self.calibrator.operate()
 
-                self.uut.set_acquisition(1)
-
-                if not self.simulating:
-                    time.sleep(0.2)
-
                 self.uut.set_acquisition(acquisitions)
 
                 if not self.simulating:
-                    time.sleep(1)
+                    time.sleep(0.1)
 
                 if settings.scale <= 0.005:
                     self.uut.set_acquisition(64)
-                    time.sleep(5)  # little longer to average for sensitive scales
+                    time.sleep(1)  # little longer to average for sensitive scales
 
                 self.uut.measure_clear()
 
-                reading = self.uut.measure_voltage(chan=channel, delay=3)
+                reading = self.uut.measure_voltage(chan=channel, delay=0.5)
 
                 if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                     voltage2 = self.uut.read_cursor_avg()
@@ -1236,6 +1229,8 @@ class TestOscilloscope(QDialog, object):
             return False
 
         self.uut.reset()
+
+        self.uut.set_timebase(200e-6)
 
         self.uut.set_acquisition(32)
 
@@ -1458,7 +1453,7 @@ class TestOscilloscope(QDialog, object):
                         age = 10
 
                         try:
-                            val = int(code)  # type: ignore
+                            val = int(code[0])  # type: ignore
                             print(f"{val/100}, {datetime.now().year-2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
@@ -1511,7 +1506,7 @@ class TestOscilloscope(QDialog, object):
         """
 
         QMessageBox.information(
-            self, "Not IMplemented", "Not yet debugged, test manually"
+            self, "Not Implemented", "Not yet debugged, test manually"
         )
 
         return True
