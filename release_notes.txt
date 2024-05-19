@@ -1,0 +1,12 @@
+Oscilloscope Test Release Notes:
+
+Version			A.02.00
+Date:			20240510
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 	Functional
+
+Change Notes:
+ - Rewritten GUI to replace PySimpleGUI with QT6
