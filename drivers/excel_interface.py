@@ -17,7 +17,7 @@ VERSION = "A.00.03"
 
 
 @dataclass(frozen=True)
-class DCV_Settings:
+class DcvSettings:
     function: str
     channel: str | int  # Allow for EXT
     coupling: str
@@ -31,7 +31,7 @@ class DCV_Settings:
 
 
 @dataclass(frozen=True)
-class Timebase_Settings:
+class TimebaseSettings:
     function: str
     channel: int
     timebase: float
@@ -40,7 +40,7 @@ class Timebase_Settings:
 
 
 @dataclass(frozen=True)
-class Trigger_Settings:
+class TriggerSettings:
     function: str
     channel: int
     scale: float
@@ -51,7 +51,7 @@ class Trigger_Settings:
 
 
 @dataclass(frozen=True)
-class Sampling_Settings:
+class SamplingSettings:
     function: str
     channel: int
     coupling: str
@@ -63,7 +63,7 @@ class Sampling_Settings:
 
 
 @dataclass(frozen=True)
-class Threshold_Settings:
+class ThresholdSettings:
     function: str
     pod: int
     voltage: float
@@ -414,7 +414,7 @@ class ExcelInterface:
 
         return test_rows
 
-    def get_tb_test_settings(self, row: int = -1) -> Timebase_Settings:
+    def get_tb_test_settings(self, row: int = -1) -> TimebaseSettings:
         """
         get_tb_test_settings
         Get the settings relevant to the timebase test
@@ -440,7 +440,7 @@ class ExcelInterface:
         col += 1
         bandwidth = self.ws.cell(column=col, row=row).value
 
-        return Timebase_Settings(
+        return TimebaseSettings(
             function=func,
             channel=channel,  # type: ignore
             timebase=tb,  # type: ignore
@@ -448,7 +448,7 @@ class ExcelInterface:
             bandwidth=bandwidth,  # type: ignore
         )
 
-    def get_trigger_settings(self, row: int = -1) -> Trigger_Settings:
+    def get_trigger_settings(self, row: int = -1) -> TriggerSettings:
         """
         get_trigger_settings
         Read the settings for the specified or current ro for trigger sensitivty test
@@ -480,7 +480,7 @@ class ExcelInterface:
 
         edge_select = "F" if edge and edge.lower() == "f" else "R"  # type: ignore
 
-        return Trigger_Settings(
+        return TriggerSettings(
             function=func,
             channel=channel,  # type: ignore
             scale=scale,  # type: ignore
@@ -490,7 +490,7 @@ class ExcelInterface:
             edge=edge_select,
         )
 
-    def get_volt_settings(self, row: int = -1) -> DCV_Settings:
+    def get_volt_settings(self, row: int = -1) -> DcvSettings:
         """
         get_volt_settings
         Read the current row as a test setting
@@ -529,7 +529,7 @@ class ExcelInterface:
         if mode:
             mode = mode.upper()
 
-        return DCV_Settings(
+        return DcvSettings(
             function=func,
             channel=chan,  # type: ignore
             coupling=coupling,  # type: ignore
@@ -542,7 +542,7 @@ class ExcelInterface:
             acq_mode=mode,
         )
 
-    def get_sample_rate_settings(self, row: int = -1) -> Sampling_Settings:
+    def get_sample_rate_settings(self, row: int = -1) -> SamplingSettings:
         """
         get_sample_rate_settings _summary_
 
@@ -573,7 +573,7 @@ class ExcelInterface:
         col += 1
         frequency = self.parse_value(self.ws.cell(column=col, row=row).value)  # type: ignore
 
-        return Sampling_Settings(
+        return SamplingSettings(
             function=func,
             channel=chan,  # type: ignore
             coupling=coupling,  # type: ignore
@@ -584,7 +584,7 @@ class ExcelInterface:
             frequency=frequency,  # type: ignore
         )
 
-    def get_threshold_settings(self, row: int = -1) -> Threshold_Settings:
+    def get_threshold_settings(self, row: int = -1) -> ThresholdSettings:
         """
         get_threshold_settings _summary_
 
@@ -604,7 +604,7 @@ class ExcelInterface:
         col += 1
         pol = self.ws.cell(column=col, row=row).value
 
-        return Threshold_Settings(
+        return ThresholdSettings(
             function=func, pod=pod, voltage=voltage, polarity=pol  # type: ignore
         )
 
@@ -696,7 +696,8 @@ class ExcelInterface:
     def find_units_col(self, row: int = -1) -> int:
         """
         find_results_col
-        Read the row one above current row and look for the column which has results or measured in it
+        Read the row one above current row and look for the column which
+        has results or measured in it
 
         Args:
             row (int, optional): _description_. Defaults to -1.
@@ -730,7 +731,8 @@ class ExcelInterface:
     def find_results_col(self, row: int = -1) -> int:
         """
         find_results_col
-        Read the row one above current row and look for the column which has results or measured in it
+        Read the row one above current row and look for the column
+        which has results or measured in it
 
         Args:
             row (int, optional): _description_. Defaults to -1.
@@ -859,7 +861,8 @@ class ExcelInterface:
     def check_channel_rows(self) -> bool:
         """
         check_channel_rows
-        Some results sheets have a channel column in Col A, as the same model can have different channel counts (eg Tek MSO)
+        Some results sheets have a channel column in Col A, as the same model
+        can have different channel counts (eg Tek MSO)
 
         Returns:
             bool: _description_
