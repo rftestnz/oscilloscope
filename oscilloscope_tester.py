@@ -1031,11 +1031,17 @@ class TestOscilloscope(QDialog, object):
 
                     self.uut.set_cursor_xy_source(chan=1, cursor=1)
                     self.uut.set_cursor_position(cursor="X1", pos=0)
-                    if not parallel_channels:
+                    if not parallel_channels or (
+                        self.use_filter and settings.scale <= 0.01
+                    ):
+                        message = f"Connect Calibrator output to channel {channel}"
+                        if self.use_filter and settings.scale <= 0.1:
+                            message += " via 0.15 uF filter direct to input channel"
+
                         response = QMessageBox.information(
                             self,
                             "Connections",
-                            f"Connect Calibrator output to channel {channel}",
+                            message,
                             buttons=QMessageBox.StandardButton.Ok
                             | QMessageBox.StandardButton.Cancel,
                         )
