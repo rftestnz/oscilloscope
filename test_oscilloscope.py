@@ -25,6 +25,7 @@ from PyQt6.QtWidgets import (
     QGroupBox,
 )
 
+from pathlib import Path
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import Keysight_Oscilloscope
@@ -286,8 +287,12 @@ class UI(QMainWindow):
         self.settings.setValue("uut addr", self.txt_uut_addr.text())
 
     def browse_results(self) -> None:
+        dir = "."
+        if len(self.txt_results_file.text()):
+            p = Path(self.txt_results_file.text())
+            dir = p.parent.__str__()
         if fname := QFileDialog.getOpenFileName(
-            self, "Select results file", filter="Excel Files (*.xlsx)"
+            self, "Select results file", filter="Excel Files (*.xlsx)", directory=dir
         ):
             self.txt_results_file.setText(fname[0])  # type: ignore
             self.settings.setValue("filename", fname[0])
