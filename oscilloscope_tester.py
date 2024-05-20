@@ -53,6 +53,7 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
+        self.use_filter = False
         self.abort_test = False
 
     def local_all(self) -> None:
