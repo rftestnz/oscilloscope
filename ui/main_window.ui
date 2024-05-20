@@ -346,6 +346,22 @@
       <string>Simulation</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="cbFilterLowRanges">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>180</y>
+       <width>141</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Filter low mV Ranges</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <widget class="QCheckBox" name="cbSkipRows">
     <property name="geometry">
