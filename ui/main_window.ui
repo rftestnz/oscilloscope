@@ -355,6 +355,9 @@
        <height>17</height>
       </rect>
      </property>
+     <property name="toolTip">
+      <string>On 10 mV/Div and lower, only direct connection to channel and use 0.15uF filter</string>
+     </property>
      <property name="text">
       <string>Filter low mV Ranges</string>
      </property>
