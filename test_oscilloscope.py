@@ -441,6 +441,8 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
+        self.tester.use_filter = self.cb_filter_low_ranges.isChecked()
+
         self.tester.test_progress.connect(self.update_progress)
         self.tester.current_test.connect(self.current_test_message)
 
