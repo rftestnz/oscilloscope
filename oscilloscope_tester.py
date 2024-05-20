@@ -959,8 +959,6 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results = []  # save results for cursor tests
 
-        filter_connected = False  # noqa: F841
-
         if parallel_channels:
             response = QMessageBox.information(
                 self,
