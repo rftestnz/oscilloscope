@@ -97,6 +97,7 @@ class UI(QMainWindow):
 
         self.cb_skip_rows = self.findChild(QCheckBox, "cbSkipRows")
         self.cb_simulating = self.findChild(QCheckBox, "cbSimulation")
+        self.cb_filter_low_ranges = self.findChild(QCheckBox, "cbFilterLowRanges")
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
