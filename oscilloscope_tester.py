@@ -978,6 +978,8 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_acquisition(acquisitions)
 
+        max_filter_range = 0.01  # 10 mVDiv
+
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
