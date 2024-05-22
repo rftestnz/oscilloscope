@@ -130,6 +130,8 @@ class UI(QMainWindow):
         self.progress_test.setVisible(False)
         self.btn_abort.setVisible(False)
 
+        self.cb_filter_low_ranges.setChecked(False)
+
         self.txt_results_file.setText(self.settings.value("filename"))
 
         self.cmb_number_channels.addItems(["2", "4", "6", "8"])
