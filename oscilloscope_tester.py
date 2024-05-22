@@ -1173,6 +1173,7 @@ class TestOscilloscope(QDialog, object):
 
                     if units and units.startswith("m"):
                         reading *= 1000
+                        reading1 *= 1000
 
                     if settings.function == "DCV-BAL":
                         if units.startswith("m"):
@@ -1181,7 +1182,7 @@ class TestOscilloscope(QDialog, object):
                         excel.write_result(diff, col=results_col)  # auto saving
                     else:
                         # DCV (offset) test. 0V is measured for the cursors only
-                        excel.write_result(reading, col=results_col)
+                        excel.write_result(reading - reading1, col=results_col)
 
                     self.update_test_progress()
 
