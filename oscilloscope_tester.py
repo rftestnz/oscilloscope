@@ -1102,11 +1102,11 @@ class TestOscilloscope(QDialog, object):
                             self.calibrator.set_voltage_dc(settings.voltage)
 
                         # 0V test
-                        self.calibrator.operate()
-
                         # Turn off averaging to speed up change in reading
 
                         self.uut.set_acquisition(1)
+
+                        self.calibrator.operate()
 
                         if not self.simulating:
                             time.sleep(0.1)
@@ -1139,9 +1139,8 @@ class TestOscilloscope(QDialog, object):
                     else:
                         self.calibrator.set_voltage_dc(settings.voltage)
 
-                    self.calibrator.operate()
-
                     self.uut.set_acquisition(1)
+                    self.calibrator.operate()
 
                     if not self.simulating:
                         time.sleep(0.1)
