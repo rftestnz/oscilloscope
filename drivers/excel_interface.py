@@ -101,7 +101,8 @@ class ExcelInterface:
         "IMP",
         "NOISE",
         "DELTAT",
-        "THR",
+        # "THR",
+        # TRIG
     ]  # In order of test sequence preference - need list instead of set
 
     def __init__(self, filename, sheetindex=0) -> None:
@@ -374,7 +375,12 @@ class ExcelInterface:
         """
 
         test_name = str(self.ws.cell(column=self.__data_col, row=row).value)
-        channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
+        try:
+            # Not all tests have a channel, such as TIME. In the readahead for DCV test consolidation,
+            # if all tests have been selected then it will read seettings for everything
+            channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
+        except Exception as ex:
+            channel = 1
 
         return test_name, channel
 
@@ -795,6 +801,20 @@ class ExcelInterface:
             return True
 
         return False
+    
+    def write_cal_date(self)->None:
+        """
+        Write the current date
+        If the CalDate location is not assigned, it should be the cell above the model
+        """
+
+        if nr:= self.get_named_cell("CalDate"):
+            self.ws.cell(column=nr.col, row=nr.row).value=datetime.today()
+
+        elif nr := self.get_named_cell("Model"):
+            self.ws.cell(column=nr.col, row=nr.row-1).value=datetime.today()
+
+        self.save_sheet()
 
     def check_empty_result(self, col: int) -> bool:
         """

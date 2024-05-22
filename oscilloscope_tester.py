@@ -53,6 +53,7 @@ class TestOscilloscope(QDialog, object):
 
         self.cursor_results: list = []
 
+        self.use_filter = False
         self.abort_test = False
 
     def local_all(self) -> None:
@@ -108,6 +109,8 @@ class TestOscilloscope(QDialog, object):
             )
             self.uut = Tektronix_Oscilloscope(simulate=False)
 
+        # Make sure the address is set correctly
+        self.uut.visa_address = address
         self.uut.num_channels = num_channels
 
         return True
@@ -206,6 +209,9 @@ class TestOscilloscope(QDialog, object):
             # If the named range doesn't exist, nothing is written
             excel.write_data(data=self.uut.model, named_range="Model")
             excel.write_data(data=self.uut.serial, named_range="Serial")
+
+            # Cal date is the cell above Model
+            excel.write_cal_date()
 
             test_names = set()
 
@@ -373,7 +379,7 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_acquisition(32)
 
-        self.uut.set_timebase(0.001)
+        self.uut.set_timebase(200e-6)
 
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
@@ -949,11 +955,9 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
-        self.uut.set_timebase(1e-3)
+        self.uut.set_timebase(200e-6)
 
         self.cursor_results = []  # save results for cursor tests
-
-        filter_connected = False  # noqa: F841
 
         if parallel_channels:
             response = QMessageBox.information(
@@ -974,6 +978,8 @@ class TestOscilloscope(QDialog, object):
 
         self.uut.set_acquisition(acquisitions)
 
+        max_filter_range = 0.01  # 10 mVDiv
+
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
@@ -986,179 +992,199 @@ class TestOscilloscope(QDialog, object):
                 return False
             excel.find_units_col(test_rows[0])
 
-            for row in test_rows:
-                if self.abort_test:
-                    return False
+            max_runs = 2 if self.use_filter else 1
 
-                excel.row = row
+            # If using filter we have to run through the sequencer twice
+            # First time does the high levels maye in parallel, second run low levels not in parallel
 
-                if skip_completed:
-                    if not excel.check_empty_result(results_col):
+            for run_count in range(max_runs):
+                for row in test_rows:
+                    if self.abort_test:
+                        return False
+
+                    excel.row = row
+
+                    if skip_completed:
+                        if not excel.check_empty_result(results_col):
+                            continue
+
+                    settings = excel.get_volt_settings()
+
+                    if run_count >= 1 and settings.scale > max_filter_range:
+                        # already measured
                         continue
 
-                settings = excel.get_volt_settings()
+                    if (
+                        run_count == 0
+                        and settings.scale <= max_filter_range
+                        and self.use_filter
+                    ):
+                        continue
 
-                units = excel.get_units()
+                    units = excel.get_units()
 
-                self.calibrator.set_voltage_dc(0)
+                    self.calibrator.set_voltage_dc(0)
 
-                channel = int(settings.channel)
+                    channel = int(settings.channel)
 
-                if channel > self.uut.num_channels:
-                    continue
+                    if channel > self.uut.num_channels:
+                        continue
 
-                if channel != last_channel:
-                    if last_channel > 0:
-                        # changed channel to another, but not channel 1.
-                        # Reset all of the settings on the channel just measured
-                        self.uut.set_voltage_scale(chan=last_channel, scale=1)
-                        self.uut.set_voltage_offset(chan=last_channel, offset=0)
-                        self.uut.set_channel(chan=last_channel, enabled=False)
-                        self.uut.set_channel_bw_limit(chan=last_channel, bw_limit=False)
-                        self.uut.set_channel(chan=channel, enabled=True)
+                    if channel != last_channel:
+                        if last_channel > 0:
+                            # changed channel to another, but not channel 1.
+                            # Reset all of the settings on the channel just measured
+                            self.uut.set_voltage_scale(chan=last_channel, scale=1)
+                            self.uut.set_voltage_offset(chan=last_channel, offset=0)
+                            self.uut.set_channel(chan=last_channel, enabled=False)
+                            self.uut.set_channel_bw_limit(
+                                chan=last_channel, bw_limit=False
+                            )
+                            self.uut.set_channel(chan=channel, enabled=True)
+                            self.uut.set_channel_impedance(
+                                chan=last_channel, impedance="1M"
+                            )  # always
+
+                        self.uut.set_voltage_scale(chan=channel, scale=5)
+                        self.uut.set_voltage_offset(chan=channel, offset=0)
+
+                        self.uut.set_cursor_xy_source(chan=1, cursor=1)
+                        self.uut.set_cursor_position(cursor="X1", pos=0)
+                        if not parallel_channels or (
+                            self.use_filter and settings.scale <= max_filter_range
+                        ):
+                            message = f"Connect Calibrator output to channel {channel}"
+                            if self.use_filter and settings.scale <= max_filter_range:
+                                message += (
+                                    " via 0.15 uF capacitor direct to input channel"
+                                )
+
+                            response = QMessageBox.information(
+                                self,
+                                "Connections",
+                                message,
+                                buttons=QMessageBox.StandardButton.Ok
+                                | QMessageBox.StandardButton.Cancel,
+                            )
+                            if response == QMessageBox.StandardButton.Cancel:
+                                return False
+                        last_channel = channel
+
+                    self.uut.set_channel(chan=channel, enabled=True)
+                    self.uut.set_voltage_scale(chan=channel, scale=settings.scale)
+                    self.uut.set_voltage_offset(chan=channel, offset=settings.offset)
+
+                    if settings.impedance:
                         self.uut.set_channel_impedance(
-                            chan=last_channel, impedance="1M"
-                        )  # always
-
-                    self.uut.set_voltage_scale(chan=channel, scale=5)
-                    self.uut.set_voltage_offset(chan=channel, offset=0)
-
-                    self.uut.set_cursor_xy_source(chan=1, cursor=1)
-                    self.uut.set_cursor_position(cursor="X1", pos=0)
-                    if not parallel_channels:
-                        response = QMessageBox.information(
-                            self,
-                            "Connections",
-                            f"Connect Calibrator output to channel {channel}",
-                            buttons=QMessageBox.StandardButton.Ok
-                            | QMessageBox.StandardButton.Cancel,
+                            chan=channel, impedance=settings.impedance
                         )
-                        if response == QMessageBox.StandardButton.Cancel:
-                            return False
-                    last_channel = channel
 
-                self.uut.set_channel(chan=channel, enabled=True)
-                self.uut.set_voltage_scale(chan=channel, scale=settings.scale)
-                self.uut.set_voltage_offset(chan=channel, offset=settings.offset)
+                    if settings.bandwidth:
+                        self.uut.set_channel_bw_limit(
+                            chan=channel, bw_limit=settings.bandwidth
+                        )
+                    else:
+                        self.uut.set_channel_bw_limit(chan=channel, bw_limit=False)
 
-                if settings.impedance:
-                    self.uut.set_channel_impedance(
-                        chan=channel, impedance=settings.impedance
-                    )
+                    if settings.invert:
+                        # already casted to a bool
+                        self.uut.set_channel_invert(
+                            chan=channel, inverted=settings.invert
+                        )
+                    else:
+                        self.uut.set_channel_invert(chan=channel, inverted=False)
 
-                if settings.bandwidth:
-                    self.uut.set_channel_bw_limit(
-                        chan=channel, bw_limit=settings.bandwidth
-                    )
-                else:
-                    self.uut.set_channel_bw_limit(chan=channel, bw_limit=False)
+                    if self.uut.keysight or settings.function == "DCV-BAL":
+                        if settings.function == "DCV-BAL":
+                            # Non keysight, apply the half the voltage
+                            # and the offset then do the reverse
 
-                if settings.invert:
-                    # already casted to a bool
-                    self.uut.set_channel_invert(chan=channel, inverted=settings.invert)
-                else:
-                    self.uut.set_channel_invert(chan=channel, inverted=False)
+                            self.calibrator.set_voltage_dc(settings.voltage)
 
-                """
-                if not filter_connected and settings.voltage < 0.1:
-                    self.calibrator.standby()
-                    sg.popup(
-                        "Connect filter capacitor to input channel", background_color="blue"
-                    )
-                    filter_connected = True
-                elif filter_connected and settings.voltage >= 0.1:
-                    self.calibrator.standby()
-                    sg.popup(
-                        "Remove filter capacitor from input channel",
-                        background_color="blue",
-                    )
-                    filter_connected = False
-                """
+                        # 0V test
+                        # Turn off averaging to speed up change in reading
 
-                if self.uut.keysight or settings.function == "DCV-BAL":
+                        self.uut.set_acquisition(1)
+
+                        self.calibrator.operate()
+
+                        if not self.simulating:
+                            time.sleep(0.1)
+
+                        self.uut.set_acquisition(acquisitions)
+
+                        # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
+                        if not self.simulating:
+                            time.sleep(0.1)
+
+                        if settings.scale <= max_filter_range:
+                            self.uut.set_acquisition(64)
+                            time.sleep(
+                                1
+                            )  # little longer to average for sensitive scales
+
+                        if self.uut.keysight:
+                            voltage1 = self.uut.read_cursor_avg()
+
+                        self.uut.measure_clear()
+                        reading1 = self.uut.measure_voltage(chan=channel, delay=0.1)
+
                     if settings.function == "DCV-BAL":
-                        # Non keysight, apply the half the voltage
-                        # and the offset then do the reverse
+                        # still set up for the + voltage
 
+                        self.calibrator.set_voltage_dc(-settings.voltage)
+                        self.uut.set_voltage_offset(
+                            chan=channel, offset=-settings.offset
+                        )
+                    else:
                         self.calibrator.set_voltage_dc(settings.voltage)
 
-                    # 0V test
+                    self.uut.set_acquisition(1)
                     self.calibrator.operate()
 
-                    self.uut.set_acquisition(1)
-
                     if not self.simulating:
-                        time.sleep(0.2)
+                        time.sleep(0.1)
 
                     self.uut.set_acquisition(acquisitions)
 
                     if not self.simulating:
-                        time.sleep(1)
+                        time.sleep(0.1)
 
-                    if settings.scale <= 0.005:
+                    if settings.scale <= max_filter_range:
                         self.uut.set_acquisition(64)
-                        time.sleep(5)  # little longer to average for sensitive scales
-
-                    if self.uut.keysight:
-                        voltage1 = self.uut.read_cursor_avg()
+                        time.sleep(1)  # little longer to average for sensitive scales
 
                     self.uut.measure_clear()
-                    reading1 = self.uut.measure_voltage(chan=channel, delay=2)
 
-                if settings.function == "DCV-BAL":
-                    # still set up for the + voltage
+                    reading = self.uut.measure_voltage(chan=channel, delay=0.5)
 
-                    self.calibrator.set_voltage_dc(-settings.voltage)
-                    self.uut.set_voltage_offset(chan=channel, offset=-settings.offset)
-                else:
-                    self.calibrator.set_voltage_dc(settings.voltage)
+                    if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
+                        voltage2 = self.uut.read_cursor_avg()
 
-                self.calibrator.operate()
+                        self.cursor_results.append(
+                            {
+                                "chan": channel,
+                                "scale": settings.scale,
+                                "result": voltage2 - voltage1,  # type: ignore
+                            }
+                        )
 
-                self.uut.set_acquisition(1)
+                    self.calibrator.standby()
 
-                if not self.simulating:
-                    time.sleep(0.2)
-
-                self.uut.set_acquisition(acquisitions)
-
-                if not self.simulating:
-                    time.sleep(1)
-
-                if settings.scale <= 0.005:
-                    self.uut.set_acquisition(64)
-                    time.sleep(5)  # little longer to average for sensitive scales
-
-                self.uut.measure_clear()
-
-                reading = self.uut.measure_voltage(chan=channel, delay=3)
-
-                if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
-                    voltage2 = self.uut.read_cursor_avg()
-
-                    self.cursor_results.append(
-                        {
-                            "chan": channel,
-                            "scale": settings.scale,
-                            "result": voltage2 - voltage1,  # type: ignore
-                        }
-                    )
-
-                self.calibrator.standby()
-
-                if units and units.startswith("m"):
-                    reading *= 1000
-
-                if settings.function == "DCV-BAL":
-                    if units.startswith("m"):
+                    if units and units.startswith("m"):
+                        reading *= 1000
                         reading1 *= 1000
-                    diff = reading1 - reading
-                    excel.write_result(diff, col=results_col)  # auto saving
-                else:
-                    # DCV (offset) test. 0V is measured for the cursors only
-                    excel.write_result(reading, col=results_col)
 
-                self.update_test_progress()
+                    if settings.function == "DCV-BAL":
+                        if units.startswith("m"):
+                            reading1 *= 1000
+                        diff = reading1 - reading
+                        excel.write_result(diff, col=results_col)  # auto saving
+                    else:
+                        # DCV (offset) test. 0V is measured for the cursors only
+                        excel.write_result(reading - reading1, col=results_col)
+
+                    self.update_test_progress()
 
             self.calibrator.reset()
             self.calibrator.close()
@@ -1254,6 +1280,8 @@ class TestOscilloscope(QDialog, object):
             return False
 
         self.uut.reset()
+
+        self.uut.set_timebase(200e-6)
 
         self.uut.set_acquisition(32)
 
@@ -1478,8 +1506,8 @@ class TestOscilloscope(QDialog, object):
                         age = 10
 
                         try:
-                            val = int(code)  # type: ignore
-                            print(f"{val / 100}, {datetime.now().year - 2000}")
+                            val = int(code[0])  # type: ignore
+                            print(f"{val/100}, {datetime.now().year-2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
                             age = datetime.now().year - (val / 100) - 2000
@@ -1531,7 +1559,7 @@ class TestOscilloscope(QDialog, object):
         """
 
         QMessageBox.information(
-            self, "Not IMplemented", "Not yet debugged, test manually"
+            self, "Not Implemented", "Not yet debugged, test manually"
         )
 
         return True

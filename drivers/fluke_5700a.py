@@ -2,7 +2,6 @@
 # Quick script to control 5700A
 """
 
-
 import contextlib
 from enum import Enum
 import pyvisa
@@ -97,8 +96,10 @@ class Fluke5700A:
 
     def __init__(self, simulate=False) -> None:
         self.simulating = simulate
+        self.rm = pyvisa.ResourceManager()
+
         if not simulate:
-            self.rm = pyvisa.ResourceManager()
+
             self.open_connection()
 
     def __enter__(self):
@@ -128,7 +129,8 @@ class Fluke5700A:
                 self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception:
+        except Exception as ex:
+            print(ex)
             self.connected = False
 
         return self.connected

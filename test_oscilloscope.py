@@ -5,7 +5,6 @@ Test Oscilloscopes
 
 import os
 from pprint import pformat
-from typing import List
 from zipfile import BadZipFile
 
 from PyQt6 import uic
@@ -26,31 +25,33 @@ from PyQt6.QtWidgets import (
     QGroupBox,
 )
 
+from pathlib import Path
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import Keysight_Oscilloscope
 from drivers.Ks3458A import Ks3458A
 from drivers.Ks33250A import Ks33250A
 from drivers.meatest_m142 import M142
-from drivers.rf_signal_generator import RF_Signal_Generator
 from drivers.scpi_id import SCPI_ID
 from individual_test_selector import IndividualTestSelector
 from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.02.00"
+VERSION = "A.02.01"
 
 
 class UI(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
 
-        self.m142 = M142()
-        self.fl5700 = Fluke5700A()
-        self.ks33250 = Ks33250A()
-        self.ks3458 = Ks3458A()
-        self.uut = Keysight_Oscilloscope()
+        # Create all as simulated, else it will scan the instruments
+        # instruments may not be present or wrong address, which has the effect of a very long startup
+        self.m142 = M142(simulate=True)
+        self.fl5700 = Fluke5700A(simulate=True)
+        self.ks33250 = Ks33250A(simulate=True)
+        self.ks3458 = Ks3458A(simulate=True)
+        self.uut = Keysight_Oscilloscope(simulate=True)
 
         self.calibrator = self.m142
 
@@ -96,6 +97,7 @@ class UI(QMainWindow):
 
         self.cb_skip_rows = self.findChild(QCheckBox, "cbSkipRows")
         self.cb_simulating = self.findChild(QCheckBox, "cbSimulation")
+        self.cb_filter_low_ranges = self.findChild(QCheckBox, "cbFilterLowRanges")
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
@@ -127,6 +129,8 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(False)
         self.btn_abort.setVisible(False)
+
+        self.cb_filter_low_ranges.setChecked(False)
 
         self.txt_results_file.setText(self.settings.value("filename"))
 
@@ -286,8 +290,12 @@ class UI(QMainWindow):
         self.settings.setValue("uut addr", self.txt_uut_addr.text())
 
     def browse_results(self) -> None:
+        dir = "."
+        if len(self.txt_results_file.text()):
+            p = Path(self.txt_results_file.text())
+            dir = p.parent.__str__()
         if fname := QFileDialog.getOpenFileName(
-            self, "Select results file", filter="Excel Files (*.xlsx)"
+            self, "Select results file", filter="Excel Files (*.xlsx)", directory=dir
         ):
             self.txt_results_file.setText(fname[0])  # type: ignore
             self.settings.setValue("filename", fname[0])
@@ -435,6 +443,8 @@ class UI(QMainWindow):
             simulating=self.cb_simulating.isChecked(),
         )
 
+        self.tester.use_filter = self.cb_filter_low_ranges.isChecked()
+
         self.tester.test_progress.connect(self.update_progress)
         self.tester.current_test.connect(self.current_test_message)
 
@@ -451,6 +461,8 @@ class UI(QMainWindow):
         self.btn_abort.setVisible(False)
 
         self.set_control_state(True)
+
+        QMessageBox.information(self, "Finished", "Completed, check results")
 
     def update_progress(self, progress: float) -> None:
         self.progress_test.setValue(int(progress))

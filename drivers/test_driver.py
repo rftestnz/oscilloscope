@@ -2,6 +2,7 @@
 Generic test class for driver.
 Running ensures all methods have been implemented
 """
+
 from base_scope_driver import ScopeDriver
 from typing import List
 

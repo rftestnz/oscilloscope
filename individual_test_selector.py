@@ -2,22 +2,10 @@
     Individual test selector dialog
 """
 
-from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings
-from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import (
-    QApplication,
     QCheckBox,
-    QComboBox,
-    QFileDialog,
-    QGroupBox,
     QLabel,
-    QLineEdit,
-    QMainWindow,
-    QMenuBar,
-    QMessageBox,
     QPushButton,
-    QStatusBar,
     QDialog,
     QVBoxLayout,
     QDialogButtonBox,
@@ -42,6 +30,7 @@ class IndividualTestSelector(QDialog):
 
         for name in test_names:
             cb = QCheckBox(name)
+            cb.setChecked(True)
             self.checkboxes.append(cb)
             self.layout1.addWidget(cb)
 
