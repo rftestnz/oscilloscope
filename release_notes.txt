@@ -6,7 +6,25 @@ Date:			20240510
 Engineer:		Dave Kelly
 Verified:		Dave Kelly
 
-Release Type: 	Functional
+Release Type: 		Performance
+
+Change Notes:
+ - Add ability to use input filter for low ranges
+ - Turn off acquisition while calibrator out settling to speed up measurements
+ - DCV test store differencee between 0V and V measurements
+
+Testing:
+ - Performed tests manually and checked software results were similar
+
+===============================================================
+
+Version			A.02.00
+Date:			20240510
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 		Functional
 
 Change Notes:
  - Rewritten GUI to replace PySimpleGUI with QT6
