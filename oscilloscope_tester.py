@@ -1150,7 +1150,7 @@ class TestOscilloscope(QDialog, object):
                     if not self.simulating:
                         time.sleep(0.1)
 
-                    if settings.scale <= 0.005:
+                    if settings.scale <= max_filter_range:
                         self.uut.set_acquisition(64)
                         time.sleep(1)  # little longer to average for sensitive scales
 
