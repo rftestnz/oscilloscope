@@ -97,6 +97,7 @@ class UI(QMainWindow):
 
         self.cb_skip_rows = self.findChild(QCheckBox, "cbSkipRows")
         self.cb_simulating = self.findChild(QCheckBox, "cbSimulation")
+        self.cb_filter_low_ranges = self.findChild(QCheckBox, "cbFilterLowRanges")
 
         self.btn_browse_results = self.findChild(QPushButton, "btnBrowseResults")
         self.btn_view_results = self.findChild(QPushButton, "btnViewResults")
@@ -128,6 +129,8 @@ class UI(QMainWindow):
 
         self.progress_test.setVisible(False)
         self.btn_abort.setVisible(False)
+
+        self.cb_filter_low_ranges.setChecked(False)
 
         self.txt_results_file.setText(self.settings.value("filename"))
 
@@ -439,6 +442,8 @@ class UI(QMainWindow):
             uut=self.uut,
             simulating=self.cb_simulating.isChecked(),
         )
+
+        self.tester.use_filter = self.cb_filter_low_ranges.isChecked()
 
         self.tester.test_progress.connect(self.update_progress)
         self.tester.current_test.connect(self.current_test_message)
