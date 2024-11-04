@@ -1695,6 +1695,8 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
+        last_channel = 0
+
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
@@ -1722,16 +1724,19 @@ class TestOscilloscope(QDialog, object):
                 if settings.impedance != 50:
                     message += " via 50 Ohm feedthru"
 
-                response = QMessageBox.information(
-                    self,
-                    "Connections",
-                    message,
-                    buttons=QMessageBox.StandardButton.Ok
-                    | QMessageBox.StandardButton.Cancel,
-                )
+                if settings.channel != last_channel:
+                    response = QMessageBox.information(
+                        self,
+                        "Connections",
+                        message,
+                        buttons=QMessageBox.StandardButton.Ok
+                        | QMessageBox.StandardButton.Cancel,
+                    )
 
-                if response == QMessageBox.StandardButton.Cancel:
-                    return False
+                    last_channel = settings.channel
+
+                    if response == QMessageBox.StandardButton.Cancel:
+                        return False
 
                 for chan in range(self.uut.num_channels):
                     self.uut.set_channel(
