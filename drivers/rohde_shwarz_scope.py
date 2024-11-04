@@ -454,13 +454,17 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
 
         Args:
             chan (int): _description_
-            delay (float, optional): Number seconds to allow measurement. Defaults to 1.
+            delay (float, optional): Number seconds to allow measurement. Defaults to 6.
 
         Returns:
             float: _description_
         """
 
-        # Only using measurement 1
+        # This one takes longer than Keysight or Tek to settle
+        if delay < 3:
+            delay = 3
+
+        # Only using measurement 6
 
         self.write(f"MEAS1:SOURCE C{chan}")
         self.write("MEAS1:TYPE MEAN")
