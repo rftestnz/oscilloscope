@@ -1117,7 +1117,7 @@ class TestOscilloscope(QDialog, object):
 
                         # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
                         if not self.simulating:
-                            time.sleep(0.1)
+                            time.sleep(0.2)
 
                         if settings.scale <= max_filter_range:
                             self.uut.set_acquisition(64)
@@ -1129,7 +1129,7 @@ class TestOscilloscope(QDialog, object):
                             voltage1 = self.uut.read_cursor_avg()
 
                         self.uut.measure_clear()
-                        reading1 = self.uut.measure_voltage(chan=channel, delay=0.1)
+                        reading1 = self.uut.measure_voltage(chan=channel, delay=1)
 
                     if settings.function == "DCV-BAL":
                         # still set up for the + voltage
@@ -1158,7 +1158,7 @@ class TestOscilloscope(QDialog, object):
 
                     self.uut.measure_clear()
 
-                    reading = self.uut.measure_voltage(chan=channel, delay=0.5)
+                    reading = self.uut.measure_voltage(chan=channel, delay=1)
 
                     if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                         voltage2 = self.uut.read_cursor_avg()
