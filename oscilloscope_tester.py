@@ -1464,19 +1464,24 @@ class TestOscilloscope(QDialog, object):
                 if not self.uut.keysight:
                     valid = False
                     while not valid:
-                        result = QInputDialog.getDouble(
+                        result = QInputDialog.getText(
                             self,
                             "Difference",
                             "Enter difference in div of waveform crossing from center?",
                         )
 
+                        if not result[1]:
+                            # cancelled
+                            break
+
                         try:
-                            val = float(result)  # type: ignore
+                            val = float(result[0])  # type: ignore
                             valid = True
                         except ValueError:
                             valid = False
 
-                    excel.write_result(result=val, col=results_col)  # type: ignore
+                    if valid:
+                        excel.write_result(result=val, col=results_col)  # type: ignore
                 else:
                     # Keysight
                     self.uut.set_cursor_position(
