@@ -1,5 +1,19 @@
 Oscilloscope Test Release Notes:
 
+Version			A.02.02
+Date:			20241104
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 		Functional
+
+Change Notes:
+ - Increased delays before measuring voltage for Tek & R&S scopes
+ - Fixed some dialog library changes
+
+===============================================================
+
 Version			A.02.00
 Date:			20240510
 
