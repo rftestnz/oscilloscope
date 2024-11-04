@@ -245,39 +245,46 @@ class RohdeSchwarz_Oscilloscope(ScopeDriver):
             # Assuming MHz
             state = f"B{bw_limit}"
         else:
-            # str, last character should be k for kHz
-            assert str(bw_limit)[-1] in {"k", "M"}, " Bandwidth kHz must end with k"
-            # if the third character is H, then it is hundreds of kHz
 
-            if str(bw_limit)[-1] == "M":
-                state = f"B{str(bw_limit)[:-1]}"
-            elif bw_limit == "500k":
-                state = "B5HK"
-            elif bw_limit == "400k":
-                state = "B4HK"
-            elif bw_limit == "200k":
-                state = "B2HK"
-            elif bw_limit == "100k":
-                state = "B1HK"
-            elif bw_limit == "50k":
-                state = "B50K"
-            elif bw_limit == "40k":
-                state = "B40K"
-            elif bw_limit == "20k":
-                state = "B20K"
-            elif bw_limit == "10k":
-                state = "B10K"
-            elif bw_limit == "5k":
-                state = "B5K"
-            elif bw_limit == "4k":
-                state = "B4K"
-            elif bw_limit == "2k":
-                state = "B2K"
-            elif bw_limit == "1K":
-                state = "B1K"
-            else:
-                print(f"Invalid bandwidth {bw_limit}")
+            if bw_limit.upper() == "FULL":
                 state = "FULL"
+            else:
+                # str, last character should be k for kHz
+                assert str(bw_limit)[-1] in {
+                    "k",
+                    "M",
+                }, " Bandwidth kHz must end with k or M (or FULL)"
+                # if the third character is H, then it is hundreds of kHz
+
+                if str(bw_limit)[-1] == "M":
+                    state = f"B{str(bw_limit)[:-1]}"
+                elif bw_limit == "500k":
+                    state = "B5HK"
+                elif bw_limit == "400k":
+                    state = "B4HK"
+                elif bw_limit == "200k":
+                    state = "B2HK"
+                elif bw_limit == "100k":
+                    state = "B1HK"
+                elif bw_limit == "50k":
+                    state = "B50K"
+                elif bw_limit == "40k":
+                    state = "B40K"
+                elif bw_limit == "20k":
+                    state = "B20K"
+                elif bw_limit == "10k":
+                    state = "B10K"
+                elif bw_limit == "5k":
+                    state = "B5K"
+                elif bw_limit == "4k":
+                    state = "B4K"
+                elif bw_limit == "2k":
+                    state = "B2K"
+                elif bw_limit == "1K":
+                    state = "B1K"
+                else:
+                    print(f"Invalid bandwidth {bw_limit}")
+                    state = "FULL"
 
         # Some use BAN and some BAND, so use the full command
         self.write(f"CHAN{chan}:BANDWIDTH {state}")
