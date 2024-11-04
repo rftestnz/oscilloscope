@@ -549,10 +549,13 @@ class UI(QMainWindow):
         """
 
         if os.path.isfile(self.txt_results_file.text()):
-            with ExcelInterface(filename=self.txt_results_file.text()) as excel:
-                check = excel.check_channel_rows()
+            try:
+                with ExcelInterface(filename=self.txt_results_file.text()) as excel:
+                    check = excel.check_channel_rows()
 
-                self.btn_hide_excel_rows.setEnabled(check)
+                    self.btn_hide_excel_rows.setEnabled(check)
+            except Exception:
+                self.btn_hide_excel_rows.setEnabled(False)
         else:
             self.btn_hide_excel_rows.setEnabled(False)
 

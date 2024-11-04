@@ -1094,6 +1094,8 @@ class TestOscilloscope(QDialog, object):
                     else:
                         self.uut.set_channel_invert(chan=channel, inverted=False)
 
+                    reading1 = 0
+
                     if self.uut.keysight or settings.function == "DCV-BAL":
                         if settings.function == "DCV-BAL":
                             # Non keysight, apply the half the voltage
@@ -1115,7 +1117,7 @@ class TestOscilloscope(QDialog, object):
 
                         # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
                         if not self.simulating:
-                            time.sleep(0.1)
+                            time.sleep(0.2)
 
                         if settings.scale <= max_filter_range:
                             self.uut.set_acquisition(64)
@@ -1127,7 +1129,7 @@ class TestOscilloscope(QDialog, object):
                             voltage1 = self.uut.read_cursor_avg()
 
                         self.uut.measure_clear()
-                        reading1 = self.uut.measure_voltage(chan=channel, delay=0.1)
+                        reading1 = self.uut.measure_voltage(chan=channel, delay=1)
 
                     if settings.function == "DCV-BAL":
                         # still set up for the + voltage
@@ -1156,7 +1158,7 @@ class TestOscilloscope(QDialog, object):
 
                     self.uut.measure_clear()
 
-                    reading = self.uut.measure_voltage(chan=channel, delay=0.5)
+                    reading = self.uut.measure_voltage(chan=channel, delay=1)
 
                     if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                         voltage2 = self.uut.read_cursor_avg()
@@ -1176,8 +1178,6 @@ class TestOscilloscope(QDialog, object):
                         reading1 *= 1000
 
                     if settings.function == "DCV-BAL":
-                        if units.startswith("m"):
-                            reading1 *= 1000
                         diff = reading1 - reading
                         excel.write_result(diff, col=results_col)  # auto saving
                     else:
@@ -1346,11 +1346,10 @@ class TestOscilloscope(QDialog, object):
 
                 # reading = self.uut.measure_voltage(chan=int(settings.channel), delay=2)
                 response = QMessageBox.question(
-                    parent=self,
-                    title="Check cursor",
-                    text="Trace within 0.2 div of center?",
-                    buttons=QMessageBox.StandardButton.Yes
-                    | QMessageBox.StandardButton.No,
+                    self,
+                    "Check cursor",
+                    "Trace within 0.2 div of center?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
 
                 result = (
@@ -1465,19 +1464,24 @@ class TestOscilloscope(QDialog, object):
                 if not self.uut.keysight:
                     valid = False
                     while not valid:
-                        result = QInputDialog.getDouble(
+                        result = QInputDialog.getText(
                             self,
                             "Difference",
                             "Enter difference in div of waveform crossing from center?",
                         )
 
+                        if not result[1]:
+                            # cancelled
+                            break
+
                         try:
-                            val = float(result)  # type: ignore
+                            val = float(result[0])  # type: ignore
                             valid = True
                         except ValueError:
                             valid = False
 
-                    excel.write_result(result=val, col=results_col)  # type: ignore
+                    if valid:
+                        excel.write_result(result=val, col=results_col)  # type: ignore
                 else:
                     # Keysight
                     self.uut.set_cursor_position(
@@ -1691,6 +1695,8 @@ class TestOscilloscope(QDialog, object):
         self.uut.open_connection()
         self.uut.reset()
 
+        last_channel = 0
+
         with ExcelInterface(filename=filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
@@ -1718,16 +1724,19 @@ class TestOscilloscope(QDialog, object):
                 if settings.impedance != 50:
                     message += " via 50 Ohm feedthru"
 
-                response = QMessageBox.information(
-                    self,
-                    "Connections",
-                    message,
-                    buttons=QMessageBox.StandardButton.Ok
-                    | QMessageBox.StandardButton.Cancel,
-                )
+                if settings.channel != last_channel:
+                    response = QMessageBox.information(
+                        self,
+                        "Connections",
+                        message,
+                        buttons=QMessageBox.StandardButton.Ok
+                        | QMessageBox.StandardButton.Cancel,
+                    )
 
-                if response == QMessageBox.StandardButton.Cancel:
-                    return False
+                    last_channel = settings.channel
+
+                    if response == QMessageBox.StandardButton.Cancel:
+                        return False
 
                 for chan in range(self.uut.num_channels):
                     self.uut.set_channel(
