@@ -1094,6 +1094,8 @@ class TestOscilloscope(QDialog, object):
                     else:
                         self.uut.set_channel_invert(chan=channel, inverted=False)
 
+                    reading1 = 0
+
                     if self.uut.keysight or settings.function == "DCV-BAL":
                         if settings.function == "DCV-BAL":
                             # Non keysight, apply the half the voltage
