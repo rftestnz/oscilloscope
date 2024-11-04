@@ -220,6 +220,8 @@ class M142:
                 else:
                     pprint(tmo)
 
+        time.sleep(0.5)
+
     def set_ext_sense(self, setting: bool) -> None:
         """
         set_ext_sense _summary_

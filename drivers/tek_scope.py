@@ -541,7 +541,13 @@ class Tektronix_Oscilloscope(ScopeDriver):
         if not self.simulating:
             time.sleep(delay)
 
-        return self.read_query("MEASU:MEAS1:VAL?")
+        val = self.read_query("MEASU:MEAS1:VAL?")
+
+        if val > 9e30:
+            time.sleep(1)
+            val = self.read_query("MEASU:MEAS1:VAL?")
+
+        return val
 
     def measure_rms_noise(self, chan: int, delay: float = 2) -> float:
         """
