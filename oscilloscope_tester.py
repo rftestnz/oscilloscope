@@ -1346,11 +1346,10 @@ class TestOscilloscope(QDialog, object):
 
                 # reading = self.uut.measure_voltage(chan=int(settings.channel), delay=2)
                 response = QMessageBox.question(
-                    parent=self,
-                    title="Check cursor",
-                    text="Trace within 0.2 div of center?",
-                    buttons=QMessageBox.StandardButton.Yes
-                    | QMessageBox.StandardButton.No,
+                    self,
+                    "Check cursor",
+                    "Trace within 0.2 div of center?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 )
 
                 result = (
