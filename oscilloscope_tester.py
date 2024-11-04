@@ -1178,8 +1178,6 @@ class TestOscilloscope(QDialog, object):
                         reading1 *= 1000
 
                     if settings.function == "DCV-BAL":
-                        if units.startswith("m"):
-                            reading1 *= 1000
                         diff = reading1 - reading
                         excel.write_result(diff, col=results_col)  # auto saving
                     else:
