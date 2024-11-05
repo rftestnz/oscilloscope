@@ -1,5 +1,19 @@
 Oscilloscope Test Release Notes:
 
+Version			A.02.03
+Date:			20241105
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 		Functional
+
+Change Notes:
+ - Fixed issues with >4 channel scopes
+ - Recheck results columns when test function name changes
+
+===============================================================
+
 Version			A.02.02
 Date:			20241104
 
