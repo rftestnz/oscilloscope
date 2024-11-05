@@ -74,7 +74,8 @@ class TestOscilloscope(QDialog, object):
 
         if simulating:
             self.uut = Tektronix_Oscilloscope(simulate=simulating)
-            self.uut.model = "MSO5104B"
+            self.uut.model = "MSO68"
+            self.uut.num_channels = 6
             self.uut.open_connection()
             return True
 
