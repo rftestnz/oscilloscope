@@ -871,7 +871,7 @@ class TestOscilloscope(QDialog, object):
                     response = QMessageBox.information(
                         self,
                         "Connections",
-                        f"Connect 3458A Input to self.uut Ch {channel}, and sense",
+                        f"Connect 3458A Input to Ch {channel}, and sense",
                         buttons=QMessageBox.StandardButton.Ok
                         | QMessageBox.StandardButton.Cancel,
                     )
