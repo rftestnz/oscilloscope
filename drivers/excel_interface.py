@@ -801,18 +801,18 @@ class ExcelInterface:
             return True
 
         return False
-    
-    def write_cal_date(self)->None:
+
+    def write_cal_date(self) -> None:
         """
         Write the current date
         If the CalDate location is not assigned, it should be the cell above the model
         """
 
-        if nr:= self.get_named_cell("CalDate"):
-            self.ws.cell(column=nr.col, row=nr.row).value=datetime.today()
+        if nr := self.get_named_cell("CalDate"):
+            self.ws.cell(column=nr.col, row=nr.row).value = datetime.today()
 
         elif nr := self.get_named_cell("Model"):
-            self.ws.cell(column=nr.col, row=nr.row-1).value=datetime.today()
+            self.ws.cell(column=nr.col, row=nr.row - 1).value = datetime.today()
 
         self.save_sheet()
 
