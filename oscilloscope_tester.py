@@ -163,6 +163,8 @@ class TestOscilloscope(QDialog, object):
                 if test_name.startswith("DCV"):
                     sorted_steps.add(step)
 
+        sorted_steps = sorted(sorted_steps)
+
         print(list(sorted_steps))
 
         return list(sorted_steps)
