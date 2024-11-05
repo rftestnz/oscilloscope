@@ -176,6 +176,7 @@ class TestOscilloscope(QDialog, object):
         uut_address: str,
         parallel_channels: bool = False,
         skip_completed: bool = False,
+        num_channels: int = 4,
     ) -> None:
         """
         run_tests

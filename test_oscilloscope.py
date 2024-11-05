@@ -454,6 +454,7 @@ class UI(QMainWindow):
             uut_address=self.txt_uut_addr.text(),
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
+            num_channels=int(self.cmb_number_channels.currentText()),
         )
 
         self.progress_test.setVisible(False)
