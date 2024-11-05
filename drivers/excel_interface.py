@@ -849,10 +849,7 @@ class ExcelInterface:
         while row < self.__max_row:
             filt = self.ws.cell(column=1, row=row).value
 
-            if filt and filt > channel:  # type: ignore
-                # Hide this row
-
-                self.ws.row_dimensions[row].hidden = True  # type: ignore
+            self.ws.row_dimensions[row].hidden = filt and filt > channel  # type: ignore
 
             row += 1
 
