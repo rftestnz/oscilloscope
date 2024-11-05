@@ -977,7 +977,6 @@ class TestOscilloscope(QDialog, object):
             )
 
             if response == QMessageBox.StandardButton.Cancel:
-
                 return False
 
         # Turn off all channels but 1
@@ -1003,7 +1002,10 @@ class TestOscilloscope(QDialog, object):
             max_runs = 2 if self.use_filter else 1
 
             # If using filter we have to run through the sequencer twice
-            # First time does the high levels maye in parallel, second run low levels not in parallel
+            # First time does the high levels maybe in parallel, second run low levels not in parallel
+
+            # See if the test name has changed between rows, as the results column may be different
+            last_test_name = ""
 
             for run_count in range(max_runs):
                 for row in test_rows:
@@ -1012,11 +1014,27 @@ class TestOscilloscope(QDialog, object):
 
                     excel.row = row
 
+                    settings = excel.get_volt_settings()
+
+                    if settings.function != last_test_name:
+                        # Changed test name, update the results column
+                        last_test_name = settings.function
+
+                        results_col = excel.find_results_col(row=row)
+                        if results_col == 0:
+                            QMessageBox.critical(
+                                self,
+                                "Error",
+                                f"Unable to find results col from row {row}.\n"
+                                "Ensure col headed with results or measured",
+                            )
+                            return False
+
+                        excel.find_units_col(row)
+
                     if skip_completed:
                         if not excel.check_empty_result(results_col):
                             continue
-
-                    settings = excel.get_volt_settings()
 
                     if run_count >= 1 and settings.scale > max_filter_range:
                         # already measured
