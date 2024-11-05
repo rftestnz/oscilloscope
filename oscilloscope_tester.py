@@ -201,7 +201,11 @@ class TestOscilloscope(QDialog, object):
 
         self.abort_test = False
 
+        # This function sets the number of channels
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
+
+        if self.simulating:
+            self.uut.num_channels = num_channels
 
         with ExcelInterface(filename=filename) as excel:
             excel.backup()
