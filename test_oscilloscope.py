@@ -260,7 +260,7 @@ class UI(QMainWindow):
             self.txt_uut_addr.text(), simulating=simulating
         )
 
-        if uut_connected:
+        if uut_connected and not simulating:
             self.cmb_number_channels.setCurrentIndex(
                 self.cmb_number_channels.findText(str(check.uut.num_channels))
             )
