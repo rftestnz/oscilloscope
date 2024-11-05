@@ -74,7 +74,8 @@ class TestOscilloscope(QDialog, object):
 
         if simulating:
             self.uut = Tektronix_Oscilloscope(simulate=simulating)
-            self.uut.model = "MSO5104B"
+            self.uut.model = "MSO68"
+            self.uut.num_channels = 6
             self.uut.open_connection()
             return True
 
@@ -163,6 +164,8 @@ class TestOscilloscope(QDialog, object):
                 if test_name.startswith("DCV"):
                     sorted_steps.add(step)
 
+        sorted_steps = sorted(sorted_steps)
+
         print(list(sorted_steps))
 
         return list(sorted_steps)
@@ -174,6 +177,7 @@ class TestOscilloscope(QDialog, object):
         uut_address: str,
         parallel_channels: bool = False,
         skip_completed: bool = False,
+        num_channels: int = 4,
     ) -> None:
         """
         run_tests
@@ -197,7 +201,11 @@ class TestOscilloscope(QDialog, object):
 
         self.abort_test = False
 
+        # This function sets the number of channels
         self.load_uut_driver(address=uut_address, simulating=self.simulating)
+
+        if self.simulating:
+            self.uut.num_channels = num_channels
 
         with ExcelInterface(filename=filename) as excel:
             excel.backup()
@@ -871,7 +879,7 @@ class TestOscilloscope(QDialog, object):
                     response = QMessageBox.information(
                         self,
                         "Connections",
-                        f"Connect 3458A Input to self.uut Ch {channel}, and sense",
+                        f"Connect 3458A Input to Ch {channel}, and sense",
                         buttons=QMessageBox.StandardButton.Ok
                         | QMessageBox.StandardButton.Cancel,
                     )
@@ -969,7 +977,6 @@ class TestOscilloscope(QDialog, object):
             )
 
             if response == QMessageBox.StandardButton.Cancel:
-
                 return False
 
         # Turn off all channels but 1
@@ -995,7 +1002,10 @@ class TestOscilloscope(QDialog, object):
             max_runs = 2 if self.use_filter else 1
 
             # If using filter we have to run through the sequencer twice
-            # First time does the high levels maye in parallel, second run low levels not in parallel
+            # First time does the high levels maybe in parallel, second run low levels not in parallel
+
+            # See if the test name has changed between rows, as the results column may be different
+            last_test_name = ""
 
             for run_count in range(max_runs):
                 for row in test_rows:
@@ -1004,11 +1014,27 @@ class TestOscilloscope(QDialog, object):
 
                     excel.row = row
 
+                    settings = excel.get_volt_settings()
+
+                    if settings.function != last_test_name:
+                        # Changed test name, update the results column
+                        last_test_name = settings.function
+
+                        results_col = excel.find_results_col(row=row)
+                        if results_col == 0:
+                            QMessageBox.critical(
+                                self,
+                                "Error",
+                                f"Unable to find results col from row {row}.\n"
+                                "Ensure col headed with results or measured",
+                            )
+                            return False
+
+                        excel.find_units_col(row)
+
                     if skip_completed:
                         if not excel.check_empty_result(results_col):
                             continue
-
-                    settings = excel.get_volt_settings()
 
                     if run_count >= 1 and settings.scale > max_filter_range:
                         # already measured

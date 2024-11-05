@@ -260,7 +260,7 @@ class UI(QMainWindow):
             self.txt_uut_addr.text(), simulating=simulating
         )
 
-        if uut_connected:
+        if uut_connected and not simulating:
             self.cmb_number_channels.setCurrentIndex(
                 self.cmb_number_channels.findText(str(check.uut.num_channels))
             )
@@ -454,6 +454,7 @@ class UI(QMainWindow):
             uut_address=self.txt_uut_addr.text(),
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
+            num_channels=int(self.cmb_number_channels.currentText()),
         )
 
         self.progress_test.setVisible(False)
