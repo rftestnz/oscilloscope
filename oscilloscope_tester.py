@@ -66,7 +66,7 @@ class TestOscilloscope(QDialog, object):
         self.ks33250.go_to_local()
         self.ks3458.go_to_local()
 
-    def load_uut_driver(self, address: str, simulating: bool = False) -> bool:
+    def load_uut_driver(self, address: str, simulating: bool = False) -> tuple:
         """
         load_uut_driver
         Use a generic driver to figure out which driver of the scope should be used
@@ -114,7 +114,7 @@ class TestOscilloscope(QDialog, object):
         self.uut.visa_address = address
         self.uut.num_channels = num_channels
 
-        return True
+        return (True, self.uut)
 
     def consolidate_dcv_tests(self, test_steps: List, filename: str) -> List:
         """
