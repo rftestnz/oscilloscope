@@ -412,6 +412,9 @@ class TestOscilloscope(QDialog, object):
                 excel.row = row
 
                 settings = excel.get_volt_settings()
+
+                if int(settings.channel) > self.uut.num_channels:
+                    continue
                 units = excel.get_units()
 
                 if settings.function == "BAL":
@@ -992,6 +995,8 @@ class TestOscilloscope(QDialog, object):
 
         max_filter_range = 0.01  # 10 mVDiv
 
+        connected_channel = -1  # currently connected channel to calibrator
+
         with ExcelInterface(filename) as excel:
             results_col = excel.find_results_col(test_rows[0])
             if results_col == 0:
@@ -1097,6 +1102,9 @@ class TestOscilloscope(QDialog, object):
                             )
                             if response == QMessageBox.StandardButton.Cancel:
                                 return False
+
+                            connected_channel = channel
+
                         last_channel = channel
 
                     self.uut.set_channel(chan=channel, enabled=True)
