@@ -273,8 +273,8 @@ class UI(QMainWindow):
             )
 
         self.uut = uut_connected[1]
-        # self.uut.visa_address = self.txt_uut_addr.text()
-        self.uut.simulating = simulating
+        if self.uut:
+            self.uut.simulating = simulating
 
         self.lbl_uut_connection.setPixmap(
             QPixmap(connected_pix) if uut_connected else QPixmap(unconnected_pix)
