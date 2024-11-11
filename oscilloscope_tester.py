@@ -122,6 +122,9 @@ class TestOscilloscope(QDialog, object):
         Go through the test steps and all of the DCV and DCV-BAL tests group
         by channel to minimize channel swapping
 
+        Note: Ths function not really working correctly, as the tests don't always have the results and units cols
+        in the same place, which means when it skips table the cols may be incorrect
+
         Args:
             test_steps (List): _description_
             filename (str): _description_
@@ -167,6 +170,8 @@ class TestOscilloscope(QDialog, object):
         sorted_steps = sorted(sorted_steps)
 
         print(list(sorted_steps))
+
+        # reminder - the sort doesn't work as tables have results columns in different places
 
         return list(sorted_steps)
 
