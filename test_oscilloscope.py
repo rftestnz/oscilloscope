@@ -267,12 +267,13 @@ class UI(QMainWindow):
             self.txt_uut_addr.text(), simulating=simulating
         )
 
-        if uut_connected and not simulating:
+        if uut_connected[0] and not simulating:
             self.cmb_number_channels.setCurrentIndex(
                 self.cmb_number_channels.findText(str(check.uut.num_channels))
             )
 
-        self.uut.visa_address = self.txt_uut_addr.text()
+        self.uut = uut_connected[1]
+        # self.uut.visa_address = self.txt_uut_addr.text()
         self.uut.simulating = simulating
 
         self.lbl_uut_connection.setPixmap(
