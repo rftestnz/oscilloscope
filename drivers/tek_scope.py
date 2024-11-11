@@ -268,9 +268,15 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.num_channels = 4
 
-        if self.model.startswith("MSO") and len(self.model) == 5:
-            with contextlib.suppress(ValueError):
-                self.num_channels = int(self.model[-1])
+        if self.model.startswith("MSO"):
+
+            if len(self.model) == 5:
+                with contextlib.suppress(ValueError):
+                    self.num_channels = int(self.model[-1])
+
+            elif self.model.endswith("B"):
+                with contextlib.suppress(ValueError):
+                    self.num_channels = int(self.model[-2])
 
         # TODO Support mode models
 
@@ -286,7 +292,17 @@ class Tektronix_Oscilloscope(ScopeDriver):
             bw_limit (bool): _description_
         """
 
-        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+        if self.model in {
+            "MSO44",
+            "MSO46",
+            "MSO56",
+            "MSO58",
+            "MSO58B",
+            "MSO64",
+            "MSO66",
+            "MSO68",
+            "MSO68B",
+        }:
             if type(bw_limit) is str and bw_limit.find("M") > 0:
                 bw_limit = int(bw_limit.strip()[:-1]) * 1000000
             state = str(bw_limit) if bw_limit else "FULL"
@@ -631,7 +647,17 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.measure_clear()
 
-        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+        if self.model in {
+            "MSO44",
+            "MSO46",
+            "MSO56",
+            "MSO58",
+            "MSO58B",
+            "MSO64",
+            "MSO66",
+            "MSO68",
+            "MSO68B",
+        }:
             self.write("MEASU:MEAS1:TYPE RISETIME")
         else:
             self.write("MEASU:MEAS1:TYPE RISE")
