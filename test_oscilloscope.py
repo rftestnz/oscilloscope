@@ -196,7 +196,14 @@ class UI(QMainWindow):
 
         self.check_excel_button()
 
-    def test_connections(self) -> None:
+    def test_connections(self) -> bool:
+        """
+        test_connections
+        Check instruments connected
+
+        Returns:
+            bool: state of uut connection, the only one that is critical
+        """
         connected_pix = get_path("ui\\tick.png")
         unconnected_pix = get_path("ui\\cross.png")
         simulating = self.cb_simulating.isChecked()
@@ -288,6 +295,8 @@ class UI(QMainWindow):
         self.settings.setValue("3458 gpib", self.cmb3458_gpib.currentText())
         self.settings.setValue("3458 addr", self.cmb3458_addr.currentText())
         self.settings.setValue("uut addr", self.txt_uut_addr.text())
+
+        return uut_connected[0]
 
     def browse_results(self) -> None:
         dir = "."
