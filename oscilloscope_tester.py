@@ -251,6 +251,8 @@ class TestOscilloscope(QDialog, object):
 
             # Would like to join DCV and DCV-BAL into same test for consolidating.
 
+            done_dcv = False
+
             for test_name in ordered_test_names:
                 testing_rows = excel.get_test_rows(test_name)
                 # At the moment we only do full tests, so we can get the
@@ -259,15 +261,20 @@ class TestOscilloscope(QDialog, object):
                 # TODO use functional method
 
                 if "DCV" in test_name:
+                    if done_dcv:
+                        continue
                     sorted_rows = self.consolidate_dcv_tests(
                         test_rows, filename=filename
                     )
+                    done_dcv = True  # Set before the test as we don't want to run it more than once if completed or cancelled
+
                     if not self.test_dcv(
                         filename=filename,
                         test_rows=sorted_rows,
                         parallel_channels=parallel_channels,
                         skip_completed=skip_completed,
                     ):
+
                         break
 
                 elif test_name == "POS":
