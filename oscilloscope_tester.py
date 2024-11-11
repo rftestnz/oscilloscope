@@ -77,7 +77,7 @@ class TestOscilloscope(QDialog, object):
             self.uut.model = "MSO68"
             self.uut.num_channels = 6
             self.uut.open_connection()
-            return True
+            return (True, self.uut)
 
         # TODO when using the SCPI ID class, it affects all subsequent uses
 
@@ -91,7 +91,7 @@ class TestOscilloscope(QDialog, object):
             QMessageBox.critical(
                 self, "Error", "Unable to contact UUT. Is address correct?"
             )
-            return False
+            return (False, None)
         elif manufacturer == "KEYSIGHT":
             self.uut = Keysight_Oscilloscope(simulate=False)
 
