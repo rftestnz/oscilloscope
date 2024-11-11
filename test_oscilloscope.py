@@ -358,7 +358,21 @@ class UI(QMainWindow):
                     )
                     return
 
-                self.test_connections()
+                if not self.test_connections():
+                    return
+
+                if (
+                    self.uut.manufacturer.startswith("TEK")
+                    and not self.cb_filter_low_ranges.isChecked()
+                ):
+                    reply = QMessageBox.question(
+                        self,
+                        "Use filter",
+                        "Recommend using filter for Tek scopes. Enable?",
+                    )
+
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.cb_filter_low_ranges.setChecked(True)
 
                 test_names = excel.get_test_types()
 
