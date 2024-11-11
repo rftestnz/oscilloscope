@@ -907,9 +907,9 @@ class TestOscilloscope(QDialog, object):
                 )
                 self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
 
-                time.sleep(0.5)
+                time.sleep(1)
 
-                reading = self.ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
+                reading = self.ks3458.measure(function=Ks3458A_Function.R4W, number_readings=5)["Average"]  # type: ignore
                 if units.lower().startswith("k"):
                     reading /= 1000
                 if units.upper().startswith("M"):
