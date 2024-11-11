@@ -99,7 +99,7 @@ class TestOscilloscope(QDialog, object):
             self.uut = Tektronix_Oscilloscope(simulate=False)
             self.uut.visa_address = address
             self.uut.open_connection()
-            self.num_channels = self.uut.get_number_channels()
+            num_channels = self.uut.get_number_channels()
 
         elif manufacturer == "ROHDE&SCHWARZ":
             self.uut = RohdeSchwarz_Oscilloscope(simulate=False)
