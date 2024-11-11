@@ -1204,6 +1204,15 @@ class TestOscilloscope(QDialog, object):
 
                     reading = self.uut.measure_voltage(chan=channel, delay=1)
 
+                    if (
+                        settings.scale == 0.001
+                        and abs(settings.offset) > 0
+                        and abs(reading) < 9e40
+                    ):
+                        # reading was off scale, so go to 2mV and try again
+                        self.uut.set_voltage_scale(chan=channel, scale=0.002)
+                        reading = self.uut.measure_voltage(chan=channel, delay=1)
+
                     if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                         voltage2 = self.uut.read_cursor_avg()
 
