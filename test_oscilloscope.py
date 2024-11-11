@@ -448,13 +448,19 @@ class UI(QMainWindow):
         self.tester.test_progress.connect(self.update_progress)
         self.tester.current_test.connect(self.current_test_message)
 
+        try:
+            num_channels = int(self.cmb_number_channels.currentText())
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Invalid number of channels")
+            return
+
         self.tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
             uut_address=self.txt_uut_addr.text(),
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
-            num_channels=int(self.cmb_number_channels.currentText()),
+            num_channels=num_channels,
         )
 
         self.progress_test.setVisible(False)
