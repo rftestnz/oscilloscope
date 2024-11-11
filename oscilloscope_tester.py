@@ -1081,9 +1081,7 @@ class TestOscilloscope(QDialog, object):
                         ):
                             message = f"Connect Calibrator output to channel {channel}"
                             if self.use_filter and settings.scale <= max_filter_range:
-                                message += (
-                                    " via 0.15 uF capacitor direct to input channel"
-                                )
+                                message += " via 0.15 uF capacitor direct to input"
 
                             response = QMessageBox.information(
                                 self,
