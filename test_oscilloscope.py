@@ -412,12 +412,14 @@ class UI(QMainWindow):
                     test_steps.extend(iter(rows))
 
                 self.do_parallel = False
-                if "DCV" in selector.selected_tests:
-                    self.do_parallel = True
-                if "DCV-BAL" in selector.selected_tests:
-                    self.do_parallel = True
-                if "CURS" in selector.selected_tests:
-                    self.do_parallel = True
+
+                if int(self.cmb_number_channels.currentText()) <= 4:
+                    if "DCV" in selector.selected_tests:
+                        self.do_parallel = True
+                    if "DCV-BAL" in selector.selected_tests:
+                        self.do_parallel = True
+                    if "CURS" in selector.selected_tests:
+                        self.do_parallel = True
 
                 test_rows = sorted(test_steps)
 
