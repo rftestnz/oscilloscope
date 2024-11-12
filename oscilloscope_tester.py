@@ -116,63 +116,6 @@ class TestOscilloscope(QDialog, object):
 
         return (True, self.uut)
 
-    def consolidate_dcv_tests(self, test_steps: List, filename: str) -> List:
-        """
-        consolidate_dcv_tests
-        Go through the test steps and all of the DCV and DCV-BAL tests group
-        by channel to minimize channel swapping
-
-        Note: Ths function not really working correctly, as the tests don't always have the results and units cols
-        in the same place, which means when it skips table the cols may be incorrect
-
-        Args:
-            test_steps (List): _description_
-            filename (str): _description_
-
-        Returns:
-            List: _description_
-        """
-
-        sorted_steps = []
-
-        # we only have the row number, so have to read it again
-
-        # Go through first to get the DCV tests
-
-        with ExcelInterface(filename=filename) as excel:
-            for step in test_steps:
-                test_name, channel = excel.get_test_name(step)
-                if test_name.startswith("DCV"):
-                    sorted_steps.append(
-                        (channel, step)
-                    )  # Append channel first to help with sorting
-
-            new_list = sorted(sorted_steps)
-
-            print(new_list)
-
-            # and make a new list with just the row numbers
-
-            sorted_steps = set()
-
-            for step in new_list:
-                sorted_steps.add(step[1])
-
-            # And the rest of the steps
-
-            for step in test_steps:
-                test_name, channel = excel.get_test_name(step)
-                if test_name.startswith("DCV"):
-                    sorted_steps.add(step)
-
-        sorted_steps = sorted(sorted_steps)
-
-        print(list(sorted_steps))
-
-        # reminder - the sort doesn't work as tables have results columns in different places
-
-        return list(sorted_steps)
-
     def run_tests(
         self,
         filename: str,
@@ -186,6 +129,10 @@ class TestOscilloscope(QDialog, object):
         run_tests
         Main test sequencer
         From the list of test rows, work out the test names and call the appropriate functions
+
+        Currently only performs whole tests, although for DCV tests skip rows allows retest by deleting suspicioous results
+
+        Other tests skip rows not implemented as they are quick to perform
 
         Args:
             filename (str): _description_
@@ -247,28 +194,19 @@ class TestOscilloscope(QDialog, object):
                 name for name in excel.supported_test_names if name in test_names
             ]
 
-            # Would like to join DCV and DCV-BAL into same test for consolidating.
-
-            done_dcv = False
-
             for test_name in ordered_test_names:
                 testing_rows = excel.get_test_rows(test_name)
                 # At the moment we only do full tests, so we can get the
                 # test rows from the excel sheet
 
-                # TODO use functional method
+                # Had consolidated DCV and DCV-BAL into one test, but as the tables have different columns it
+                # offered no advantage
 
                 if "DCV" in test_name:
-                    if done_dcv:
-                        continue
-                    sorted_rows = self.consolidate_dcv_tests(
-                        test_rows, filename=filename
-                    )
-                    done_dcv = True  # Set before the test as we don't want to run it more than once if completed or cancelled
 
                     if not self.test_dcv(
                         filename=filename,
-                        test_rows=sorted_rows,
+                        test_rows=testing_rows,
                         parallel_channels=parallel_channels,
                         skip_completed=skip_completed,
                     ):
