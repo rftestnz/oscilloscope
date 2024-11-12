@@ -1808,7 +1808,7 @@ class TestOscilloscope(QDialog, object):
                 self.uut.set_trigger_level(chan=settings.channel, level=0)
 
                 risetime = (
-                    self.uut.measure_risetime(chan=settings.channel, num_readings=1)
+                    self.uut.measure_risetime(chan=settings.channel, num_readings=10)
                     * 1e9
                 )
 
