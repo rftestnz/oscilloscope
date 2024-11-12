@@ -664,14 +664,15 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        # print(self.read_query("MEASU:MEAS1:COUNT?"))
-
         if not self.simulating:
-            time.sleep(2)  # allow time to measure
+            time.sleep(1)  # allow time to measure
 
-        # Tek will automatically average successive readings
+        total = 0
+        for _ in range(num_readings):
+            total += self.read_query("MEASU:MEAS1:VAL?")
+            time.sleep(0.1)
 
-        return self.read_query("MEASU:MEAS1:VAL?")
+        return total / num_readings
 
     def read_cursor(self, cursor: str) -> float:
         """
