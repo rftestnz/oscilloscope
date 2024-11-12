@@ -1204,10 +1204,12 @@ class TestOscilloscope(QDialog, object):
 
                     reading = self.uut.measure_voltage(chan=channel, delay=1)
 
+                    # MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
+
                     if (
                         settings.scale == 0.001
                         and abs(settings.offset) > 0
-                        and abs(reading) < 9e40
+                        and abs(reading) > 9e30
                     ):
                         # reading was off scale, so go to 2mV and try again
                         self.uut.set_voltage_scale(chan=channel, scale=0.002)
