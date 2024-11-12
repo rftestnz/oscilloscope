@@ -381,6 +381,9 @@ class UI(QMainWindow):
 
                 print(selector.selected_tests)
 
+                if not selector.selected_tests:
+                    return  # cancelled
+
                 # Now we have the list of test names, we need to get the associated test rows
 
                 # Have to trap CURS tests, as the results come from the DCV tests. If DCV selected automatically select CURS, if CURS only display message
