@@ -21,6 +21,8 @@ class IndividualTestSelector(QDialog):
 
         self.checkboxes: list[QCheckBox] = []
 
+        self.cb_all = QCheckBox()
+
         self.selector = QDialog()
         self.selector.setWindowTitle("Select tests to perform")
 
@@ -33,6 +35,13 @@ class IndividualTestSelector(QDialog):
             cb.setChecked(False)
             self.checkboxes.append(cb)
             self.layout1.addWidget(cb)
+
+        self.layout1.addWidget(QLabel(""))  # Spacer
+
+        self.cb_all = QCheckBox("All/None")
+        self.cb_all.setChecked(False)
+        self.cb_all.clicked.connect(self.all_checkboxes)
+        self.layout1.addWidget(self.cb_all)
 
         buttons = (
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
@@ -60,3 +69,15 @@ class IndividualTestSelector(QDialog):
                     self.selected_tests.append(cb.text())
 
         self.selector.close()
+
+    def all_checkboxes(self) -> None:
+        """
+        all_checkboxes
+        Set all to the state of the All checkbox
+
+        Args:
+            cb (QCheckBox): _description_
+        """
+
+        for cb in self.checkboxes:
+            cb.setChecked(self.cb_all.isChecked())
