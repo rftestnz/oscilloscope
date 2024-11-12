@@ -588,7 +588,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return self.read_query("MEASU:MEAS1:VAL?")
 
-    def get_waveform(self, chan: int, delay: float) -> None:
+    def get_waveform(self, chan: int, delay: float) -> tuple:
         """
         measure_voltage _summary_
 
@@ -610,7 +610,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             xincr = float(self.query("WFMINPRE:XINCR?"))
             xdelay = float(self.query("HORizontal:POSition?"))
             self.write("CURVE?")
-            data = self.instr.read_raw()
+            data = self.instr.read_raw()  # type: ignore
             headerlen = 2 + int(data[1])
             header = data[:headerlen]
             ADC_wave = data[headerlen:-1]
@@ -619,9 +619,9 @@ class Tektronix_Oscilloscope(ScopeDriver):
             Time = np.arange(0, (xincr * len(Volts)), xincr) - (
                 (xincr * len(Volts)) / 2 - xdelay
             )
-            return Time, Volts
+            return (Time, Volts)
         except IndexError:
-            return 0, 0
+            return (0, 0)
 
     def measure_clear(self) -> None:
         """
