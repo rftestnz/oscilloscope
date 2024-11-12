@@ -137,8 +137,6 @@ class TestOscilloscope(QDialog, object):
 
         # we only have the row number, so have to read it again
 
-        # TODO full settings are available, use them
-
         # Go through first to get the DCV tests
 
         with ExcelInterface(filename=filename) as excel:
