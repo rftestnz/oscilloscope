@@ -2,27 +2,13 @@
  Dialog to show all of the USB addresses of attached devices
 """
 
-from PyQt6 import uic
-from PyQt6.QtCore import QObject, QSettings, Qt
-from PyQt6.QtGui import QAction, QIcon, QPixmap
 from PyQt6.QtWidgets import (
-    QApplication,
-    QCheckBox,
-    QRadioButton,
-    QComboBox,
-    QFileDialog,
-    QGroupBox,
-    QLabel,
-    QLineEdit,
-    QMainWindow,
-    QMenuBar,
-    QMessageBox,
-    QPushButton,
-    QStatusBar,
     QDialog,
-    QVBoxLayout,
     QDialogButtonBox,
-    QWidget,
+    QLabel,
+    QPushButton,
+    QRadioButton,
+    QVBoxLayout,
 )
 
 
