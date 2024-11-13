@@ -30,7 +30,9 @@ class IndividualTestSelector(QDialog):
 
         self.layout1.addWidget(QLabel("Select tests to perform"))
 
-        for name in test_names:
+        # list is unordered and changes each time, so order alphabetically
+
+        for name in sorted(test_names):
             cb = QCheckBox(name)
             cb.setChecked(False)
             self.checkboxes.append(cb)
