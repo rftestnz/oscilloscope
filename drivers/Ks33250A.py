@@ -98,6 +98,7 @@ class Ks33250A:
                 self.manufacturer = "Keysight"
                 self.serial = "666"
             else:
+                self.rm = pyvisa.ResourceManager()
                 self.instr = self.rm.open_resource(
                     self.visa_address, write_termination="\n"
                 )
