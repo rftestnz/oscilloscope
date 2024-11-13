@@ -665,12 +665,16 @@ class Tektronix_Oscilloscope(ScopeDriver):
         self.write("MEASU:MEAS1:STATE ON")
 
         if not self.simulating:
-            time.sleep(1)  # allow time to measure
+            time.sleep(2)  # allow time to measure
+
+        temp = self.read_query("MEASU:MEAS1:VAL?")
+        if temp > 9e30:
+            time.sleep(2)  # some models takes much longer to get an initial reading
 
         total = 0
         for _ in range(num_readings):
             total += self.read_query("MEASU:MEAS1:VAL?")
-            time.sleep(0.1)
+            time.sleep(0.2)
 
         return total / num_readings
 
