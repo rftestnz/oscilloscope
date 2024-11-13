@@ -214,11 +214,18 @@ class UI(QMainWindow):
         self.cmb3458_gpib.setEnabled(impedance_tests)
         self.lbl3458_connection.setVisible(impedance_tests)
 
+        # The 32250A is used for most scopes, but not the Tek MSO4, MSO5, and MSO6 series
+        time_tests = self.check_test_required("TIME")
+        self.cmb33250_addr.setEnabled(time_tests)
+        self.cmb33250_gpib.setEnabled(time_tests)
+        self.lbl33250_connection.setVisible(time_tests)
+
         if self.cmb_calibrator.currentText() == "M142":
             self.calibrator = self.m142
         else:
             self.calibrator = self.fl5700
 
+        self.calibrator.close()
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
@@ -230,16 +237,17 @@ class UI(QMainWindow):
         self.lbl_calibrator_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
-        self.ks33250.simulating = simulating
-        self.ks33250.open_connection()
-        self.lbl33250_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.ks33250.is_connected()
-            else QPixmap(unconnected_pix)
-        )
-        self.lbl33250_connection.resize(QPixmap(connected_pix).size())
-        QApplication.processEvents()
+        if time_tests:
+            self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
+            self.ks33250.simulating = simulating
+            self.ks33250.open_connection()
+            self.lbl33250_connection.setPixmap(
+                QPixmap(connected_pix)
+                if self.ks33250.is_connected()
+                else QPixmap(unconnected_pix)
+            )
+            self.lbl33250_connection.resize(QPixmap(connected_pix).size())
+            QApplication.processEvents()
 
         if impedance_tests:
             self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
