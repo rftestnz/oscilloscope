@@ -285,7 +285,7 @@ class UI(QMainWindow):
             self.uut.simulating = simulating
 
         self.lbl_uut_connection.setPixmap(
-            QPixmap(connected_pix) if uut_connected else QPixmap(unconnected_pix)
+            QPixmap(connected_pix) if uut_connected[0] else QPixmap(unconnected_pix)
         )
         self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
