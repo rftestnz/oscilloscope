@@ -38,7 +38,7 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.02.03"
+VERSION = "A.02.04"
 
 
 class UI(QMainWindow):
