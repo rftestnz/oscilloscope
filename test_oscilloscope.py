@@ -209,7 +209,7 @@ class UI(QMainWindow):
         simulating = self.cb_simulating.isChecked()
 
         # Check impedance first calls the check result sheet
-        impedance_tests = self.check_impedance()
+        impedance_tests = self.check_test_required("IMP")
         self.cmb3458_addr.setEnabled(impedance_tests)
         self.cmb3458_gpib.setEnabled(impedance_tests)
         self.lbl3458_connection.setVisible(impedance_tests)
@@ -546,7 +546,7 @@ class UI(QMainWindow):
 
             return True
 
-    def check_impedance(self) -> bool:
+    def check_test_required(self, test_name: str) -> bool:
         """
         check_impedance
         Check the results sheet to see if there are any impedance tests.
@@ -569,7 +569,7 @@ class UI(QMainWindow):
 
             valid_tests = excel.get_test_types()
 
-        return "IMP" in valid_tests
+        return test_name in valid_tests
 
     def hide_excel_rows(self) -> None:
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
