@@ -38,7 +38,7 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.02.03"
+VERSION = "A.02.04"
 
 
 class UI(QMainWindow):
@@ -131,7 +131,7 @@ class UI(QMainWindow):
         self.btn_abort.setVisible(False)
 
         self.cb_filter_low_ranges.setChecked(False)
-
+        self.cb_skip_rows.setChecked(False)
         self.txt_results_file.setText(self.settings.value("filename"))
 
         self.cmb_number_channels.addItems(["2", "4", "6", "8"])
@@ -196,22 +196,36 @@ class UI(QMainWindow):
 
         self.check_excel_button()
 
-    def test_connections(self) -> None:
+    def test_connections(self) -> bool:
+        """
+        test_connections
+        Check instruments connected
+
+        Returns:
+            bool: state of uut connection, the only one that is critical
+        """
         connected_pix = get_path("ui\\tick.png")
         unconnected_pix = get_path("ui\\cross.png")
         simulating = self.cb_simulating.isChecked()
 
         # Check impedance first calls the check result sheet
-        impedance_tests = self.check_impedance()
+        impedance_tests = self.check_test_required("IMP")
         self.cmb3458_addr.setEnabled(impedance_tests)
         self.cmb3458_gpib.setEnabled(impedance_tests)
         self.lbl3458_connection.setVisible(impedance_tests)
+
+        # The 32250A is used for most scopes, but not the Tek MSO4, MSO5, and MSO6 series
+        time_tests = self.check_test_required("TIME")
+        self.cmb33250_addr.setEnabled(time_tests)
+        self.cmb33250_gpib.setEnabled(time_tests)
+        self.lbl33250_connection.setVisible(time_tests)
 
         if self.cmb_calibrator.currentText() == "M142":
             self.calibrator = self.m142
         else:
             self.calibrator = self.fl5700
 
+        self.calibrator.close()
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
@@ -223,16 +237,17 @@ class UI(QMainWindow):
         self.lbl_calibrator_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
 
-        self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
-        self.ks33250.simulating = simulating
-        self.ks33250.open_connection()
-        self.lbl33250_connection.setPixmap(
-            QPixmap(connected_pix)
-            if self.ks33250.is_connected()
-            else QPixmap(unconnected_pix)
-        )
-        self.lbl33250_connection.resize(QPixmap(connected_pix).size())
-        QApplication.processEvents()
+        if time_tests:
+            self.ks33250.visa_address = f"{self.cmb33250_gpib.currentText()}::{self.cmb33250_addr.currentText()}::INSTR"
+            self.ks33250.simulating = simulating
+            self.ks33250.open_connection()
+            self.lbl33250_connection.setPixmap(
+                QPixmap(connected_pix)
+                if self.ks33250.is_connected()
+                else QPixmap(unconnected_pix)
+            )
+            self.lbl33250_connection.resize(QPixmap(connected_pix).size())
+            QApplication.processEvents()
 
         if impedance_tests:
             self.ks3458.visa_address = f"{self.cmb3458_gpib.currentText()}::{self.cmb3458_addr.currentText()}::INSTR"
@@ -260,16 +275,17 @@ class UI(QMainWindow):
             self.txt_uut_addr.text(), simulating=simulating
         )
 
-        if uut_connected and not simulating:
+        if uut_connected[0] and not simulating:
             self.cmb_number_channels.setCurrentIndex(
                 self.cmb_number_channels.findText(str(check.uut.num_channels))
             )
 
-        self.uut.visa_address = self.txt_uut_addr.text()
-        self.uut.simulating = simulating
+        self.uut = uut_connected[1]
+        if self.uut:
+            self.uut.simulating = simulating
 
         self.lbl_uut_connection.setPixmap(
-            QPixmap(connected_pix) if uut_connected else QPixmap(unconnected_pix)
+            QPixmap(connected_pix) if uut_connected[0] else QPixmap(unconnected_pix)
         )
         self.lbl_uut_connection.resize(QPixmap(connected_pix).size())
         QApplication.processEvents()
@@ -288,6 +304,8 @@ class UI(QMainWindow):
         self.settings.setValue("3458 gpib", self.cmb3458_gpib.currentText())
         self.settings.setValue("3458 addr", self.cmb3458_addr.currentText())
         self.settings.setValue("uut addr", self.txt_uut_addr.text())
+
+        return uut_connected[0]
 
     def browse_results(self) -> None:
         dir = "."
@@ -348,7 +366,21 @@ class UI(QMainWindow):
                     )
                     return
 
-                self.test_connections()
+                if not self.test_connections():
+                    return
+
+                if (
+                    self.uut.manufacturer.startswith("TEK")
+                    and not self.cb_filter_low_ranges.isChecked()
+                ):
+                    reply = QMessageBox.question(
+                        self,
+                        "Use filter",
+                        "Recommend using filter for Tek scopes. Enable?",
+                    )
+
+                    if reply == QMessageBox.StandardButton.Yes:
+                        self.cb_filter_low_ranges.setChecked(True)
 
                 test_names = excel.get_test_types()
 
@@ -356,6 +388,9 @@ class UI(QMainWindow):
                 selector.show()
 
                 print(selector.selected_tests)
+
+                if not selector.selected_tests:
+                    return  # cancelled
 
                 # Now we have the list of test names, we need to get the associated test rows
 
@@ -388,12 +423,14 @@ class UI(QMainWindow):
                     test_steps.extend(iter(rows))
 
                 self.do_parallel = False
-                if "DCV" in selector.selected_tests:
-                    self.do_parallel = True
-                if "DCV-BAL" in selector.selected_tests:
-                    self.do_parallel = True
-                if "CURS" in selector.selected_tests:
-                    self.do_parallel = True
+
+                if int(self.cmb_number_channels.currentText()) <= 4:
+                    if "DCV" in selector.selected_tests:
+                        self.do_parallel = True
+                    if "DCV-BAL" in selector.selected_tests:
+                        self.do_parallel = True
+                    if "CURS" in selector.selected_tests:
+                        self.do_parallel = True
 
                 test_rows = sorted(test_steps)
 
@@ -448,13 +485,19 @@ class UI(QMainWindow):
         self.tester.test_progress.connect(self.update_progress)
         self.tester.current_test.connect(self.current_test_message)
 
+        try:
+            num_channels = int(self.cmb_number_channels.currentText())
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Invalid number of channels")
+            return
+
         self.tester.run_tests(
             filename=self.txt_results_file.text(),
             test_rows=test_rows,
             uut_address=self.txt_uut_addr.text(),
             parallel_channels=self.do_parallel,
             skip_completed=self.cb_skip_rows.isChecked(),
-            num_channels=int(self.cmb_number_channels.currentText()),
+            num_channels=num_channels,
         )
 
         self.progress_test.setVisible(False)
@@ -511,7 +554,7 @@ class UI(QMainWindow):
 
             return True
 
-    def check_impedance(self) -> bool:
+    def check_test_required(self, test_name: str) -> bool:
         """
         check_impedance
         Check the results sheet to see if there are any impedance tests.
@@ -534,7 +577,7 @@ class UI(QMainWindow):
 
             valid_tests = excel.get_test_types()
 
-        return "IMP" in valid_tests
+        return test_name in valid_tests
 
     def hide_excel_rows(self) -> None:
         with ExcelInterface(filename=self.txt_results_file.text()) as excel:
@@ -596,69 +639,3 @@ if __name__ == "__main__":
     window = UI()
     window.show()
     app.exec()
-
-
-def template_help() -> None:
-    """
-    template_help _summary_
-    """
-
-    help_text = """
-Test data  begins to the right of test data, outside print area.
-
-There are 3 types of setting data, all columns must be specified, data not required in all columns though.
-
-The presence of the data in the function column determines if this is an automated test row.
-
-For the first row, name the cell in the function column 'StartCell' so the software knows where to start looking.
-
-The software will look for a column including the text 'result' or 'measured' to store the test result for that table
-
-The only implemented test names (exactly) are:
-
-BAL - DC Balance test, DC Volts with no signal applied
-DCV - DC Voltage tests
-DCV-BAL - Tek style test where positive and negative voltage are applied
-POS - Vertical position test (Tektronix)
-CURS - Keysight test of cursor delta
-RISE - Risetime using fast pulse generator
-TIME - Timebase test
-TRIG - Trigger sensitivity test
-
-Columns:
-There are 3 different sets of column tyopes for the tests
-
-DCV, DCV-BAL, POS, BAL
-Function, Channel, Coupling [AC/DC/GND], Scale (1x probe), Voltage (calibrator), Offset, Bandwidth, Impedance, Invert
-
-TIME, RISE
-Function, Channel (blank for time), Timebase (ns), Impedance, Bandwidth (MHz)
-Impedance use 50 if available, else blank
-
-TRIG
-Function, Channel [1-4,EXT], Scale (1x probe), Voltage (RF Source), Impedance (channel input), Frequency (MHz), Edge [Rise/Fall]
-
-Don't mix tables with different types of tests. The above column headers are not read, just assumed
-    """
-
-    layout = [
-        [
-            sg.Text(
-                "Ensure the following are followed in creating/modifying template",
-                background_color="blue",
-            )
-        ],
-        [sg.Multiline(default_text=help_text, size=(60, 20), disabled=True)],
-        [sg.Ok(size=(12, 1))],
-    ]
-
-    window = sg.Window(
-        "Template setup",
-        layout=layout,
-        icon=get_path("ui\\scope.ico"),
-        background_color="blue",
-    )
-
-    window.read()
-
-    window.close()

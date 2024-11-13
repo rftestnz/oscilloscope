@@ -1,5 +1,26 @@
 Oscilloscope Test Release Notes:
 
+Version			A.02.04
+Date:			20241114
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 		Functional
+
+Change Notes:
+ - Numerous changes for Tek MSO series
+    o risetime averaging
+    o extra MSO models in driver
+ - Removed DCV consolidation test steps
+ - Reinit resource manager for all drivers on open connection
+ - optional 33250a check
+ - test selection alpha order
+ - test all/none selection
+ - don't offer parallel for >4 channel
+
+===============================================================
+
 Version			A.02.03
 Date:			20241105
 

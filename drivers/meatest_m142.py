@@ -102,6 +102,7 @@ class M142:
                 self.manufacturer = "Meatest"
                 self.serial = "666"
             else:
+                self.rm = pyvisa.ResourceManager()
                 self.instr = self.rm.open_resource(
                     self.visa_address, write_termination="\n"
                 )
@@ -109,7 +110,8 @@ class M142:
                 # self.instr.control_ren(VI_GPIB_REN_ASSERT)  # type: ignore
                 self.get_id()
             self.connected = True
-        except Exception:
+        except Exception as ex:
+            print(f"M142 Exception: {ex}")
             self.connected = False
 
         return self.connected
@@ -118,7 +120,9 @@ class M142:
         """
         close _summary_
         """
-        self.instr.close()  # type: ignore
+        with contextlib.suppress(Exception):
+            self.instr.close()  # type: ignore
+
         self.connected = False
 
     def go_to_local(self) -> None:

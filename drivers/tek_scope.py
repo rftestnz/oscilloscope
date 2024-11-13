@@ -79,6 +79,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
                 self.manufacturer = "Tektronix"
                 self.serial = "666"
             else:
+                self.rm = pyvisa.ResourceManager()
                 self.instr = self.rm.open_resource(
                     self.visa_address, write_termination="\n"
                 )
@@ -268,9 +269,15 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.num_channels = 4
 
-        if self.model.startswith("MSO") and len(self.model) == 5:
-            with contextlib.suppress(ValueError):
-                self.num_channels = int(self.model[-1])
+        if self.model.startswith("MSO"):
+
+            if len(self.model) == 5:
+                with contextlib.suppress(ValueError):
+                    self.num_channels = int(self.model[-1])
+
+            elif self.model.endswith("B"):
+                with contextlib.suppress(ValueError):
+                    self.num_channels = int(self.model[-2])
 
         # TODO Support mode models
 
@@ -286,7 +293,17 @@ class Tektronix_Oscilloscope(ScopeDriver):
             bw_limit (bool): _description_
         """
 
-        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+        if self.model in {
+            "MSO44",
+            "MSO46",
+            "MSO56",
+            "MSO58",
+            "MSO58B",
+            "MSO64",
+            "MSO66",
+            "MSO68",
+            "MSO68B",
+        }:
             if type(bw_limit) is str and bw_limit.find("M") > 0:
                 bw_limit = int(bw_limit.strip()[:-1]) * 1000000
             state = str(bw_limit) if bw_limit else "FULL"
@@ -572,7 +589,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         return self.read_query("MEASU:MEAS1:VAL?")
 
-    def get_waveform(self, chan: int, delay: float) -> None:
+    def get_waveform(self, chan: int, delay: float) -> tuple:
         """
         measure_voltage _summary_
 
@@ -594,7 +611,7 @@ class Tektronix_Oscilloscope(ScopeDriver):
             xincr = float(self.query("WFMINPRE:XINCR?"))
             xdelay = float(self.query("HORizontal:POSition?"))
             self.write("CURVE?")
-            data = self.instr.read_raw()
+            data = self.instr.read_raw()  # type: ignore
             headerlen = 2 + int(data[1])
             header = data[:headerlen]
             ADC_wave = data[headerlen:-1]
@@ -603,9 +620,9 @@ class Tektronix_Oscilloscope(ScopeDriver):
             Time = np.arange(0, (xincr * len(Volts)), xincr) - (
                 (xincr * len(Volts)) / 2 - xdelay
             )
-            return Time, Volts
+            return (Time, Volts)
         except IndexError:
-            return 0, 0
+            return (0, 0)
 
     def measure_clear(self) -> None:
         """
@@ -631,21 +648,36 @@ class Tektronix_Oscilloscope(ScopeDriver):
 
         self.measure_clear()
 
-        if self.model in {"MSO44", "MSO46", "MSO56", "MSO58", "MSO64", "MSO66"}:
+        if self.model in {
+            "MSO44",
+            "MSO46",
+            "MSO56",
+            "MSO58",
+            "MSO58B",
+            "MSO64",
+            "MSO66",
+            "MSO68",
+            "MSO68B",
+        }:
             self.write("MEASU:MEAS1:TYPE RISETIME")
         else:
             self.write("MEASU:MEAS1:TYPE RISE")
         self.write(f"MEASU:MEAS1:SOURCE CH{chan}")
         self.write("MEASU:MEAS1:STATE ON")
 
-        # print(self.read_query("MEASU:MEAS1:COUNT?"))
-
         if not self.simulating:
             time.sleep(2)  # allow time to measure
 
-        # Tek will automatically average successive readings
+        temp = self.read_query("MEASU:MEAS1:VAL?")
+        if temp > 9e30:
+            time.sleep(2)  # some models takes much longer to get an initial reading
 
-        return self.read_query("MEASU:MEAS1:VAL?")
+        total = 0
+        for _ in range(num_readings):
+            total += self.read_query("MEASU:MEAS1:VAL?")
+            time.sleep(0.2)
+
+        return total / num_readings
 
     def read_cursor(self, cursor: str) -> float:
         """
