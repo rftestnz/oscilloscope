@@ -66,7 +66,7 @@ class TestOscilloscope(QDialog, object):
         self.ks33250.go_to_local()
         self.ks3458.go_to_local()
 
-    def load_uut_driver(self, address: str, simulating: bool = False) -> bool:
+    def load_uut_driver(self, address: str, simulating: bool = False) -> tuple:
         """
         load_uut_driver
         Use a generic driver to figure out which driver of the scope should be used
@@ -77,7 +77,7 @@ class TestOscilloscope(QDialog, object):
             self.uut.model = "MSO68"
             self.uut.num_channels = 6
             self.uut.open_connection()
-            return True
+            return (True, self.uut)
 
         # TODO when using the SCPI ID class, it affects all subsequent uses
 
@@ -91,7 +91,7 @@ class TestOscilloscope(QDialog, object):
             QMessageBox.critical(
                 self, "Error", "Unable to contact UUT. Is address correct?"
             )
-            return False
+            return (False, None)
         elif manufacturer == "KEYSIGHT":
             self.uut = Keysight_Oscilloscope(simulate=False)
 
@@ -99,7 +99,7 @@ class TestOscilloscope(QDialog, object):
             self.uut = Tektronix_Oscilloscope(simulate=False)
             self.uut.visa_address = address
             self.uut.open_connection()
-            self.num_channels = self.uut.get_number_channels()
+            num_channels = self.uut.get_number_channels()
 
         elif manufacturer == "ROHDE&SCHWARZ":
             self.uut = RohdeSchwarz_Oscilloscope(simulate=False)
@@ -114,61 +114,7 @@ class TestOscilloscope(QDialog, object):
         self.uut.visa_address = address
         self.uut.num_channels = num_channels
 
-        return True
-
-    def consolidate_dcv_tests(self, test_steps: List, filename: str) -> List:
-        """
-        consolidate_dcv_tests
-        Go through the test steps and all of the DCV and DCV-BAL tests group
-        by channel to minimize channel swapping
-
-        Args:
-            test_steps (List): _description_
-            filename (str): _description_
-
-        Returns:
-            List: _description_
-        """
-
-        sorted_steps = []
-
-        # we only have the row number, so have to read it again
-
-        # TODO full settings are available, use them
-
-        # Go through first to get the DCV tests
-
-        with ExcelInterface(filename=filename) as excel:
-            for step in test_steps:
-                test_name, channel = excel.get_test_name(step)
-                if test_name.startswith("DCV"):
-                    sorted_steps.append(
-                        (channel, step)
-                    )  # Append channel first to help with sorting
-
-            new_list = sorted(sorted_steps)
-
-            print(new_list)
-
-            # and make a new list with just the row numbers
-
-            sorted_steps = set()
-
-            for step in new_list:
-                sorted_steps.add(step[1])
-
-            # And the rest of the steps
-
-            for step in test_steps:
-                test_name, channel = excel.get_test_name(step)
-                if test_name.startswith("DCV"):
-                    sorted_steps.add(step)
-
-        sorted_steps = sorted(sorted_steps)
-
-        print(list(sorted_steps))
-
-        return list(sorted_steps)
+        return (True, self.uut)
 
     def run_tests(
         self,
@@ -183,6 +129,10 @@ class TestOscilloscope(QDialog, object):
         run_tests
         Main test sequencer
         From the list of test rows, work out the test names and call the appropriate functions
+
+        Currently only performs whole tests, although for DCV tests skip rows allows retest by deleting suspicioous results
+
+        Other tests skip rows not implemented as they are quick to perform
 
         Args:
             filename (str): _description_
@@ -244,25 +194,23 @@ class TestOscilloscope(QDialog, object):
                 name for name in excel.supported_test_names if name in test_names
             ]
 
-            # Would like to join DCV and DCV-BAL into same test for consolidating.
-
             for test_name in ordered_test_names:
                 testing_rows = excel.get_test_rows(test_name)
                 # At the moment we only do full tests, so we can get the
                 # test rows from the excel sheet
 
-                # TODO use functional method
+                # Had consolidated DCV and DCV-BAL into one test, but as the tables have different columns it
+                # offered no advantage
 
                 if "DCV" in test_name:
-                    sorted_rows = self.consolidate_dcv_tests(
-                        test_rows, filename=filename
-                    )
+
                     if not self.test_dcv(
                         filename=filename,
-                        test_rows=sorted_rows,
+                        test_rows=testing_rows,
                         parallel_channels=parallel_channels,
                         skip_completed=skip_completed,
                     ):
+
                         break
 
                 elif test_name == "POS":
@@ -407,6 +355,9 @@ class TestOscilloscope(QDialog, object):
                 excel.row = row
 
                 settings = excel.get_volt_settings()
+
+                if int(settings.channel) > self.uut.num_channels:
+                    continue
                 units = excel.get_units()
 
                 if settings.function == "BAL":
@@ -907,9 +858,9 @@ class TestOscilloscope(QDialog, object):
                 )
                 self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)
 
-                time.sleep(0.5)
+                time.sleep(1)
 
-                reading = self.ks3458.measure(function=Ks3458A_Function.R4W)["Average"]  # type: ignore
+                reading = self.ks3458.measure(function=Ks3458A_Function.R4W, number_readings=5)["Average"]  # type: ignore
                 if units.lower().startswith("k"):
                     reading /= 1000
                 if units.upper().startswith("M"):
@@ -1081,9 +1032,7 @@ class TestOscilloscope(QDialog, object):
                         ):
                             message = f"Connect Calibrator output to channel {channel}"
                             if self.use_filter and settings.scale <= max_filter_range:
-                                message += (
-                                    " via 0.15 uF capacitor direct to input channel"
-                                )
+                                message += " via 0.15 uF capacitor direct to input"
 
                             response = QMessageBox.information(
                                 self,
@@ -1094,6 +1043,7 @@ class TestOscilloscope(QDialog, object):
                             )
                             if response == QMessageBox.StandardButton.Cancel:
                                 return False
+
                         last_channel = channel
 
                     self.uut.set_channel(chan=channel, enabled=True)
@@ -1185,6 +1135,17 @@ class TestOscilloscope(QDialog, object):
                     self.uut.measure_clear()
 
                     reading = self.uut.measure_voltage(chan=channel, delay=1)
+
+                    # MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
+
+                    if (
+                        settings.scale == 0.001
+                        and abs(settings.offset) > 0
+                        and abs(reading) > 9e30
+                    ):
+                        # reading was off scale, so go to 2mV and try again
+                        self.uut.set_voltage_scale(chan=channel, scale=0.002)
+                        reading = self.uut.measure_voltage(chan=channel, delay=1)
 
                     if self.uut.keysight and self.uut.family != DSOX_FAMILY.DSO5000:  # type: ignore
                         voltage2 = self.uut.read_cursor_avg()
@@ -1785,7 +1746,7 @@ class TestOscilloscope(QDialog, object):
                 self.uut.set_trigger_level(chan=settings.channel, level=0)
 
                 risetime = (
-                    self.uut.measure_risetime(chan=settings.channel, num_readings=1)
+                    self.uut.measure_risetime(chan=settings.channel, num_readings=10)
                     * 1e9
                 )
 

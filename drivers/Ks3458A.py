@@ -230,6 +230,7 @@ class Ks3458A:
                 self.model = "3458A"
 
             else:
+                self.rm = pyvisa.ResourceManager()
                 self.instr = self.rm.open_resource(
                     self.visa_address, read_termination="\n", write_termination="\n"
                 )
