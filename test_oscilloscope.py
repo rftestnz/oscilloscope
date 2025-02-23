@@ -225,7 +225,7 @@ class UI(QMainWindow):
         else:
             self.calibrator = self.fl5700
 
-        self.calibrator.close()
+
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
