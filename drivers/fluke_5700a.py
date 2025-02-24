@@ -97,12 +97,10 @@ class Fluke5700A:
     def __init__(self, simulate=False) -> None:
         self.simulating = simulate
         self.rm = pyvisa.ResourceManager()
-
-        if not simulate:
-
-            self.open_connection()
+        self.open_connection()
 
     def __enter__(self):
+        self.open_connection()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
