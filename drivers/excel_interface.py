@@ -377,7 +377,7 @@ class ExcelInterface:
         test_name = str(self.ws.cell(column=self.__data_col, row=row).value)
         try:
             # Not all tests have a channel, such as TIME. In the readahead for DCV test consolidation,
-            # if all tests have been selected then it will read seettings for everything
+            # if all tests have been selected then it will read settings for everything
             channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
         except Exception:
             channel = 1
