@@ -1285,6 +1285,18 @@ class TestOscilloscope(QDialog, object):
                 )
                 return False
 
+            if parallel_channels:
+                response = QMessageBox.information(
+                    self,
+                    "Connections",
+                    "Connect Calibrator output to all channels in parallel",
+                    buttons=QMessageBox.StandardButton.Ok
+                    | QMessageBox.StandardButton.Cancel,
+                )
+
+                if response == QMessageBox.StandardButton.Cancel:
+                    return False
+
             for row in test_rows:
                 if self.abort_test:
                     return False
