@@ -1458,7 +1458,15 @@ class TestOscilloscope(QDialog, object):
                         "Adjust Horz position so waveform is on center graticule",
                     )
 
-                self.uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+                delay_period = (
+                    DELAY_PERIOD
+                    if setting.delay_period is None
+                    else setting.delay_period
+                )
+
+                self.uut.set_timebase_pos(
+                    delay_period
+                )  # delay 1ms (or defined) to next pulse
 
                 if not self.uut.keysight:
                     valid = False
