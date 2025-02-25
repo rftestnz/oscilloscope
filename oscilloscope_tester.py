@@ -1368,8 +1368,6 @@ class TestOscilloscope(QDialog, object):
 
         return True
 
-    # DELAY_PERIOD = 0.00099998  # 1 ms
-    # DELAY_PERIOD = 0.00100002  # 1 ms
     DELAY_PERIOD = 0.001  # 1 ms
 
     def test_timebase(self, filename: str, row: int) -> bool:
