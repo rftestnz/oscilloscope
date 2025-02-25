@@ -144,8 +144,6 @@ class TestOscilloscope(QDialog, object):
 
         # Get the test names
 
-        global test_number
-
         self.test_number = 0
         self.number_tests = len(test_rows)
 
@@ -1379,8 +1377,6 @@ class TestOscilloscope(QDialog, object):
         Args:
             row (int): _description_
         """
-
-        global current_test_text
 
         self.current_test.emit("Testing: Timebase")
 
