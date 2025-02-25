@@ -73,9 +73,9 @@ class TestOscilloscope(QDialog, object):
         """
 
         if simulating:
-            self.uut = Tektronix_Oscilloscope(simulate=simulating)
-            self.uut.model = "MSO68"
-            self.uut.num_channels = 6
+            self.uut = Keysight_Oscilloscope(simulate=simulating)
+            self.uut.model = "DSOX3034T"
+            self.uut.num_channels = 4
             self.uut.open_connection()
             return (True, self.uut)
 
@@ -1285,6 +1285,18 @@ class TestOscilloscope(QDialog, object):
                 )
                 return False
 
+            if parallel_channels:
+                response = QMessageBox.information(
+                    self,
+                    "Connections",
+                    "Connect Calibrator output to all channels in parallel",
+                    buttons=QMessageBox.StandardButton.Ok
+                    | QMessageBox.StandardButton.Cancel,
+                )
+
+                if response == QMessageBox.StandardButton.Cancel:
+                    return False
+
             for row in test_rows:
                 if self.abort_test:
                     return False
@@ -1446,7 +1458,15 @@ class TestOscilloscope(QDialog, object):
                         "Adjust Horz position so waveform is on center graticule",
                     )
 
-                self.uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+                delay_period = (
+                    DELAY_PERIOD
+                    if setting.delay_period is None
+                    else setting.delay_period
+                )
+
+                self.uut.set_timebase_pos(
+                    delay_period
+                )  # delay 1ms (or defined) to next pulse
 
                 if not self.uut.keysight:
                     valid = False

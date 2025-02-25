@@ -225,7 +225,6 @@ class UI(QMainWindow):
         else:
             self.calibrator = self.fl5700
 
-        self.calibrator.close()
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
@@ -336,8 +335,15 @@ class UI(QMainWindow):
                     model = scpi.get_id()[1]
                 visa_instruments.append((addr, model))
 
+        # Do again with GPIB
+        for addr in addresses:
+            if addr.startswith("GPIB"):
+                with SCPI_ID(address=addr) as scpi:
+                    model = scpi.get_id()[1]
+                visa_instruments.append((addr, model))
+
         if not len(visa_instruments):
-            QMessageBox.critical(self, "Error", "No USB Visa instruments found")
+            QMessageBox.critical(self, "Error", "No Visa instruments found")
         else:
             selector = AddressSelector(visa_instruments)
             selector.show()

@@ -37,6 +37,7 @@ class TimebaseSettings:
     timebase: float
     impedance: str | int
     bandwidth: int
+    delay_period: float
 
 
 @dataclass(frozen=True)
@@ -377,7 +378,7 @@ class ExcelInterface:
         test_name = str(self.ws.cell(column=self.__data_col, row=row).value)
         try:
             # Not all tests have a channel, such as TIME. In the readahead for DCV test consolidation,
-            # if all tests have been selected then it will read seettings for everything
+            # if all tests have been selected then it will read settings for everything
             channel = int(str(self.ws.cell(column=self.__data_col + 1, row=row).value))
         except Exception:
             channel = 1
@@ -439,6 +440,8 @@ class ExcelInterface:
         impedance = self.ws.cell(column=col, row=row).value
         col += 1
         bandwidth = self.ws.cell(column=col, row=row).value
+        col += 1
+        delay_period = self.ws.cell(column=col, row=row).value
 
         return TimebaseSettings(
             function=func,
@@ -446,6 +449,7 @@ class ExcelInterface:
             timebase=tb,  # type: ignore
             impedance=impedance,  # type: ignore
             bandwidth=bandwidth,  # type: ignore
+            delay_period=delay_period,  # type: ignore
         )
 
     def get_trigger_settings(self, row: int = -1) -> TriggerSettings:
