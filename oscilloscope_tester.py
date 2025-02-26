@@ -1094,8 +1094,10 @@ class TestOscilloscope(QDialog, object):
                         self.uut.set_acquisition(acquisitions)
 
                         # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
+                        settle_period = 0.2 if acquisitions < 64 else 1
+
                         if not self.simulating:
-                            time.sleep(0.2)
+                            time.sleep(settle_period)
 
                         if settings.scale <= max_filter_range:
                             self.uut.set_acquisition(64)
@@ -1128,7 +1130,7 @@ class TestOscilloscope(QDialog, object):
                     self.uut.set_acquisition(acquisitions)
 
                     if not self.simulating:
-                        time.sleep(0.1)
+                        time.sleep(settle_period)
 
                     if settings.scale <= max_filter_range:
                         self.uut.set_acquisition(64)
