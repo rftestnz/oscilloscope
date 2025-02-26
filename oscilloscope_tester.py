@@ -901,12 +901,16 @@ class TestOscilloscope(QDialog, object):
             check_3458=False
         )  # Don't need 3458 for this test
 
-        acquisitions = 32
+        acquisitions = (
+            64
+            if (self.uut.keysight and self.uut.family == DSOX_FAMILY.DSOX3000)
+            else 32
+        )  # type: ignore
 
         # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
-            QMessageBox.critical(self, "Error", "Cannot find self.calibrator")
+            QMessageBox.critical(self, "Error", "Cannot find calibrator")
             return False
 
         self.uut.open_connection()
