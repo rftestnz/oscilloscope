@@ -631,7 +631,7 @@ class Keysight_Oscilloscope(ScopeDriver):
             self.write(f"MARK:{cursor}:DISP ON")
         self.write("*OPC")
         pos = self.read_query(f"MARK:{cursor}P?")
-        if pos > 9e37:
+        if abs(pos) > 9e37:
             time.sleep(0.2)
             pos = self.read_query(f"MARK:{cursor}P?")
         return pos
