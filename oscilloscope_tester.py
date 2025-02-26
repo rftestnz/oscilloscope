@@ -1547,7 +1547,7 @@ class TestOscilloscope(QDialog, object):
 
         self.ks33250.enable_output(False)
         self.ks33250.go_to_local()
-        self.ks33250.close()
+
         self.uut.reset()
         self.uut.close()
 
