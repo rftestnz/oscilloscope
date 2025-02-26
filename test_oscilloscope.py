@@ -4,17 +4,19 @@ Test Oscilloscopes
 """
 
 import os
+from pathlib import Path
 from pprint import pformat
 from zipfile import BadZipFile
 
 from PyQt6 import uic
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QFileDialog,
+    QGroupBox,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -22,10 +24,8 @@ from PyQt6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QStatusBar,
-    QGroupBox,
 )
 
-from pathlib import Path
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import Keysight_Oscilloscope
