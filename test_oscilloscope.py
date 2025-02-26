@@ -378,6 +378,24 @@ class UI(QMainWindow):
                 if not self.test_connections():
                     return
 
+                # Check the serial number in the sheet, if it is different to UUT notify in case not updated the results file
+
+                serial = excel.get_serial_number()
+
+                self.uut.open_connection()
+                self.uut.get_id()
+
+                if serial and serial != self.uut.serial:
+                    check = QMessageBox.question(
+                        self,
+                        "Check results",
+                        "Serial differs from result sheet. Have you updated the results filename?",
+                        buttons=QMessageBox.StandardButton.Yes
+                        | QMessageBox.StandardButton.No,
+                    )
+                    if check == QMessageBox.StandardButton.No:
+                        return
+
                 if (
                     self.uut.manufacturer.startswith("TEK")
                     and not self.cb_filter_low_ranges.isChecked()
