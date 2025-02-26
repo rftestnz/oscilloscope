@@ -1,5 +1,21 @@
 Oscilloscope Test Release Notes:
 
+Version			A.02.05
+Date:			20250227
+
+Engineer:		Dave Kelly
+Verified:		Dave Kelly
+
+Release Type: 		Performance
+
+Change Notes:
+ - increase acquisition samples for Keysight DSOX3
+ - turn on mV filter by default
+ - check if serial existing and different in sheet
+ - reread Keysight cursors if error
+
+===============================================================
+
 Version			A.02.04
 Date:			20241114
 
