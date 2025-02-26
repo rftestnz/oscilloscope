@@ -1,7 +1,7 @@
 """
-  Perform the main oscilloscope tests
+Perform the main oscilloscope tests
 
-  Tests vary by manufacturer
+Tests vary by manufacturer
 """
 
 import math
@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QDialog, QMessageBox, QInputDialog
+from PyQt6.QtWidgets import QDialog, QInputDialog, QMessageBox
 
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
@@ -26,7 +26,6 @@ DELAY_PERIOD = 0.001  # 1 ms
 
 
 class TestOscilloscope(QDialog, object):
-
     current_test = pyqtSignal(object)
     test_progress = pyqtSignal(object)
 
@@ -38,7 +37,6 @@ class TestOscilloscope(QDialog, object):
         uut: Keysight_Oscilloscope | RohdeSchwarz_Oscilloscope | Tektronix_Oscilloscope,
         simulating: bool,
     ) -> None:
-
         super().__init__()
 
         self.calibrator = calibrator
@@ -201,14 +199,12 @@ class TestOscilloscope(QDialog, object):
                 # offered no advantage
 
                 if "DCV" in test_name:
-
                     if not self.test_dcv(
                         filename=filename,
                         test_rows=testing_rows,
                         parallel_channels=parallel_channels,
                         skip_completed=skip_completed,
                     ):
-
                         break
 
                 elif test_name == "POS":
@@ -456,7 +452,6 @@ class TestOscilloscope(QDialog, object):
                     )
 
                     if response == QMessageBox.StandardButton.Cancel:
-
                         return False
 
                     last_generator = "MXG"
@@ -490,7 +485,6 @@ class TestOscilloscope(QDialog, object):
                         )
 
                         if response == QMessageBox.StandardButton.Cancel:
-
                             return False
 
                     self.mxg.set_frequency(settings.frequency)
@@ -609,7 +603,6 @@ class TestOscilloscope(QDialog, object):
             )
 
             if response == QMessageBox.StandardButton.Cancel:
-
                 return False
 
             row_count = 0
@@ -637,7 +630,8 @@ class TestOscilloscope(QDialog, object):
 
                 self.uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
                 self.uut.set_channel_impedance(
-                    chan=channel, impedance=settings.impedance  # type: ignore
+                    chan=channel,
+                    impedance=settings.impedance,  # type: ignore
                 )
                 self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
@@ -858,7 +852,11 @@ class TestOscilloscope(QDialog, object):
 
                 time.sleep(1)
 
-                reading = self.ks3458.measure(function=Ks3458A_Function.R4W, number_readings=5)["Average"]  # type: ignore
+                reading = self.ks3458.measure(
+                    function=Ks3458A_Function.R4W, number_readings=5
+                )[
+                    "Average"
+                ]  # type: ignore
                 if units.lower().startswith("k"):
                     reading /= 1000
                 if units.upper().startswith("M"):
@@ -1140,7 +1138,7 @@ class TestOscilloscope(QDialog, object):
 
                     reading = self.uut.measure_voltage(chan=channel, delay=1)
 
-                    # MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
+                    # Tek MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
 
                     if (
                         settings.scale == 0.001
@@ -1518,7 +1516,7 @@ class TestOscilloscope(QDialog, object):
 
                         try:
                             val = int(code[0])  # type: ignore
-                            print(f"{val/100}, {datetime.now().year-2000}")
+                            print(f"{val / 100}, {datetime.now().year - 2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
                             age = datetime.now().year - (val / 100) - 2000
