@@ -4,17 +4,19 @@ Test Oscilloscopes
 """
 
 import os
+from pathlib import Path
 from pprint import pformat
 from zipfile import BadZipFile
 
 from PyQt6 import uic
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
     QFileDialog,
+    QGroupBox,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -22,10 +24,8 @@ from PyQt6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QStatusBar,
-    QGroupBox,
 )
 
-from pathlib import Path
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
 from drivers.keysight_scope import Keysight_Oscilloscope
@@ -38,7 +38,7 @@ from oscilloscope_tester import TestOscilloscope
 from select_uut_address import AddressSelector
 from utilities import get_path
 
-VERSION = "A.02.04"
+VERSION = "A.02.05"
 
 
 class UI(QMainWindow):
@@ -130,7 +130,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(False)
         self.btn_abort.setVisible(False)
 
-        self.cb_filter_low_ranges.setChecked(False)
+        self.cb_filter_low_ranges.setChecked(True)
         self.cb_skip_rows.setChecked(False)
         self.txt_results_file.setText(self.settings.value("filename"))
 
@@ -225,7 +225,6 @@ class UI(QMainWindow):
         else:
             self.calibrator = self.fl5700
 
-        self.calibrator.close()
         self.calibrator.visa_address = f"{self.cmb_calibrator_gpib.currentText()}::{self.cmb_calibrator_addr.currentText()}::INSTR"
         self.calibrator.simulating = simulating
         self.calibrator.open_connection()
@@ -336,8 +335,18 @@ class UI(QMainWindow):
                     model = scpi.get_id()[1]
                 visa_instruments.append((addr, model))
 
+        # Do again with GPIB
+        for addr in addresses:
+            if addr.startswith("GPIB"):
+                with SCPI_ID(address=addr) as scpi:
+                    try:
+                        model = scpi.get_id()[1]
+                    except IndexError:
+                        model = "*** ERROR - Clash? ***"
+                visa_instruments.append((addr, model))
+
         if not len(visa_instruments):
-            QMessageBox.critical(self, "Error", "No USB Visa instruments found")
+            QMessageBox.critical(self, "Error", "No Visa instruments found")
         else:
             selector = AddressSelector(visa_instruments)
             selector.show()
@@ -368,6 +377,24 @@ class UI(QMainWindow):
 
                 if not self.test_connections():
                     return
+
+                # Check the serial number in the sheet, if it is different to UUT notify in case not updated the results file
+
+                serial = excel.get_serial_number()
+
+                self.uut.open_connection()
+                self.uut.get_id()
+
+                if serial and serial != self.uut.serial:
+                    check = QMessageBox.question(
+                        self,
+                        "Check results",
+                        "Serial differs from result sheet. Have you updated the results filename?",
+                        buttons=QMessageBox.StandardButton.Yes
+                        | QMessageBox.StandardButton.No,
+                    )
+                    if check == QMessageBox.StandardButton.No:
+                        return
 
                 if (
                     self.uut.manufacturer.startswith("TEK")

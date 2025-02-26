@@ -132,6 +132,8 @@ class Ks33250A:
         Set back to local operation
         """
 
+        # The Keysight unit supports the SYST:LOC command, but the Agilent doesn't appear to. At least the RFTS ones do not.
+
         with contextlib.suppress(InvalidSession, VisaIOError, AttributeError):
             if not self.simulating:
                 self.instr.control_ren(6)  # type: ignore
@@ -300,7 +302,7 @@ class Ks33250A:
 
 if __name__ == "__main__":
     with Ks33250A(simulate=False) as ks33250:
-        ks33250.visa_address = "GPIB0::9::INSTR"
+        ks33250.visa_address = "GPIB0::2::INSTR"
         ks33250.open_connection()
 
         print(ks33250.is_connected())
@@ -308,6 +310,10 @@ if __name__ == "__main__":
 
         ks33250.set_sin(1560, 0.25)
 
+        time.sleep(2)
+
         ks33250.set_pulse(period=1e-3, pulse_width=200e-6, amplitude=2)
 
         ks33250.enable_output(True)
+
+        ks33250.go_to_local()

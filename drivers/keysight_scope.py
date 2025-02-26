@@ -631,7 +631,7 @@ class Keysight_Oscilloscope(ScopeDriver):
             self.write(f"MARK:{cursor}:DISP ON")
         self.write("*OPC")
         pos = self.read_query(f"MARK:{cursor}P?")
-        if pos > 9e37:
+        if abs(pos) > 9e37:
             time.sleep(0.2)
             pos = self.read_query(f"MARK:{cursor}P?")
         return pos
@@ -649,8 +649,21 @@ class Keysight_Oscilloscope(ScopeDriver):
         if self.family == DSOX_FAMILY.DSOX3000:
             self.write("MARK:Y1:DISP ON")
             self.write("MARK:Y2:DISP ON")
-        y1 = self.read_query("MARK:Y1P?")
-        y2 = self.read_query("MARK:Y1P?")
+
+        tries = 0
+        y1 = 0
+        y2 = 0
+
+        while tries < 4:
+            y1 = self.read_query("MARK:Y1P?")
+            y2 = self.read_query("MARK:Y2P?")
+
+            tries += 1
+
+            if abs(y1) < 9e37 and abs(y2) < 9e37:
+                break
+
+            time.sleep(0.1)
 
         return (y1 + y2) / 2
 

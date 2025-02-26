@@ -1,7 +1,7 @@
 """
-  Perform the main oscilloscope tests
+Perform the main oscilloscope tests
 
-  Tests vary by manufacturer
+Tests vary by manufacturer
 """
 
 import math
@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, List
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QDialog, QMessageBox, QInputDialog
+from PyQt6.QtWidgets import QDialog, QInputDialog, QMessageBox
 
 from drivers.excel_interface import ExcelInterface
 from drivers.fluke_5700a import Fluke5700A
@@ -26,7 +26,6 @@ DELAY_PERIOD = 0.001  # 1 ms
 
 
 class TestOscilloscope(QDialog, object):
-
     current_test = pyqtSignal(object)
     test_progress = pyqtSignal(object)
 
@@ -38,7 +37,6 @@ class TestOscilloscope(QDialog, object):
         uut: Keysight_Oscilloscope | RohdeSchwarz_Oscilloscope | Tektronix_Oscilloscope,
         simulating: bool,
     ) -> None:
-
         super().__init__()
 
         self.calibrator = calibrator
@@ -73,9 +71,9 @@ class TestOscilloscope(QDialog, object):
         """
 
         if simulating:
-            self.uut = Tektronix_Oscilloscope(simulate=simulating)
-            self.uut.model = "MSO68"
-            self.uut.num_channels = 6
+            self.uut = Keysight_Oscilloscope(simulate=simulating)
+            self.uut.model = "DSOX3034T"
+            self.uut.num_channels = 4
             self.uut.open_connection()
             return (True, self.uut)
 
@@ -144,8 +142,6 @@ class TestOscilloscope(QDialog, object):
 
         # Get the test names
 
-        global test_number
-
         self.test_number = 0
         self.number_tests = len(test_rows)
 
@@ -203,14 +199,12 @@ class TestOscilloscope(QDialog, object):
                 # offered no advantage
 
                 if "DCV" in test_name:
-
                     if not self.test_dcv(
                         filename=filename,
                         test_rows=testing_rows,
                         parallel_channels=parallel_channels,
                         skip_completed=skip_completed,
                     ):
-
                         break
 
                 elif test_name == "POS":
@@ -458,7 +452,6 @@ class TestOscilloscope(QDialog, object):
                     )
 
                     if response == QMessageBox.StandardButton.Cancel:
-
                         return False
 
                     last_generator = "MXG"
@@ -492,7 +485,6 @@ class TestOscilloscope(QDialog, object):
                         )
 
                         if response == QMessageBox.StandardButton.Cancel:
-
                             return False
 
                     self.mxg.set_frequency(settings.frequency)
@@ -611,7 +603,6 @@ class TestOscilloscope(QDialog, object):
             )
 
             if response == QMessageBox.StandardButton.Cancel:
-
                 return False
 
             row_count = 0
@@ -639,7 +630,8 @@ class TestOscilloscope(QDialog, object):
 
                 self.uut.set_channel(chan=channel, enabled=True, only=True)  # type: ignore
                 self.uut.set_channel_impedance(
-                    chan=channel, impedance=settings.impedance  # type: ignore
+                    chan=channel,
+                    impedance=settings.impedance,  # type: ignore
                 )
                 self.uut.set_channel_bw_limit(chan=channel, bw_limit=settings.bandwidth)  # type: ignore
 
@@ -860,7 +852,11 @@ class TestOscilloscope(QDialog, object):
 
                 time.sleep(1)
 
-                reading = self.ks3458.measure(function=Ks3458A_Function.R4W, number_readings=5)["Average"]  # type: ignore
+                reading = self.ks3458.measure(
+                    function=Ks3458A_Function.R4W, number_readings=5
+                )[
+                    "Average"
+                ]  # type: ignore
                 if units.lower().startswith("k"):
                     reading /= 1000
                 if units.upper().startswith("M"):
@@ -903,12 +899,16 @@ class TestOscilloscope(QDialog, object):
             check_3458=False
         )  # Don't need 3458 for this test
 
-        acquisitions = 32
+        acquisitions = (
+            64
+            if (self.uut.keysight and self.uut.family == DSOX_FAMILY.DSOX3000)
+            else 32
+        )  # type: ignore
 
         # require self.calibrator
 
         if not connections["FLUKE_5700A"]:
-            QMessageBox.critical(self, "Error", "Cannot find self.calibrator")
+            QMessageBox.critical(self, "Error", "Cannot find calibrator")
             return False
 
         self.uut.open_connection()
@@ -1092,8 +1092,10 @@ class TestOscilloscope(QDialog, object):
                         self.uut.set_acquisition(acquisitions)
 
                         # with a 200 us timebase, and 64 samples, the average is complete in 12 ms
+                        settle_period = 0.2 if acquisitions < 64 else 1
+
                         if not self.simulating:
-                            time.sleep(0.2)
+                            time.sleep(settle_period)
 
                         if settings.scale <= max_filter_range:
                             self.uut.set_acquisition(64)
@@ -1126,7 +1128,7 @@ class TestOscilloscope(QDialog, object):
                     self.uut.set_acquisition(acquisitions)
 
                     if not self.simulating:
-                        time.sleep(0.1)
+                        time.sleep(settle_period)
 
                     if settings.scale <= max_filter_range:
                         self.uut.set_acquisition(64)
@@ -1136,7 +1138,7 @@ class TestOscilloscope(QDialog, object):
 
                     reading = self.uut.measure_voltage(chan=channel, delay=1)
 
-                    # MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
+                    # Tek MSO4 error is 9e37, MSO5 and MSO6 error is 9E40
 
                     if (
                         settings.scale == 0.001
@@ -1285,6 +1287,18 @@ class TestOscilloscope(QDialog, object):
                 )
                 return False
 
+            if parallel_channels:
+                response = QMessageBox.information(
+                    self,
+                    "Connections",
+                    "Connect Calibrator output to all channels in parallel",
+                    buttons=QMessageBox.StandardButton.Ok
+                    | QMessageBox.StandardButton.Cancel,
+                )
+
+                if response == QMessageBox.StandardButton.Cancel:
+                    return False
+
             for row in test_rows:
                 if self.abort_test:
                     return False
@@ -1356,8 +1370,6 @@ class TestOscilloscope(QDialog, object):
 
         return True
 
-    # DELAY_PERIOD = 0.00099998  # 1 ms
-    # DELAY_PERIOD = 0.00100002  # 1 ms
     DELAY_PERIOD = 0.001  # 1 ms
 
     def test_timebase(self, filename: str, row: int) -> bool:
@@ -1369,8 +1381,6 @@ class TestOscilloscope(QDialog, object):
         Args:
             row (int): _description_
         """
-
-        global current_test_text
 
         self.current_test.emit("Testing: Timebase")
 
@@ -1446,7 +1456,15 @@ class TestOscilloscope(QDialog, object):
                         "Adjust Horz position so waveform is on center graticule",
                     )
 
-                self.uut.set_timebase_pos(DELAY_PERIOD)  # delay 1ms to next pulse
+                delay_period = (
+                    DELAY_PERIOD
+                    if setting.delay_period is None
+                    else setting.delay_period
+                )
+
+                self.uut.set_timebase_pos(
+                    delay_period
+                )  # delay 1ms (or defined) to next pulse
 
                 if not self.uut.keysight:
                     valid = False
@@ -1498,7 +1516,7 @@ class TestOscilloscope(QDialog, object):
 
                         try:
                             val = int(code[0])  # type: ignore
-                            print(f"{val/100}, {datetime.now().year-2000}")
+                            print(f"{val / 100}, {datetime.now().year - 2000}")
                             if val // 100 > datetime.now().year - 2000:
                                 val = 0
                             age = datetime.now().year - (val / 100) - 2000
@@ -1528,7 +1546,8 @@ class TestOscilloscope(QDialog, object):
                 self.update_test_progress()
 
         self.ks33250.enable_output(False)
-        self.ks33250.close()
+        self.ks33250.go_to_local()
+
         self.uut.reset()
         self.uut.close()
 
