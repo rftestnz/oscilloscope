@@ -130,7 +130,7 @@ class UI(QMainWindow):
         self.progress_test.setVisible(False)
         self.btn_abort.setVisible(False)
 
-        self.cb_filter_low_ranges.setChecked(False)
+        self.cb_filter_low_ranges.setChecked(True)
         self.cb_skip_rows.setChecked(False)
         self.txt_results_file.setText(self.settings.value("filename"))
 
