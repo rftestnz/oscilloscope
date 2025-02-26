@@ -339,7 +339,10 @@ class UI(QMainWindow):
         for addr in addresses:
             if addr.startswith("GPIB"):
                 with SCPI_ID(address=addr) as scpi:
-                    model = scpi.get_id()[1]
+                    try:
+                        model = scpi.get_id()[1]
+                    except IndexError:
+                        model = "*** ERROR - Clash? ***"
                 visa_instruments.append((addr, model))
 
         if not len(visa_instruments):
