@@ -182,6 +182,19 @@ class ExcelInterface:
 
         return available
 
+    def get_serial_number(self) -> str:
+        """
+        get_serial_number
+
+
+        Returns:
+            str: _description_
+        """
+
+        sn = self.get_named_cell("Serial")
+
+        return sn.value if sn else ""
+
     def check_valid_results(self) -> bool:
         """
         check_valid_results

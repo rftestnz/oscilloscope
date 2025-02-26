@@ -132,6 +132,8 @@ class Ks33250A:
         Set back to local operation
         """
 
+        # The Keysight unit supports the SYST:LOC command, but the Agilent doesn't appear to. At least the RFTS ones do not.
+
         with contextlib.suppress(InvalidSession, VisaIOError, AttributeError):
             if not self.simulating:
                 self.instr.control_ren(6)  # type: ignore
